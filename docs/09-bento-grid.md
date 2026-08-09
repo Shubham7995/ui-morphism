@@ -61,8 +61,8 @@ Every token named here is the **exact custom property emitted by the CSS block b
 | Surface | `--bento-page-bg` | `#ffffff` | `#000000` | Page ground behind the grid. |
 | Surface | `--bento-tile-bg` | `#f5f5f7` | `#161617` | Default tile. ΔL ≈ 8.6 points light, ≈ 0.8 dark. |
 | Surface | `--bento-tile-bg-raised` | `#ffffff` | `#1d1d1f` | For tiles sitting on a tinted section. |
-| Border | `--bento-border` | `1px solid rgba(0,0,0,0.06)` | `1px solid rgba(255,255,255,0.08)` | Hairline. ~1.15:1 — decorative only, never the sole indicator. |
-| Border | `--bento-border-interactive` | `1px solid rgba(0,0,0,0.18)` | `1px solid rgba(255,255,255,0.22)` | ≥ 3:1. Use when the tile is itself a control. |
+| Border | `--bento-border` | `1px solid rgba(0,0,0,0.06)` | `1px solid rgba(255,255,255,0.08)` | Hairline. ~1.14:1 — decorative only, never the sole indicator. |
+| Border | `--bento-border-interactive` | `1px solid rgba(0,0,0,0.45)` | `1px solid rgba(255,255,255,0.35)` | Clears 3:1 against the tile — 3.31:1 light, 3.23:1 dark. Use when the tile is itself a control. |
 | Radius | `--bento-radius` | `24px` | same | Tile. Tailwind `rounded-3xl`. |
 | Radius | `--bento-radius-media` | `12px` | same | Nested media. Concentric: outer − padding. |
 | Radius | `--bento-radius-chip` | `999px` | same | Chips and badges. |
@@ -117,7 +117,7 @@ Every token named here is the **exact custom property emitted by the CSS block b
   --bento-tile-bg: #f5f5f7;
   --bento-tile-bg-raised: #ffffff;
   --bento-border: 1px solid rgba(0, 0, 0, 0.06);
-  --bento-border-interactive: 1px solid rgba(0, 0, 0, 0.18);
+  --bento-border-interactive: 1px solid rgba(0, 0, 0, 0.45);
 
   /* ---- shape ---- */
   --bento-radius: 24px;
@@ -180,7 +180,7 @@ Every token named here is the **exact custom property emitted by the CSS block b
     --bento-tile-bg: #161617;
     --bento-tile-bg-raised: #1d1d1f;
     --bento-border: 1px solid rgba(255, 255, 255, 0.08);
-    --bento-border-interactive: 1px solid rgba(255, 255, 255, 0.22);
+    --bento-border-interactive: 1px solid rgba(255, 255, 255, 0.35);
     --bento-shadow-rest: 0 1px 2px rgba(0, 0, 0, 0.40);
     --bento-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
     --bento-fg: #f5f5f7;
@@ -195,7 +195,7 @@ Every token named here is the **exact custom property emitted by the CSS block b
   --bento-tile-bg: #161617;
   --bento-tile-bg-raised: #1d1d1f;
   --bento-border: 1px solid rgba(255, 255, 255, 0.08);
-  --bento-border-interactive: 1px solid rgba(255, 255, 255, 0.22);
+  --bento-border-interactive: 1px solid rgba(255, 255, 255, 0.35);
   --bento-shadow-rest: 0 1px 2px rgba(0, 0, 0, 0.40);
   --bento-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
   --bento-fg: #f5f5f7;
@@ -583,12 +583,12 @@ No plugin required. Everything below is core Tailwind v4 plus `@theme` tokens. C
     </li>
 
     <!-- tall, interactive: whole tile is one link -->
-    <li class="bento-tile group p-6 ring-black/18 transition-[transform,box-shadow] duration-[180ms] ease-bento
+    <li class="bento-tile group p-6 ring-black/45 transition-[transform,box-shadow] duration-[180ms] ease-bento
                hover:-translate-y-0.5 hover:shadow-bento-hover
                has-[a:focus-visible]:outline has-[a:focus-visible]:outline-[3px]
                has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-bento-accent
                motion-reduce:transform-none motion-reduce:transition-none
-               md:col-span-3 md:row-span-2 xl:col-span-3 dark:ring-white/22">
+               md:col-span-3 md:row-span-2 xl:col-span-3 dark:ring-white/35">
       <p class="text-[13px] font-semibold uppercase tracking-[0.06em] text-bento-muted dark:text-[#a1a1a6]">Observability</p>
       <h3 class="text-2xl font-semibold tracking-[-0.02em]">
         <a href="/observability" class="after:absolute after:inset-0 after:z-10 after:content-['']">
@@ -1078,7 +1078,7 @@ Bento is low-risk structurally and medium-risk in practice, because the same thr
 - **1.3.2 Meaningful Sequence (A)** — the headline risk. `grid-auto-flow: dense` and `order` change visual placement without changing the accessibility tree. The CSS Grid spec is explicit: *"Authors must use `order` and the grid-placement properties only for visual, not logical, reordering of content. Style sheets that use these features to perform logical reordering are non-conforming."* If your dense grid's visual reading order differs from DOM order, that is a conformance failure, not a preference.
 - **2.4.3 Focus Order (A)** — same root cause. Tab order follows DOM; a densely packed grid sends focus jumping around the composition.
 - **1.4.3 Contrast (Minimum) (AA)** — text over imagery in cover tiles, and muted body copy on tinted tile surfaces. `#6e6e73` on `#f5f5f7` computes to **4.66:1**, which passes at 16px but leaves almost no margin; lightening the tile or darkening the text by one step drops it below 4.5:1.
-- **1.4.11 Non-text Contrast (AA)** — the signature hairline. `rgba(0,0,0,0.06)` composited on `#f5f5f7` yields `#e6e6e8`, a contrast of **1.15:1** against the tile. That is fine for a decorative divider and a failure if the border is the only thing indicating "this tile is a control". Interactive tiles need `rgba(0,0,0,0.18)` or stronger to clear 3:1.
+- **1.4.11 Non-text Contrast (AA)** — the signature hairline. `rgba(0,0,0,0.06)` composited on `#f5f5f7` yields `#e6e6e8`, a contrast of **1.14:1** against the tile. That is fine for a decorative divider and a failure if the border is the only thing indicating "this tile is a control". Clearing 3:1 against `#f5f5f7` takes far more alpha than it looks: the crossing is `rgba(0,0,0,0.4198)`, so `--bento-border-interactive` ships `0.45` (**3.31:1**). In dark mode the crossing over `#161617` is `rgba(255,255,255,0.3293)` and the token ships `0.35` (**3.23:1**).
 - **2.4.7 Focus Visible (AA)** and **2.4.13 Focus Appearance (AAA)** — `overflow: hidden` on the tile clips an inset focus ring. Use `outline-offset: 2px` with the outline on the tile (not the inner link), or drop `overflow: hidden` for interactive tiles and clip the media instead.
 - **2.4.11 Focus Not Obscured (Minimum) (AA, new in 2.2)** — sticky headers over a tall bento section will hide the focused tile. Add `scroll-margin-top` equal to header height plus 8px on every tile.
 - **2.5.8 Target Size (Minimum) (AA, new in 2.2)** — the tiles are huge, but the small "Learn more →" chips, tag pills and icon buttons inside them frequently are not. Every interactive element inside a tile needs a **24×24 CSS px** minimum hit area.
@@ -1089,15 +1089,15 @@ Bento is low-risk structurally and medium-risk in practice, because the same thr
 
 | Foreground | Background | Ratio | Verdict |
 |---|---|---|---|
-| `#1d1d1f` | `#f5f5f7` | 15.42:1 | pass AAA |
+| `#1d1d1f` | `#f5f5f7` | 15.46:1 | pass AAA |
 | `#6e6e73` | `#f5f5f7` | 4.66:1 | pass AA normal text, fail AAA |
 | `#f5f5f7` | `#161617` | 16.61:1 | pass AAA |
 | `#a1a1a6` | `#161617` | 7.03:1 | pass AAA normal text |
 | `#0071e3` | `#f5f5f7` | 4.31:1 | pass 1.4.11 (3:1) as a focus ring; fails 4.5:1 as body text |
 | `#0a84ff` | `#161617` | 4.96:1 | pass AA text and 1.4.11 |
-| `rgba(0,0,0,0.06)` border | `#f5f5f7` | 1.15:1 | decorative only, fails 1.4.11 for controls |
+| `rgba(0,0,0,0.06)` border | `#f5f5f7` | 1.14:1 | decorative only, fails 1.4.11 for controls |
 | `#ffffff` | `rgba(0,0,0,0.55)` over white imagery | 4.76:1 | pass AA — this is the minimum viable scrim |
-| `#ffffff` | `rgba(0,0,0,0.72)` over white imagery | 9.29:1 | comfortable margin, use for headlines |
+| `#ffffff` | `rgba(0,0,0,0.72)` over white imagery | 9.23:1 | comfortable margin, use for headlines |
 
 The scrim numbers are worst case: they assume the photograph under the scrim is pure white. That is the only assumption that is safe with user-supplied or CMS-supplied imagery.
 
@@ -1206,7 +1206,7 @@ Bento is one of the cheapest visual styles in this set. CSS Grid layout with exp
 | Use `grid-auto-rows: minmax(180px, auto)` so tiles grow under text zoom | Hard-code `grid-auto-rows: 180px` and clip content at 200% zoom |
 | Put one idea, one heading and at most one CTA in each tile | Cram two features into a hero tile because it "has room" |
 | Use `border-radius: 24px` on every tile and `inner = outer − padding` on nested media | Mix 8px, 16px and 24px radii across tiles in the same grid |
-| Strengthen the border to `rgba(0,0,0,0.18)` when the tile is clickable | Rely on a `0.06` alpha hairline (1.15:1) to signal interactivity |
+| Strengthen the border to `rgba(0,0,0,0.45)` when the tile is clickable | Rely on a `0.06` alpha hairline (1.14:1) to signal interactivity, or assume `0.18` clears 3:1 — it measures 1.52:1 |
 | Collapse to one full-width column below 768px | Keep four columns on mobile and ship 70px-wide tiles |
 | Give text over imagery a scrim of at least `rgba(0,0,0,0.55)` | Set white text directly on a photograph and hope |
 | Ship a poster frame and pause off-screen video; one autoplaying loop per section max | Autoplay six looping videos, one per tile, on a phone |

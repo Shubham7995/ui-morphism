@@ -74,8 +74,8 @@ Every name in the Token column is the **exact custom property emitted by the CSS
 | Depth | `--sp-z-push` (behind modal) | `-125px` | same | Android XR `SpatialDialog` panel pushback |
 | Depth | `--sp-k-1` … `--sp-k-5` | `0.98667 / 0.98 / 0.97333 / 0.96667 / 0.95333` | same | counter-scale, `1 − z / perspective` |
 | Surface | `--sp-env` / `--sp-env-2` | `#E8EAF0` / `#DFE2EA` | `#0B0C10` / `#131620` | neutral room, low chroma so glass reads |
-| Surface | `--sp-panel` | `rgba(255,255,255,0.72)` | `rgba(22,24,30,0.72)` | visionOS-style translucency |
-| Surface | `--sp-panel-legible` | `rgba(255,255,255,0.92)` | `rgba(22,24,30,0.90)` | contrast-safe over arbitrary backdrops |
+| Surface | `--sp-panel` | `rgba(255,255,255,0.72)` | `rgba(22,24,30,0.72)` | visionOS-style translucency. 0.72 already clears 4.5:1 against `--sp-ink-1` over *any* backdrop — 9.53:1 light, 6.52:1 dark, worst case (§7) |
+| Surface | `--sp-panel-legible` | `rgba(255,255,255,0.92)` | `rgba(22,24,30,0.90)` | contrast-safe over arbitrary backdrops: 15.87:1 (light) / 12.37:1 (dark) worst case, per-channel sRGB compositing (§7) |
 | Surface | `--sp-panel-opaque` | `#F7F8FB` | `#15171D` | reduce-transparency / forced-colors |
 | Surface | `--sp-hairline` | `rgba(16,16,20,0.12)` | `rgba(255,255,255,0.16)` | 1px edge so panels read at glancing angles |
 | Surface | `--sp-specular` | `rgba(255,255,255,0.65)` | `rgba(255,255,255,0.28)` | top edge highlight, 1px |
@@ -1157,7 +1157,7 @@ This style carries **high** risk. It stacks three independently hazardous mechan
 
 - **1.3.1 Info and Relationships (A)** — depth is the hierarchy. A screen reader gets a flat DOM. Every depth level must have a semantic equivalent: `<dialog>`/`aria-modal` for level 5, `role="menu"` or a popover for level 3, headings and landmarks for panels.
 - **1.4.3 Contrast (Minimum) (AA)** — the composite of glass fill over an arbitrary backdrop is where this fails. Math below.
-- **1.4.11 Non-text Contrast (AA)** — a 1px `rgba(16,16,20,0.12)` hairline is roughly **1.14:1** against a white panel. It is decorative only. If the panel edge is the sole indicator of a control boundary, you need ≥ 3:1, which means a `rgba(16,16,20,0.42)` hairline or a real border.
+- **1.4.11 Non-text Contrast (AA)** — a 1px `rgba(16,16,20,0.12)` hairline composites to `rgb(226.3, 226.3, 226.8)` over a white panel (`L = 0.76322`), which is **1.29:1**. It is decorative only. If the panel edge is the sole indicator of a control boundary, you need ≥ 3:1, and that means **`rgba(16,16,20,0.45)`** — composite `rgb(147.4, 147.4, 149.2)`, `L = 0.29430`, **3.05:1** — or a real border. `0.42` reaches only **2.79:1** and fails; both of these are per-channel composites, not averaged luminances.
 - **1.4.13 Content on Hover or Focus (AA)** — orbiters that appear on hover must be dismissible, hoverable and persistent. A floating toolbar that vanishes when the pointer crosses the 20px gap between panel and orbiter fails outright. Fix by making the gap part of the hover target.
 - **2.4.7 Focus Visible (AA)** and **2.4.11 Focus Not Obscured (Minimum) (AA)** — 2.4.11 is the sleeper failure. Floating orbiters and level-5 dialogs sit *in front* of content; a focused control behind them is obscured. Every floating surface needs either `scroll-margin` compensation on focusable descendants or a rule that focus moves the obscuring layer.
 - **2.5.7 Dragging Movements (AA)** — this is the criterion spatial UI breaks most reliably and most people miss. `movable()` and `resizable()` panels, drag-to-reposition windows, and drag-based depth controls all require a single-pointer non-dragging alternative. Ship arrow-key nudging and a "reset layout" button.
@@ -1165,18 +1165,40 @@ This style carries **high** risk. It stacks three independently hazardous mechan
 - **2.3.3 Animation from Interactions (AAA)** and **2.2.2 Pause, Stop, Hide (A)** — pointer parallax is motion triggered by interaction; scroll-driven depth that continues after the user stops is auto-playing motion. Both need an off switch beyond the OS setting if the effect exceeds the amplitudes above.
 - **1.4.10 Reflow (AA)** — a `perspective` stage with a fixed `max-width: 1413px` must still reflow at 320 CSS px without two-dimensional scrolling. Drop to `perspective: none` and a single column below 640px.
 
-**Contrast math, done properly.** For a translucent panel the composite luminance is `L = α·L_fill + (1−α)·L_backdrop`. Take the worst case: dark glass with white text over a pure white backdrop (a photo blown out, a light-mode page behind).
+**Contrast math, done properly.** Browsers composite a translucent fill in **gamma-encoded sRGB, one 8-bit channel at a time** — `C = α·C_fill + (1−α)·C_backdrop` on each of R, G and B — and only *then* is the composited colour linearised and reduced to a relative luminance; averaging the two luminances instead (`L = α·L_fill + (1−α)·L_bd`) is not an approximation but a different and consistently **optimistic** model, and it overstates the contrast of light fills over dark grounds by enough to ship illegible text. Doc 08 §7 states the same per-channel rule; the two agree.
 
-- Fill `#14161C` → relative luminance `L_fill = 0.00804`.
-- Backdrop worst case `L_bd = 1.0`.
-- At **α = 0.72**: `L = 0.72(0.00804) + 0.28(1.0) = 0.2858`. Contrast with white text = `1.05 / 0.3358` = **3.13:1 — fails 1.4.3**.
-- At **α = 0.80**: `L = 0.2064` → **4.09:1 — still fails**.
-- At **α = 0.83**: `L = 0.1767` → **4.63:1 — passes AA**.
-- At **α = 0.88**: `L = 0.1271` → **5.93:1 — comfortable**.
+The full procedure, and the only one this doc's numbers use:
 
-So the honest rule: **dark glass with white body text needs α ≥ 0.83 whenever you do not control the backdrop.** The pretty 0.72 default is only safe over a backdrop whose luminance you own and cap.
+```
+C = α·C_fill + (1−α)·C_backdrop              per channel, 0-255 sRGB
+s = C/255 ;  lin = s ≤ 0.04045 ? s/12.92 : ((s+0.055)/1.055)^2.4
+L = 0.2126·linR + 0.7152·linG + 0.0722·linB
+ratio = (L_max + 0.05) / (L_min + 0.05)
+```
 
-Light glass is more forgiving. White fill at alpha α over a black backdrop composites to `L = α`; with `#101014` text (`L = 0.00531`) the ratio is `(α + 0.05) / 0.0553`, which clears 4.5:1 at **α ≥ 0.20**. But at α = 0.20 the backdrop imagery is fully legible *through* the text, which is a real-world legibility failure the ratio does not capture. Use **α ≥ 0.60** for light glass carrying body copy, and raise to 0.92 for anything over photography.
+Never round a ratio up through its threshold. 4.497:1 fails 4.5:1; 2.96:1 fails 3:1.
+
+**Dark glass, light text, worst-case white backdrop** (a blown-out photo, a light-mode page behind). Fill `#14161C` = rgb(20, 22, 28). The shipped dark `--sp-panel` is `rgba(22,24,30,α)` = `#16181E`, two 8-bit steps lighter; it shifts every ratio below by at most 0.35 of a point and changes no conclusion, so both are quoted where it matters.
+
+- **α = 0.585** → composite `rgb(117.5, 118.7, 122.2)` → `L = 0.18350`. Against pure white text: `1.05 / 0.23350` = **4.497:1 — fails**. This is the round-up trap: it is not "4.5:1".
+- The exact 4.5:1 crossing against pure white text is **α = 0.5853**. Against the ink token actually paired with dark glass, `--sp-ink-1` dark `#F5F6FA` (`L = 0.92226`), it is **α = 0.6082**; with the `#16181E` token fill, **α = 0.6135**.
+- **α = 0.62** → composite `rgb(109.3, 110.5, 114.3)` → `L = 0.15760` → **5.06:1** against white, **4.68:1** against `#F5F6FA` (4.60:1 with the `#16181E` fill). First two-decimal step that passes with margin.
+- **α = 0.72** (the shipped `--sp-panel`) → composite `rgb(85.8, 87.2, 91.6)` → `L = 0.09589` → `1.05 / 0.14589` = **7.20:1** against white, **6.66:1** against `#F5F6FA`. Passes AA and AAA for body text.
+- **α = 0.83** → `L = 0.04762` → **10.76:1** / **9.96:1**. Not wrong, just more than twice the headroom AA asks for.
+- **α = 0.90** (`--sp-panel-legible` dark) → `L = 0.02661` → **12.69:1** against `#F5F6FA`.
+
+So the honest rule for a backdrop you do not control is **α ≥ 0.62 for dark glass carrying light body text** — not 0.83. The 0.72 default is not the compromise it looks like; against pure white text it already clears AAA (7.20:1). Against the real `#F5F6FA` ink it reaches 6.66:1 — AAA needs α ≥ 0.7335 there, so 0.72 is AA with a wide margin and just short of AAA.
+
+**Light glass, dark text, worst-case black backdrop.** This is where luminance-averaging does real damage. A white fill at alpha α over black composites to `rgb(255α, 255α, 255α)` — its luminance is *not* α, it is the sRGB transfer function applied to α. With `--sp-ink-1` light `#101014` (`L = 0.00531`):
+
+- **α = 0.20** → composite `rgb(51, 51, 51)` → `L = 0.03311` → `0.08311 / 0.05531` = **1.50:1**. The luminance-averaging model claims 4.52:1 for exactly this case. Anyone who trusted it shipped body text at a third of the contrast they believed they had.
+- **α = 0.40** → `rgb(102,102,102)` → `L = 0.13287` → **3.31:1** — large text only, never body copy.
+- **α = 0.483** → `L = 0.19864` → **4.495:1 — still fails.** The exact crossing is **α = 0.4833**; α = 0.484 → **4.51:1**.
+- **α = 0.60** → `L = 0.31855` → **6.66:1**.
+- **α = 0.72** (`--sp-panel` light) → `L = 0.47700` → **9.53:1**.
+- **α = 0.92** (`--sp-panel-legible` light) → `L = 0.82757` → **15.87:1**.
+
+Light glass is still the more forgiving polarity, but its floor is **α ≥ 0.49**, not 0.20. Keep **α ≥ 0.60** for light glass carrying body copy — below that the backdrop imagery stays legible *through* the text, a real failure the ratio does not capture — and raise to 0.92 over photography.
 
 **Focus-visible strategy.** A single outline is not enough on glass because the outline colour may match either the panel or the backdrop. Use a two-ring pattern: an inner 1px `rgba(255,255,255,.9)` ring inside the border box and an outer 3px solid brand ring at 3px offset. Never animate focus rings and never rely on the depth lift alone — a keyboard user who cannot perceive depth gets nothing.
 
@@ -1190,8 +1212,9 @@ Light glass is more forgiving. White fill at alpha α over a black backdrop comp
 
 **Pass/fail checklist.**
 
-- [ ] Every glass surface carrying text measures ≥ 4.5:1 against the *worst-case* backdrop, not the design mock's backdrop.
-- [ ] Panel edges that convey boundaries measure ≥ 3:1 (1.4.11).
+- [ ] Every glass surface carrying text measures ≥ 4.5:1 against the *worst-case* backdrop, not the design mock's backdrop — composited **per channel in gamma-encoded sRGB** (`C = α·C_fill + (1−α)·C_bd`), never by averaging luminances, and never rounded up through the threshold.
+- [ ] Over an uncontrolled backdrop, dark glass under light body text is at **α ≥ 0.62** and light glass under dark body text at **α ≥ 0.60** (contrast floor 0.49; 0.60 is the legibility floor).
+- [ ] Panel edges that convey boundaries measure ≥ 3:1 (1.4.11) — `rgba(16,16,20,0.45)` over a light panel, not 0.42.
 - [ ] Every draggable/resizable panel has a keyboard and single-tap alternative (2.5.7).
 - [ ] Focused elements are never obscured by an orbiter, dialog or sticky depth layer (2.4.11).
 - [ ] Orbiter hover targets include the 20px gap; content is dismissible with Escape (1.4.13).
@@ -1265,7 +1288,7 @@ Light glass is more forgiving. White fill at alpha α over a black backdrop comp
 | Quantise depth to the six-step ladder (0.1 / 16 / 24 / 32 / 40 / 56) so hierarchy is countable | Assign arbitrary `translateZ` values per component until nothing reads as a system |
 | Counter-scale by `1 − z / perspective` so apparent size stays constant | Let elements grow as they come forward, which reads as a zoom, not a depth |
 | Put `perspective` on one stage element and keep `position: fixed` chrome outside it | Wrap the whole `<body>` in a perspective context and then wonder why the sticky header broke |
-| Compute glass alpha from worst-case backdrop luminance (≥ 0.83 for white-on-dark) | Pick 0.7 because it looked right over the one gradient in the mock |
+| Composite fill over worst-case backdrop **per channel in sRGB**, then derive alpha (≥ 0.62 dark glass / ≥ 0.60 light glass, arbitrary backdrop) | Average the fill and backdrop *luminances* — it overstates light-on-dark contrast by 3× — or pick 0.7 because it looked right over the one gradient in the mock |
 | Size targets at 44px pointer / 60px gaze with 8px minimum separation | Shrink orbiter buttons to keep the capsule slim and land under 24px |
 | Give every draggable or resizable panel a keyboard and single-tap alternative (2.5.7) | Ship `movable() / resizable()` as the only way to reposition anything |
 | Cap parallax at 12px translate and 4° tilt, and detach the listener under reduced-motion | Bind a 60px parallax to scroll and call the reduced-motion media query "handled" because you zeroed a variable |
@@ -1348,7 +1371,7 @@ Sibling filenames below are taken from the canonical index in [./README.md](./RE
 | `material` | `glass` \| `solid` | `glass` |
 | `a11yTarget` | `AA` \| `AAA` | `AA` |
 
-`target: headset` forces 60px minimum targets, the 41° content cone and a 14px type floor. `backdropControl: arbitrary` forces panel alpha ≥ 0.83 (dark) / ≥ 0.60 (light) and caps `intensity` at 45. `density: compact` is rejected outright when `target` includes `headset`.
+`target: headset` forces 60px minimum targets, the 41° content cone and a 14px type floor. `backdropControl: arbitrary` forces panel alpha ≥ 0.62 (dark) / ≥ 0.60 (light — the contrast floor is 0.49, but 0.60 is the legibility floor from §7) and caps `intensity` at 45. `density: compact` is rejected outright when `target` includes `headset`.
 
 **Outputs:**
 
@@ -1359,7 +1382,7 @@ Sibling filenames below are taken from the canonical index in [./README.md](./RE
 
 **Validation checklist the skill self-runs:**
 
-1. **Contrast.** For each glass surface, composite `α·L_fill + (1−α)·L_bd` at `L_bd = 0` and `L_bd = 1`, and require ≥ 4.5:1 for body text and ≥ 3:1 for ≥ 24px/bold text and for boundary-conveying edges. Fail the build if any surface fails at either extreme when `backdropControl: arbitrary`.
+1. **Contrast.** For each glass surface, composite **per 8-bit channel in gamma-encoded sRGB** — `C = α·C_fill + (1−α)·C_bd` at `C_bd = 0` and `C_bd = 255` — *then* linearise and compute `L`, and require ≥ 4.5:1 for body text and ≥ 3:1 for ≥ 24px/bold text and for boundary-conveying edges. The validator must reject any implementation that interpolates luminances (`α·L_fill + (1−α)·L_bd`); that model overstates light-fill-on-dark-backdrop contrast by roughly 3× and is the specific bug this rule exists to catch. Truncate, never round, when comparing to a threshold. Fail the build if any surface fails at either extreme when `backdropControl: arbitrary`.
 2. **Target size.** Assert every interactive element sizes from `--sp-target-pointer` (44 CSS px) and from `--sp-target-gaze` (60 px) under `(pointer: coarse)` rather than from a literal; hard-fail below `--sp-target-floor` (24 px, SC 2.5.8). Assert ≥ `--sp-gap-target` (8px) separation.
 3. **Dragging alternatives.** Detect any drag-initiated reposition/resize and require a keyboard handler plus a visible non-drag control (SC 2.5.7).
 4. **Focus.** Assert a `:focus-visible` rule with ≥ 3:1 ring contrast that is not the depth lift alone, and check no floating layer can obscure a focused element (SC 2.4.11).
@@ -1377,10 +1400,10 @@ Sibling filenames below are taken from the canonical index in [./README.md](./RE
 | `--sp-perspective` | `none` (flat, shadows only) | `800px` | Camera distance; lower = stronger foreshortening |
 | `depthScale` (ladder multiplier) | `0.25×` → 4 / 6 / 8 / 10 / 14 px | `2×` → 32 / 48 / 64 / 80 / 112 px | Scales steps 1-5 of the six-step ladder; `--sp-z-0` stays at `0.1px` |
 | `--sp-parallax-translate` / `--sp-parallax-tilt` | `0px` / `0deg` | `24px` / `8deg` | Pointer and scroll parallax amplitude |
-| Panel alpha / blur | `1.00` / `0px` (fully opaque) | `0.55` / `48px` | Material translucency; hard-clamped by the contrast validator |
+| Panel alpha / blur | `1.00` / `0px` (fully opaque) | `0.55` / `48px` | Material translucency. The 0.55 end is below the arbitrary-backdrop floor — dark glass at α 0.55 over white composites to `rgb(125.8, 126.9, 130.2)`, only **3.71:1** under `#F5F6FA` — and is reachable only with `backdropControl: owned`; the contrast validator hard-clamps it to 0.62 / 0.60 otherwise |
 | Shadow multiplier | `0.4×` alpha, `0.6×` blur radius | `1.6×` alpha, `1.4×` blur radius | Ambient/contact shadow strength |
 
-Default `intensity: 55` yields perspective 1200px, the 1× ladder, 12px/4° parallax, alpha 0.83 (arbitrary backdrop) or 0.72 (owned), and 1× shadows.
+Default `intensity: 55` yields perspective 1200px, the 1× ladder, 12px/4° parallax, alpha 0.72 (arbitrary backdrop — the §7 floor is 0.62 dark / 0.49 light, so 0.72 carries real margin) or 0.62 (owned and luminance-capped), and 1× shadows.
 
 **The ladder multiplier is not a token.** `depthScale`, like the panel-alpha and shadow multipliers beside it, is applied by the generator when it emits §4's block: it multiplies the `--sp-z-1` … `--sp-z-5` literals, re-derives `--sp-k-1` … `--sp-k-5` from `1 − z / perspective`, and rescales the shadow pairs to match, all before the CSS is written. It is deliberately not a `--sp-*` custom property. Two reasons. The counter-scale and shadow ladders are emitted as literals, so a unit the page could change at runtime would move the panels without moving their counter-scale or their shadows, breaking the apparent-size invariant §5 depends on — and at intensity 0 `--sp-perspective` is `none`, so the counter-scale cannot be recovered as a live `calc()` either. Second, the ladder is not a uniform unit series to begin with: `--sp-z-0` is a `0.1px` sentinel that exists to force a stacking context rather than a distance, and 16 / 24 / 32 / 40 / 56 are the Android XR `SpatialElevation` dp values — 8px × 2, 3, 4, 5, 7, skipping 6 — so a `calc(N × unit)` rewrite would invent a regularity the source does not have and cut the values loose from their provenance. That is also why the row above enumerates five numbers for a six-step ladder: step 0 is not scaled. Everything that *is* a token appears in §4's table and CSS block.
 
@@ -1388,7 +1411,7 @@ Default `intensity: 55` yields perspective 1200px, the 1× ladder, 12px/4° para
 
 - Parallax or scroll-driven depth without a `prefers-reduced-motion` guard that detaches the listener.
 - Depth as the only encoding of a state, a selection, or a hierarchy relationship.
-- Glass panels with white body text below α 0.83 when `backdropControl: arbitrary`.
+- Glass panels with light body text below α 0.62, or with dark body text below α 0.49, when `backdropControl: arbitrary` — and any contrast figure derived by averaging luminances rather than compositing per channel.
 - Drag-only panel movement or resizing with no keyboard or single-tap alternative.
 - Text planes rotated more than 12° from the viewing plane (subpixel antialiasing and legibility collapse).
 - More than three nested `preserve-3d` contexts, or `preserve-3d` on a scrolling list container.

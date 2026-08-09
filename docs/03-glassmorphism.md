@@ -871,15 +871,15 @@ This is the style's weak point and the reason its `a11y_risk` is **high**. Every
 
 Take a panel at `rgba(255,255,255,0.12)` with white text. Composite the fill over the backdrop, then compute contrast against the composite — not against the panel colour and not against the raw backdrop.
 
-- Backdrop `#0B0B12` (relative luminance ≈ 0.0035). Composite ≈ `#282833`, L ≈ 0.0220. White text: **14.6:1**. Comfortable pass.
-- Backdrop `#7DD3FC` (a perfectly ordinary sky-blue in a mesh gradient, L ≈ 0.580). Composite ≈ `#8DD8FC`, L ≈ 0.620. White text: **1.57:1**. Catastrophic fail.
+- Backdrop `#0B0B12` (relative luminance ≈ 0.0035). Composite ≈ `#28282E`, L ≈ 0.0217. White text: **14.6:1**. Comfortable pass.
+- Backdrop `#7DD3FC` (a perfectly ordinary sky-blue in a mesh gradient, L ≈ 0.580). Composite ≈ `#8DD8FC`, L ≈ 0.618. White text: **1.57:1**. Catastrophic fail.
 
 Same panel, same text, a 9.3× swing in contrast depending on where the user scrolled. That is the whole problem in two numbers.
 
 Three ways to make it deterministic, in order of preference:
 
-1. **Clamp the ground.** If you control the background and cap its brightest pixel behind body text, the maths closes. With a 12% white fill, white body text clears 4.5:1 as long as the backdrop stays at or below roughly `#5F5F5F` (sRGB 95). For the 3:1 large-text/UI threshold, the ceiling is roughly `#868686` (sRGB 134). Enforce this by putting a `linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.55))` darkening layer between the ground and the glass.
-2. **Nest a text scrim.** Wrap the text block in a child with `background: rgba(9,9,14,0.56)`. That number is not arbitrary: to guarantee white text at 4.5:1 against a *worst-case pure white* backdrop, the composited surface luminance must be ≤ 0.183, which for a `rgb(10,10,15)` tint requires **α ≥ 0.555**. Round to 0.56. Anything below that is a bet on the backdrop.
+1. **Clamp the ground.** If you control the background and cap its brightest pixel behind body text, the maths closes. With a 12% white fill, white body text clears 4.5:1 as long as the backdrop stays at or below roughly `#646464` (sRGB 100). For the 3:1 large-text/UI threshold, the ceiling is roughly `#868686` (sRGB 134). Enforce this by putting a `linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.55))` darkening layer between the ground and the glass.
+2. **Nest a text scrim.** Wrap the text block in a child with `background: rgba(9,9,14,0.56)`. That number is not arbitrary: to guarantee white text at 4.5:1 against a *worst-case pure white* backdrop, the composited surface luminance must be ≤ 0.183, which for a `rgb(10,10,15)` tint requires **α ≥ 0.558** (the crossing is α = 0.55734; at 0.555 the composite is L = 0.1852 and white text reaches only 4.46:1, which fails). Round to 0.56. Anything below that is a bet on the backdrop.
 3. **Raise the panel fill itself** to 0.56+ and accept that it is now a tinted card with a blur, not glass. For dense reading surfaces this is the correct trade.
 
 Automated tools will not catch any of this. Axe, Lighthouse and Figma's contrast plugins compute against the declared `background-color` and cannot see what `backdrop-filter` sampled. You must test manually: screenshot the composited pixels at three scroll positions and sample.
@@ -991,7 +991,7 @@ Do **not** reach for `will-change: backdrop-filter` or `transform: translateZ(0)
 | --- | --- |
 | Pair every `backdrop-filter: blur()` with `saturate(140–180%)` so the blurred backdrop keeps its chroma. | Don't ship blur alone — desaturated grey mush reads as a rendering bug, not as glass. |
 | Always ship a 1px border at 16–30% alpha (or a masked gradient hairline). | Don't rely on the drop shadow for the edge — `forced-colors: active` strips shadows and the pane loses its boundary entirely. |
-| Put body text on a nested scrim at ≥ 0.56 alpha, or clamp the ground so the brightest pixel behind text stays ≤ `#5F5F5F`. | Don't place body text directly on a 10–14% fill over an uncontrolled backdrop — contrast can swing from 14.6:1 to 1.6:1 on the same panel. |
+| Put body text on a nested scrim at ≥ 0.56 alpha, or clamp the ground so the brightest pixel behind text stays ≤ `#646464`. | Don't place body text directly on a 10–14% fill over an uncontrolled backdrop — contrast can swing from 14.6:1 to 1.6:1 on the same panel. |
 | Wrap the translucent styles in `@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))` with an opaque default outside it. | Don't declare the low-alpha background unconditionally and hope — a browser without blur renders unreadable text on a see-through box. |
 | Ship `-webkit-backdrop-filter` alongside the unprefixed property. | Don't drop the prefix "because Safari 18 unprefixed it" — Safari 15–17 is still a real install base and only understands the prefixed form. |
 | Scale blur radius with elevation: 8 / 12 / 20 / 28 / 40px for levels 0–4. | Don't use one blur value everywhere — uniform blur flattens the depth hierarchy the style exists to create. |

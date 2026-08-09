@@ -45,7 +45,7 @@ Everything else in the style (gradients, noise, leather, brushed metal, letterpr
 - **Three-stop vertical gradient with ~15% luminance spread** — lightest stop at the top, midpoint around 45%, darkest at the bottom. Flat fills read as flat no matter how good the shadows are.
 - **Letterpress / emboss type** — dark ink plus `text-shadow: 0 1px 0 rgba(255,255,255,.7)` on light surfaces; inverted (`0 -1px 0 rgba(0,0,0,.5)`) on dark ones. Costs nothing, sells the material instantly.
 - **Warm, desaturated material palette** — tans, leather browns, brushed-steel greys, felt greens. Never `#fff` and never `#000`; real materials have a hue. Saturation typically 8-25%, lightness 82-95% for faces.
-- **Fine grain, not visible texture** — SVG `feTurbulence` `fractalNoise`, `baseFrequency` 0.9, `numOctaves` 2, layer opacity **0.04-0.06**. Above 0.10 it stops reading as grain and starts reading as dirt. *Three docs in this set use inline-SVG grain with deliberately different parameters, and the difference is the point: skeuomorphism wants a tight, high-frequency machining grain (0.9 / 2 octaves, 0.04-0.06) that disappears at arm's length; [./03-glassmorphism.md](./03-glassmorphism.md) uses a softer 0.8 / 4 at 0.02-0.05 to break up backdrop-blur banding without fogging the glass; [./06-maximalism.md](./06-maximalism.md) uses 0.8 / 3 at 0.04-0.12 because there the grain is a visible print-texture statement, not a surface finish.*
+- **Fine grain, not visible texture** — SVG `feTurbulence` `fractalNoise`, `baseFrequency` 0.9, `numOctaves` 2, layer opacity **0.04-0.06 light, to 0.08 dark**. Above 0.10 it stops reading as grain and starts reading as dirt. *Three docs in this set use inline-SVG grain with deliberately different parameters, and the difference is the point: skeuomorphism wants a tight, high-frequency machining grain (0.9 / 2 octaves, 0.04-0.06) that disappears at arm's length; [./03-glassmorphism.md](./03-glassmorphism.md) uses a softer 0.8 / 4 at 0.02-0.05 to break up backdrop-blur banding without fogging the glass; [./06-maximalism.md](./06-maximalism.md) uses 0.8 / 3 at 0.04-0.12 because there the grain is a visible print-texture statement, not a surface finish.*
 - **Hairline material border** — 1px border one to two steps darker than the darkest gradient stop, so the object has a physical edge rather than a soft fade.
 - **Radius that matches the imagined material** — 8-12 px for moulded plastic and metal, 2-4 px for stamped/machined parts, 16-24 px for rubber and soft goods. Radius is a material statement, not a brand token.
 - **Specular hotspot on curved surfaces** — knobs, toggles, and pill switches get an elliptical white highlight at roughly 25-35% from the top, `opacity: .35-.55`, blurred 4-8 px. Flat rectangles do not get one.
@@ -848,7 +848,7 @@ Relative luminance for the core tokens (WCAG formula, sRGB):
 | `#7a6a4e` strong border | 0.1500 | `#e8e0d2` face | **4.01:1** |
 | `#7a6a4e` strong border | 0.1500 | `#d8cfbe` chassis (L 0.6296) | **3.40:1** |
 | `#b8a98e` hairline | 0.4052 | `#e8e0d2` face | 1.76:1 — **decorative only** |
-| `#ede4d2` dark ink | 0.7820 | `#2e2920` dark face (L 0.0227) | **11.4:1** |
+| `#ede4d2` dark ink | 0.7814 | `#2e2920` dark face (L 0.0227) | **11.4:1** |
 | `#8a7a5e` dark border | 0.2013 | `#2e2920` dark face | **3.46:1** |
 
 ### Forced colors / Windows High Contrast
@@ -952,7 +952,7 @@ Multi-layer `box-shadow`, `linear-gradient`, `text-shadow`, and SVG data-URI bac
 | Fix one light source at the top and apply it to every element, including recessed ones (which invert the stack). | Mix light directions — a top-lit button next to a bottom-lit card destroys the illusion instantly. |
 | Use the full four-layer stack: contact + ambient + inset bevel + inset lip. | Ship a single `0 2px 4px rgba(0,0,0,.2)` and call it skeuomorphic; one shadow reads flat. |
 | Give every control a real 1 px border at ≥ 3:1 against both adjacent colours. | Rely on the bevel highlight as the control boundary — it vanishes in forced-colors mode and fails 1.4.11. |
-| Keep grain at 0.04-0.06 opacity from an inline SVG `feTurbulence` tile. | Push noise past 0.10 or ship 90 KB photographic texture PNGs; the first reads as dirt, the second as bloat. |
+| Keep grain at 0.04-0.06 opacity (to 0.08 on dark surfaces) from an inline SVG `feTurbulence` tile. | Push noise past 0.10 or ship 90 KB photographic texture PNGs; the first reads as dirt, the second as bloat. |
 | Use warm, hue-bearing material colours (tans, steels, felts). | Use `#ffffff` and `#000000` — no physical material is pure white or pure black. |
 | Animate `transform`, `translate`, `opacity`, `filter`. | Animate `box-shadow`, `background-image`, or gradient stops. |
 | Make the press state travel 1 px down *and* invert to inset shadows. | Change only colour on press; the affordance is the movement plus the light inversion. |

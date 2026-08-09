@@ -1023,7 +1023,7 @@ WCAG relative luminance `L = 0.2126R + 0.7152G + 0.0722B` (linearised sRGB); rat
 - Generator default `#e0e0e0` vs `#bebebe` = **1.41:1**; vs `#ffffff` = **1.32:1**.
 - Dark surface `#2a2e39` → L = 0.0274. `#17191f` = **1.30:1**; `#3d4353` = **1.37:1**.
 
-SC 1.4.11 requires **3:1**. Every neumorphic shadow pair in normal use lands between 1.2:1 and 1.7:1 — roughly **half** the required ratio. To reach 3:1 on `#e6e7ee` you need a boundary colour at or below **#858585**; the recommended `#7c7f93` gives 3.20:1. On `#e0e0e0` the 3:1 threshold is **#7d7d7d** (3.12:1); `#808080` gives 2.99:1 and fails. There is no combination of blur, distance, or luminance delta that gets a same-hue shadow to 3:1 while still looking neumorphic. **The shadow cannot be the affordance. A border, an accent fill, or a text label must be.**
+SC 1.4.11 requires **3:1**. Every neumorphic shadow pair in normal use lands between 1.2:1 and 1.7:1 — roughly **half** the required ratio. To reach 3:1 on `#e6e7ee` you need a boundary colour at or below **#848484** (3.03:1; `#858585` is the first grey that fails, at 2.99:1); the recommended `#7c7f93` gives 3.20:1. On `#e0e0e0` the 3:1 threshold is **#7d7d7d** (3.12:1); `#808080` gives 2.99:1 and fails. There is no combination of blur, distance, or luminance delta that gets a same-hue shadow to 3:1 while still looking neumorphic. **The shadow cannot be the affordance. A border, an accent fill, or a text label must be.**
 
 ### WCAG 2.2 criteria this style tends to violate
 

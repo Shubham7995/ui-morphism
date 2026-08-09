@@ -110,11 +110,11 @@ Every technical term used across the ten style documents, alphabetical. Each ent
 
 **`GlassEffectContainer`** — the SwiftUI construct that groups sibling glass views so they can merge and morph. Its real reason for existing is architectural rather than performance-related: Apple's renderer cannot sample glass with glass, so siblings must share one container to blend. *Docs: 08, 10.*
 
-**Grain** — a fine noise overlay, typically an `feTurbulence` layer at 2–8% opacity, used to kill gradient banding and add the microtexture real materials have. Skeuomorphism declares 0.05 light / 0.07 dark inside a stated 0.04–0.06 band; glassmorphism declares 0.035 light / 0.028 dark inside a 0.02–0.05 band; maximalism declares 0.08 light / 0.05 dark inside a 0.04–0.12 range. Above roughly 0.10 it stops reading as grain and starts reading as dirt or compression artefacts. *Docs: 01, 03, 06.*
+**Grain** — a fine noise overlay, typically an `feTurbulence` layer at 2–8% opacity, used to kill gradient banding and add the microtexture real materials have. Skeuomorphism declares 0.05 light / 0.07 dark against a stated 0.04–0.06 light band that its own checklist widens to 0.08 on dark surfaces; glassmorphism declares 0.035 light / 0.028 dark inside a 0.02–0.05 band; maximalism declares 0.08 light / 0.05 dark inside a 0.04–0.12 range. Above roughly 0.10 it stops reading as grain and starts reading as dirt or compression artefacts. *Docs: 01, 03, 06.*
 
 ## H
 
-**Hairline border** — a 1px (or 0.5px at ≥ 2dppx) boundary at low alpha, used to define an edge without adding elevation. Critical distinction in this set: a *decorative* hairline (`rgba(0,0,0,0.06)` on `#f5f5f7` = 1.15:1; `#E5E5E5` on white = 1.26:1) is legal as ornament and illegal as a control's only boundary, which is why every style needs a second `border-strong` token clearing 3:1. *Docs: 01, 02, 03, 05, 09.*
+**Hairline border** — a 1px (or 0.5px at ≥ 2dppx) boundary at low alpha, used to define an edge without adding elevation. Critical distinction in this set: a *decorative* hairline (`rgba(0,0,0,0.06)` on `#f5f5f7` = 1.14:1; `#E5E5E5` on white = 1.26:1) is legal as ornament and illegal as a control's only boundary, which is why every style needs a second `border-strong` token clearing 3:1. *Docs: 01, 02, 03, 05, 09.*
 
 **Halftone** — a dot-pattern print texture, used in maximalism both as a patterned ground and as a photographic cut-out treatment. *Doc: 06.*
 
@@ -224,7 +224,7 @@ Every technical term used across the ten style documents, alphabetical. Each ent
 
 **`saturate()`** — the filter function used to restore chroma that Gaussian blur averages toward grey. 140–180% for glassmorphism, 160–190% for Liquid Glass, 165% for spatial panels. Below about 130% the material reads grey and dead. This is the web analogue of *vibrancy*. *Docs: 03, 08, 10.*
 
-**Scrim** — an opaque or semi-opaque layer inserted between a variable backdrop and foreground text to guarantee contrast. Load-bearing maths: to guarantee white body text at 4.5:1 against a worst-case white backdrop, a dark scrim needs alpha ≥ 0.555, which means a "real" glass panel at 10–14% fill alpha can never safely carry body text without one. Bento requires `rgba(0,0,0,0.55)` minimum behind text over photography. *Docs: 03, 08, 09.*
+**Scrim** — an opaque or semi-opaque layer inserted between a variable backdrop and foreground text to guarantee contrast. Load-bearing maths: to guarantee white body text at 4.5:1 against a worst-case white backdrop, a dark scrim needs alpha ≥ 0.558, which means a "real" glass panel at 10–14% fill alpha can never safely carry body text without one. Bento requires `rgba(0,0,0,0.55)` minimum behind text over photography. *Docs: 03, 08, 09.*
 
 **Shadow stack** — an ordered set of `box-shadow` layers composing one effect. Skeuomorphism's is four (contact, ambient, bevel, lip); claymorphism's is three (light inset, dark inset, hue-matched drop) plus an optional rim; neumorphism's is exactly two, mirrored. Layers paint in declaration order with the first on top. *Docs: 01, 02, 04.*
 

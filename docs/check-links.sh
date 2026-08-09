@@ -11,13 +11,15 @@
 #   5. no phantom token: every name in the §4 token table is assigned somewhere
 #      in the doc. Assigned outside §4 (a §5 runtime style object, say) is a
 #      `note`, not a failure; assigned nowhere is a PHANTOM failure. The table
-#      is also held against a degeneracy tripwire — NOT a coverage requirement;
-#      see the long note at the check itself for exactly how weak that is
+#      is also held against a per-doc row-coverage RATCHET — a no-regression
+#      baseline, NOT a coverage guarantee; see the note at the check itself
 #   6. theme-selector discipline: guarded `:root[data-theme=…]`, never a bare one
 #   7. the `target`-group token is referenced by name in §7, not restated as px
 #   8. every markdown file quotes only tokens the doc owning that prefix declares
 #   9. dead tokens: declared but never consumed by a var() (warning only)
-#  10. every contrast figure recomputes from the WCAG maths (check-contrast.py)
+#  10. every contrast figure recomputes from the WCAG maths (check-contrast.py).
+#      If python3 is absent the figures go unchecked, and an unchecked set is a
+#      failure, not a pass — the run reports SKIPPED and exits non-zero
 #
 # Exits non-zero once, after printing every offence in every category.
 
@@ -64,6 +66,49 @@ owner_of() {
 
 # Every short prefix, in doc order. Kept in step with prefix_of / owner_of.
 prefixes='sk nm glass clay min max nb lg bento sp'
+
+# COMMITTED §4 ROW-COVERAGE BASELINE for check 5, in permille — the measured
+# ratio of "§4 table rows naming at least one token" to "distinct properties the
+# §4 CSS declares". This is a RATCHET: a doc may not drop below its own recorded
+# figure (less ROW_SLACK), and when a doc rises the check prints a `ratchet` note
+# asking for the number here to be raised. It is not a skip-list — a doc with no
+# entry FAILS. Re-measure and edit the number here; never lower one silently.
+#
+# See the long note at check 5 for why this is per-doc rather than one global
+# floor, and for exactly what it does and does not guarantee.
+row_baseline_of() {
+  case "$1" in
+    01-*) echo 426  ;;   # 26 rows / 61 declared
+    02-*) echo 689  ;;   # 40 / 58
+    03-*) echo 565  ;;   # 26 / 46
+    04-*) echo 514  ;;   # 35 / 68
+    05-*) echo 500  ;;   # 35 / 70
+    06-*) echo 591  ;;   # 42 / 71
+    07-*) echo 370  ;;   # 23 / 62
+    08-*) echo 787  ;;   # 37 / 47
+    09-*) echo 1000 ;;   # 42 / 42
+    10-*) echo 551  ;;   # 32 / 58
+    *)    echo ''   ;;
+  esac
+}
+
+# Permille of churn tolerated below a baseline before the ratchet bites. Derived
+# from the measurements, not from the current minimum. Two edits have to be told
+# apart, and 25 is the width that separates them:
+#
+#   * RETIRING a token — dropping it from the table AND from the §4 CSS — is
+#     ordinary churn. Both terms fall, so the ratio barely moves: at most 10
+#     permille per token across the ten docs (worst cases 01, 03, 07). 25
+#     absorbs two retirements on every doc, and in practice 2-4 before firing
+#     (doc 09, at 42/42, stays at 1.000 however many it retires).
+#   * BLANKING a row — prosifying a Token cell while the property stays declared
+#     — is the regression this exists to catch. Only the numerator falls, so it
+#     moves the ratio 2-24x harder. Measured, every one of the ten docs absorbs
+#     exactly one blanked row and fires on the second. That uniformity is the
+#     point: the old global floor let doc 07 blank 7 rows and doc 09 blank 31.
+#
+# This is not a floor on coverage; it is the deadband around a doc's own figure.
+ROW_SLACK=25
 
 # The four docs that reference every style but own no prefix of their own.
 xrefs=(00-comparison-matrix.md README.md GLOSSARY.md MARKETPLACE.md)
@@ -306,35 +351,63 @@ for f in "${docs[@]}"; do
   anywhere=$(grep -o -- "--${p}-[A-Za-z0-9_-]*[\"']\{0,1\}[[:space:]]*:" "$f" \
     | sed 's/[^A-Za-z0-9_-]*$//' | sort -u)
 
-  # DEGENERACY TRIPWIRE — deliberately weak, and stated as such.
+  # ROW-COVERAGE RATCHET — a no-regression baseline, NOT a coverage guarantee.
   #
   # The numerator counts table ROWS that name at least one real token, not
   # unique names. A row is the unit the table is written in; unique names let a
   # multi-token cell carry the whole column. Doc 02 spends 58 names over 40
-  # rows, so the old numerator over-reported it by 45% and the tripwire could be
-  # walked past by prosifying rows whose surviving neighbours named two apiece.
+  # rows, so a unique-name numerator over-reported it by 45% and the check could
+  # be walked past by prosifying rows whose neighbours named two apiece.
   #
   # Row coverage across the ten docs, measured — rows naming a token / §4 CSS
   # declarations:
   #
-  #     01 26/61 .43   02 40/58 .69   03 26/46 .57   04 35/68 .51   05 35/70 .50
-  #     06 42/71 .59   07 23/62 .37   08 37/47 .79   09 42/42 1.0   10 32/58 .55
+  #     01 26/61 .426  02 40/58 .689  03 26/46 .565  04 35/68 .514  05 35/70 .500
+  #     06 42/71 .591  07 23/62 .370  08 37/47 .787  09 42/42 1.000 10 32/58 .551
   #
-  # The floor stays at a quarter, and the honest reason is that no coverage
-  # number is derivable from that spread. It runs 0.37 to 1.00, a 2.7x range
-  # driven by how much of a token set each doc writes as family-stem rows
-  # (`--nb-shadow-*`), which the extraction drops on purpose. That is an
-  # authorial style choice, not a quality signal. Any floor in (0.25, 0.37] is
-  # picked by reading the current minimum and sliding just underneath it, which
-  # is a suppression list with extra steps; a quarter predates the measurement
-  # and is not fitted to it.
+  # A previous revision floored this globally at a quarter and justified the
+  # looseness by claiming the 0.370–1.000 spread came from docs writing large
+  # families as one stem row (`--nb-shadow-*`), which the extraction drops on
+  # purpose. That claim is false, and measurably so: across all ten §4 Token
+  # columns the number of cells containing a `*` is ZERO. No doc in this set
+  # writes a family-stem row at all, so no doc is penalised for doing it and the
+  # spread needs another explanation.
   #
-  # So: what this catches is a column that names (almost) nothing. What it does
-  # NOT catch is a table that quietly stops documenting a third of its tokens.
-  # Doc 07 — the tightest doc — would have to fall from 23 naming rows to 15
-  # before this fires, and doc 09 from 42 to 10. Do not read a pass here as
-  # "§4 documents its tokens"; only the PHANTOM half of this check says that,
-  # and it says it about names the table does print, not about names it omits.
+  # The real driver is how many properties a doc's §4 CSS declares that its
+  # table never mentions in any form. Measured, untabled declarations run 0 for
+  # docs 02, 08 and 09 — which table everything they declare — up to 37 for doc
+  # 01, and they are dominated by enumerated scale steps and internal derived
+  # properties: `--sk-s-1…7`, `--sk-fs-100…700`, `--clay-sp-1…14`,
+  # `--max-t-sm…3xl`, `--nb-space-2…8`, alongside helpers like `--sk-press-inner`
+  # and `--clay-shadow-h/l/s`. Whether a doc enumerates a scale in CSS while
+  # documenting only its semantic tokens is a fixed, per-doc property of how that
+  # doc is built. It is stable across edits and it differs 2.7x between docs.
+  #
+  # That is precisely why a single global floor cannot do the job asked of it.
+  # It has to bite on doc 02 at 15 naming rows (0.259) while clearing doc 07 at
+  # 0.370, so it must land in (0.259, 0.370] — a band whose only landmark is the
+  # current minimum. Picking a number there IS reading the tightest doc and
+  # sliding underneath it, which is a suppression list with extra steps. It also
+  # distributes the guarantee absurdly: at a 0.30 floor doc 07 could shed 4 of
+  # 23 rows (17%) before failing while doc 09 could shed 29 of 42 (69%).
+  #
+  # So the floor is per-doc and committed, in row_baseline_of() above, with a
+  # ROW_SLACK deadband derived from the size of one token's churn rather than
+  # from the current minimum. Measured, every one of the ten docs now absorbs
+  # exactly one blanked row and fails on the second — the same guarantee for all
+  # ten, instead of one that scales with how loosely a doc happened to be
+  # written (old global floor: 7 blanked rows for doc 07, 31 for doc 09). Doc 02
+  # at 15 rows lands at 0.258 against a floor of 0.664 and fails by two and a
+  # half times over.
+  #
+  # What this now guarantees: no doc's §4 table silently documents fewer of its
+  # tokens than it did on the day the baseline was recorded. What it still does
+  # NOT guarantee, and cannot: that any baseline is itself adequate. Doc 07 is
+  # committed at 0.370, and 0.370 is a poor showing — the ratchet freezes that,
+  # it does not fix it. A pass here means "this table has not regressed", never
+  # "this table documents its token set". Only the PHANTOM half of this check
+  # speaks to correctness, and it speaks about names the table prints, not about
+  # names it omits.
   n_declared=$(printf '%s' "$declared" | grep -c .)
   n_rows=$(printf '%s\n' "$sec4" | token_column | awk -v p="$p" '
     function names_one(s,   t) {
@@ -350,14 +423,35 @@ for f in "${docs[@]}"; do
   ')
 
   # A §4 whose CSS declares nothing is itself degenerate, and used to skip the
-  # tripwire entirely — zero rows against zero declarations passed silently.
+  # ratio entirely — zero rows against zero declarations passed silently.
+  #
+  # A doc with no committed baseline FAILS. That is what keeps row_baseline_of()
+  # from becoming a skip-list: adding a doc to the set without measuring it is
+  # an offence, not an exemption.
+  base=$(row_baseline_of "$f")
   if [ "$n_declared" -eq 0 ]; then
     printf '  NODECL   %s: §4 CSS declares no --%s-… property at all\n' "$f" "$p"
     fail=1; tokens_ok=0
-  elif [ "$((n_rows * 4))" -lt "$n_declared" ]; then
-    printf '  NONAMES  %s: only %s §4 table row(s) name a token, against %s declared properties\n' \
+  elif [ -z "$base" ]; then
+    printf '  NOBASELINE %s has no committed §4 row-coverage baseline (measured %s/%s) — add one to row_baseline_of()\n' \
       "$f" "$n_rows" "$n_declared"
     fail=1; tokens_ok=0
+  else
+    permille=$((n_rows * 1000 / n_declared))
+    floor=$((base - ROW_SLACK))
+    [ "$floor" -lt 0 ] && floor=0
+    if [ "$permille" -lt "$floor" ]; then
+      printf '  NONAMES  %s: only %s §4 table row(s) name a token, against %s declared properties (%d.%03d) — below the committed baseline %d.%03d less %d.%03d slack\n' \
+        "$f" "$n_rows" "$n_declared" \
+        "$((permille / 1000))" "$((permille % 1000))" \
+        "$((base / 1000))" "$((base % 1000))" \
+        "$((ROW_SLACK / 1000))" "$((ROW_SLACK % 1000))"
+      fail=1; tokens_ok=0
+    elif [ "$permille" -gt "$((base + ROW_SLACK))" ]; then
+      printf '  ratchet  %s: §4 row coverage is now %d.%03d, above its committed baseline %d.%03d — raise it in row_baseline_of()\n' \
+        "$f" "$((permille / 1000))" "$((permille % 1000))" \
+        "$((base / 1000))" "$((base % 1000))"
+    fi
   fi
 
   while IFS= read -r t; do
@@ -550,9 +644,13 @@ fi
 # and its own closing verdict dropped, because the run has one verdict and it
 # is printed at the bottom of this file.
 #
-# python3 missing is a SKIP, and a loud one. A silent pass would mean the run
-# says "All structural checks passed" while every contrast figure in the set
-# went unread — the exact failure mode this check exists to remove.
+# python3 missing means the check did not run, and a check that did not run did
+# not pass: it is reported as SKIPPED and it FAILS the run. Printing a loud skip
+# and then exiting 0 was the same silent pass in louder type — CI reads the exit
+# code, not the log, so every contrast figure in the set went unread while the
+# build stayed green. That is the exact failure mode this check exists to remove.
+# An environment without python3 cannot verify these numbers and must say so in
+# the only channel CI listens to.
 echo "==> checking recomputed contrast figures (check-contrast.py)"
 if [ ! -f ./check-contrast.py ]; then
   echo "  MISSING  ./check-contrast.py is not on disk — contrast figures were NOT checked"
@@ -575,8 +673,10 @@ elif command -v python3 >/dev/null 2>&1; then
   fi
 else
   echo "  SKIPPED  python3 is not on PATH — NO contrast figure in this set was checked."
-  echo "  ^ this check did not run and did not pass; install python3, or run"
-  echo "    ./check-contrast.py by hand before trusting the verdict below"
+  echo "  ^ this check did not run, so it did not pass, and the run FAILS. Install"
+  echo "    python3, or run ./check-contrast.py by hand under an interpreter you"
+  echo "    do have and re-run this script before trusting any verdict"
+  fail=1
 fi
 
 if [ "$fail" -ne 0 ]; then

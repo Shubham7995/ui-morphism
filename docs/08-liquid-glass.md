@@ -85,7 +85,7 @@ Not dead, not dormant, and not a fad you can wait out on Apple platforms. On the
 | Shadow (ambient) | `--lg-shadow-ambient` | `0 8px 32px rgba(0,0,0,0.12)` | `0 8px 32px rgba(0,0,0,0.44)` | Single layer |
 | Shadow (contact) | `--lg-shadow-contact` | `0 1px 2px rgba(0,0,0,0.10)` | `0 1px 2px rgba(0,0,0,0.30)` | Keeps edges from floating |
 | Inner light | `--lg-inset` | `inset 0 1px 0 rgba(255,255,255,0.60)` | `inset 0 1px 0 rgba(255,255,255,0.22)` | Top bevel |
-| Text primary | `--lg-fg` | `#1C1C1E` | `#F2F2F7` | 10.6:1 over the default fill composite |
+| Text primary | `--lg-fg` | `#1C1C1E` | `#F2F2F7` | 10.89:1 over the default fill composite (α 0.62 white over a mid-grey B = 128, §7); the dark pair is 8.45:1 |
 | Text secondary | `--lg-fg-2` | `rgba(28,28,30,0.62)` | `rgba(242,242,247,0.66)` | Secondary only; verify per surface |
 | Accent | `--lg-accent` | `#0A84FF` | `#0A84FF` | The single accent; system blue |
 | Elevation 1 (fill) | `--lg-elev-1-fill` | `rgba(255,255,255,0.62)` | `rgba(28,28,30,0.58)` | Toolbars, tab bars. Rung 1 is the default — same value as `--lg-fill` |
@@ -614,8 +614,9 @@ Markup:
 ```html
 <!-- Every token below is registered in `@theme`, so use the GENERATED utility
      name: `animate-glass-settle`, `ease-glass`, `rounded-glass-pill`,
-     `outline-glass-accent`. Bracket syntax takes a literal value, so
-     `ease-[--ease-glass]` emits `transition-timing-function: --ease-glass`,
+     `outline-glass-accent`. Bracket syntax takes a literal value, so for an
+     easing token the bracket form emits
+     `transition-timing-function: --ease-glass`,
      which is an invalid value the browser drops — you get default easing, no
      entrance animation and no focus-ring colour, silently.
      If you do need to reference a variable directly, v4's syntax is
@@ -1001,9 +1002,9 @@ This is the highest-risk style in the set. The core problem is structural: **con
 
 Compositing a white glass fill of alpha α over a backdrop channel value `B` gives `C = 255α + B(1-α)` in sRGB 8-bit space. Relative luminance then follows the standard sRGB transfer function.
 
-- **Default fill (α = 0.62) over a mid-grey photo (B = 128):** C ≈ 176 → L ≈ 0.435. With `#1C1C1E` text (L ≈ 0.0116): **(0.485)/(0.0616) ≈ 7.9:1** — passes AA and AAA for body text. With white text: 1.05/0.485 = **2.2:1 — fails everything.**
-- **iOS 26 shipping floor (α = 0.40) over a dark photo (B = 48):** C ≈ 131 → L ≈ 0.226. White text: 1.05/0.276 = **3.8:1** (passes 1.4.3 only for large text ≥24px/18.66px bold). Black text: 0.276/0.0616 = **4.5:1**, right on the boundary. Neither foreground colour is safe — this is exactly the failure mode users reported in September 2025, and exactly why Apple raised the floor to ~0.60 in iOS 27.
-- **Practical rule:** with α ≥ 0.62 and a *known* foreground polarity, you clear 4.5:1 across the full backdrop range 0-255. Below α = 0.55 there is no single foreground colour that survives all backdrops. **0.55 is the hard floor; 0.62 is the safe default.**
+- **Default fill (α = 0.62) over a mid-grey photo (B = 128):** C = 206.74 → L ≈ 0.6222. With `#1C1C1E` text (L ≈ 0.0117): **0.6722/0.0617 ≈ 10.89:1** — passes AA and AAA for body text. With white text: 1.05/0.6722 = **1.56:1 — fails everything.**
+- **iOS 26 shipping floor (α = 0.40) over a dark photo (B = 48):** C = 130.80 → L ≈ 0.2262. White text: 1.05/0.2762 = **3.80:1** (passes 1.4.3 only for large text ≥24px/18.66px bold). `#1C1C1E` text: 0.2762/0.0617 = **4.48:1**, just under the bar. Neither foreground colour is safe — this is exactly the failure mode users reported in September 2025, and exactly why Apple raised the floor to ~0.60 in iOS 27.
+- **Practical rule:** with α ≥ 0.62 and a *known* foreground polarity, you clear 4.5:1 across the full backdrop range 0-255. The bare crossing sits lower than the shipped floor, and it is worth knowing where: the binding case is a black backdrop, where the fill composites to `255α`, so pure black text survives every backdrop from α ≈ 0.4553 and the `#1C1C1E` ink this doc actually specifies from α ≈ 0.5145. Both land on 4.5:1 exactly at B = 0, with no margin for a brand tint, a lighter ink, or the rim. **0.55 is the shipped floor; 0.62 is the safe default.**
 - If you must go lower, add the scrim: a `rgba(0,0,0,0.22)` layer beneath Clear glass pins the backdrop's maximum luminance and makes white text viable. Apple mandates this for the Clear variant.
 
 ### Focus-visible strategy
