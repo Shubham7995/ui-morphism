@@ -15,11 +15,17 @@
 #      baseline, NOT a coverage guarantee; see the note at the check itself
 #   6. theme-selector discipline: guarded `:root[data-theme=…]`, never a bare one
 #   7. the `target`-group token is referenced by name in §7, not restated as px
-#   8. every markdown file quotes only tokens the doc owning that prefix declares
-#   9. dead tokens: declared but never consumed by a var() (warning only)
+#   8. every markdown file quotes only tokens the doc owning that prefix
+#      declares. Held against a committed count of the references actually
+#      adjudicated — the same no-regression RATCHET check 5 carries
+#   9. dead tokens: declared but never consumed by a var(). The FINDINGS are
+#      warnings; the scan failing to run at all is not
 #  10. every contrast figure recomputes from the WCAG maths (check-contrast.py).
 #      If python3 is absent the figures go unchecked, and an unchecked set is a
 #      failure, not a pass — the run reports SKIPPED and exits non-zero
+#
+# Ahead of all ten, a preflight asserts the doc set is exactly the registered
+# ten and that every registration table agrees about them.
 #
 # Exits non-zero once, after printing every offence in every category.
 
@@ -27,7 +33,29 @@ set -uo pipefail
 cd "$(dirname "$0")" || exit 2
 
 fail=0
-docs=(0[1-9]-*.md 10-*.md)
+
+# Every NN-*.md on disk except 00-…, which owns no short prefix and is read as
+# a cross-reference file instead.
+#
+# The glob is deliberately OPEN-ENDED. It used to read `0[1-9]-*.md 10-*.md`,
+# which hard-coded the set at ten: an 11-*.md was invisible to checks 2, 5, 6, 7
+# and 9, so a new doc with the wrong H2 set, an undeclared cross-reference and a
+# live bracket bug could be added and the run would still exit 0 — its only
+# obstacle was check-contrast.py's NOBASELINE, and adding a claim baseline (the
+# natural remedy) removed that too. Matching every two-digit doc means a new one
+# is checked like the rest from the moment it lands; DOC_COUNT below then makes
+# landing it a reviewed act rather than an accident.
+docs=()
+for f in [0-9][0-9]-*.md; do
+  [ -f "$f" ] || continue          # no match at all: bash leaves the pattern
+  case "$f" in 00-*) continue ;; esac
+  docs+=("$f")
+done
+
+# The size of the set, asserted in the preflight below. Ten files, no more and
+# no fewer, exactly as README's canonical index says. Changing this number is
+# the last step of adding a doc, not the first.
+DOC_COUNT=10
 
 # Short custom-property prefix per doc. Mirrors README's "Per-doc short prefixes"
 # table; if a doc renames its prefix, change it in both places.
@@ -109,6 +137,53 @@ row_baseline_of() {
 #
 # This is not a floor on coverage; it is the deadband around a doc's own figure.
 ROW_SLACK=25
+
+# COMMITTED CROSS-REFERENCE BASELINE for check 8 — the total number of prefixed
+# token references that actually reach the declared-or-not adjudication, summed
+# over all fourteen files. Same shape and same semantics as the row-coverage
+# ratchet above: a drop FAILS, a rise prints an advisory asking for the number
+# here to be raised, and the number only ever moves in a reviewed diff.
+#
+# It exists because check 8's two short-circuits — no code tokens in this file,
+# no tokens of this prefix in this file — return success having tested nothing.
+# Both are correct as fast paths and wrong as a verdict: with code_tokens()
+# broken so that it emits nothing at all, every file took the first one and the
+# check printed `ok` and exited 0 over a set that still contained a real stale
+# token. Counting what was adjudicated is what turns `ok` into a claim.
+#
+# Measured today, by file: 00-comparison-matrix.md 85, README.md 9,
+# GLOSSARY.md 1, MARKETPLACE.md 0, and 0 from each of the ten style docs. The
+# eighty-five are dominated by 00's shared-token-convention table; doc 08's lone
+# foreign name is the family stem `--min-*`, which is exempt by definition and
+# so is not adjudicated and not counted. Family stems and bare prefixes never
+# count: the number is references TESTED, not references seen.
+#
+# Note what that distribution says about check 8's own header comment, which
+# claims §12 Hybrids & Neighbors quotes other docs' tokens "constantly". As code
+# spans, measured, the ten style docs quote each other's tokens zero times. The
+# widening to all fourteen files was still right — it costs nothing and closes
+# the hole — but today it adjudicates nothing the four prefix-less docs did not
+# already cover, and this baseline is the honest record of that.
+XREF_BASELINE=95
+
+# Deadband below XREF_BASELINE before the ratchet bites. It is ZERO, and unlike
+# ROW_SLACK that is not a tuned number — it is the absence of a noise term.
+#
+# ROW_SLACK exists because check 5 ratchets a RATIO whose two terms move
+# together: retiring a token drops a table row and a CSS declaration at once, so
+# the ratio twitches by a few permille for an edit that regressed nothing, and
+# that twitch has to be told apart from a blanked row. Check 8 ratchets an
+# integer COUNT of the very events it adjudicates. There is no second term and
+# so no twitch: one fewer reference tested is exactly one fewer reference
+# tested, which is the event this ratchet was added to surface.
+#
+# A deadband here would also have to be absurdly wide to be useful, because the
+# references are not spread evenly. Measured, the densest single line in the set
+# (00-comparison-matrix.md's token-convention table) carries 12 of the 95 on its
+# own, so a deadband sized to absorb "one edited line" would be 13% of the total
+# — licensing precisely the silent shrink it was added to prevent. Deleting a
+# cross-reference is therefore a reviewed edit: re-measure and lower the number.
+XREF_SLACK=0
 
 # The four docs that reference every style but own no prefix of their own.
 xrefs=(00-comparison-matrix.md README.md GLOSSARY.md MARKETPLACE.md)
@@ -238,8 +313,68 @@ token_column() {
   '
 }
 
+# ------------------------------------------------- 0. doc-set registration ---
+# The set is ten style docs, and five separate tables in this file have to agree
+# about which ten: prefix_of(), owner_of(), the `prefixes` list, and
+# row_baseline_of(), plus DOC_COUNT itself. A doc that slips in without all four
+# entries is not rejected by the individual checks in any legible way — it comes
+# out as an unrelated NOPREFIX or NOBASELINE three screens down, or, when the
+# glob was hard-coded at ten, as nothing at all. So the agreement is asserted
+# once, up front, and the failure message names every table that has to change.
+echo "==> checking the doc set is the ten registered style docs"
+docset_ok=1
+if [ "${#docs[@]}" -ne "$DOC_COUNT" ]; then
+  printf '  DOCSET   found %s style doc(s), expected %s: %s\n' \
+    "${#docs[@]}" "$DOC_COUNT" "${docs[*]:-<none>}"
+  fail=1; docset_ok=0
+fi
+
+for f in "${docs[@]}"; do
+  p=$(prefix_of "$f")
+  if [ -z "$p" ]; then
+    printf '  DOCSET   %s has no entry in prefix_of()\n' "$f"
+    fail=1; docset_ok=0; continue
+  fi
+  case " $prefixes " in
+    *" $p "*) ;;
+    *) printf '  DOCSET   %s: prefix --%s- is missing from the `prefixes` list\n' "$f" "$p"
+       fail=1; docset_ok=0 ;;
+  esac
+  o=$(owner_of "$p")
+  if [ "$o" != "$f" ]; then
+    printf '  DOCSET   owner_of(%s) says %s, but prefix_of(%s) says %s — the two are inverses\n' \
+      "$p" "${o:-<unset>}" "$f" "$p"
+    fail=1; docset_ok=0
+  fi
+  if [ -z "$(row_baseline_of "$f")" ]; then
+    printf '  DOCSET   %s has no entry in row_baseline_of()\n' "$f"
+    fail=1; docset_ok=0
+  fi
+done
+
+for p in $prefixes; do
+  o=$(owner_of "$p")
+  if [ -z "$o" ]; then
+    printf '  DOCSET   prefix --%s- is in the `prefixes` list but owner_of() does not resolve it\n' "$p"
+    fail=1; docset_ok=0
+  elif [ ! -f "$o" ]; then
+    printf '  DOCSET   prefix --%s- is owned by %s, which is not on disk\n' "$p" "$o"
+    fail=1; docset_ok=0
+  fi
+done
+
+if [ "$docset_ok" -eq 1 ]; then
+  echo "  ok"
+else
+  echo "  ^ the doc set or its registration changed. Growing it is a reviewed decision,"
+  echo "    not a side effect: update prefix_of(), owner_of(), the \`prefixes\` list,"
+  echo "    row_baseline_of(), DOC_COUNT and XREF_BASELINE in this script, CLAIM_BASELINE"
+  echo "    in ./check-contrast.py, and README's canonical index — then re-run."
+fi
+
 # ---------------------------------------------------------------- 1. links ---
 echo "==> checking ./NN-*.md link targets"
+links_ok=1
 while IFS= read -r hit; do
   file=${hit%%:*}
   rest=${hit#*:}
@@ -248,11 +383,11 @@ while IFS= read -r hit; do
   for t in $target; do
     if [ ! -f "$t" ]; then
       printf '  BROKEN  %s:%s -> ./%s\n' "$file" "$line" "$t"
-      fail=1
+      fail=1; links_ok=0
     fi
   done
 done < <(grep -n '](\./[0-9][0-9][^)]*\.md)' -- *.md)
-[ "$fail" -eq 0 ] && echo "  ok"
+[ "$links_ok" -eq 1 ] && echo "  ok"
 
 # ------------------------------------------------------------- 2. headings ---
 echo "==> checking the 14 required H2 headings"
@@ -517,8 +652,14 @@ done
 echo "==> checking the target-group token is referenced by name in §7"
 target_ok=1
 for f in "${docs[@]}"; do
+  # No registered prefix means this doc's target token cannot be named, so the
+  # check cannot run — and a check that cannot run is a failure, not a silent
+  # skip. This used to `continue`, quietly contributing an unearned `ok`.
   p=$(prefix_of "$f")
-  [ -n "$p" ] || continue
+  if [ -z "$p" ]; then
+    printf '  NOPREFIX %s has no registered short prefix — §7 target wiring NOT checked\n' "$f"
+    fail=1; target_ok=0; continue
+  fi
   sec4=$(section "$f" '^## 4\. Anatomy & Design Tokens')
   sec7=$(section "$f" '^## 7\. Accessibility')
 
@@ -551,9 +692,12 @@ done
 # doc owns, and this reads all fourteen. It used to read only the four docs that
 # own no prefix — 00-comparison-matrix.md, README.md, GLOSSARY.md and
 # MARKETPLACE.md — which left the commonest cross-reference of all unchecked:
-# one style doc quoting another style doc's token. §12 Hybrids & Neighbors and
-# the comparison prose in §9 do that constantly, so a rename in doc 07 could
-# leave a stale `--nb-…` standing in doc 09 and nothing noticed.
+# one style doc quoting another style doc's token, so a rename in doc 07 could
+# leave a stale `--nb-…` standing in doc 09 and nothing noticed. (An earlier
+# version of this comment claimed §12 Hybrids & Neighbors does that constantly.
+# Measured, as code spans, the ten style docs quote each other's tokens zero
+# times — see the note at XREF_BASELINE. Widening was still right; the
+# justification for it was overstated.)
 #
 # A file is never checked against its OWN prefix here. That is not an exemption
 # but the definition of the check: a doc's own names are its declarations, and
@@ -567,20 +711,51 @@ done
 # test also let through anything ending in a plain hyphen, so `--glass-blur-9-`
 # — a stale name with a typo, not a stem — was skipped. `--um-` convention names
 # match no short prefix and so are never considered in the first place.
+#
+# COUNT RATCHET. Everything above describes what happens to a reference the
+# check finds. What happens when it finds none used to be: nothing, silently,
+# followed by `ok`. Two short-circuits below — `$hits` empty, `$mine` empty —
+# each return success having adjudicated nothing, and neither says so. Proven by
+# mutation: with a real stale `--nb-totally-made-up` seeded in doc 09 the control
+# run reports UNDECLARED and exits 1; break code_tokens() so it emits no tokens
+# and the same stale name is still sitting there while the check prints `ok` and
+# the run exits 0. So the references that actually reach the adjudication are
+# counted and the total held against XREF_BASELINE, exactly as check 5 holds row
+# coverage against row_baseline_of(). The short-circuits stay — they are correct
+# as fast paths — but they no longer constitute a verdict.
 echo "==> checking every doc quotes only tokens the owning doc declares"
 xref_ok=1
+xref_stale=0
+xref_tested=0
+xref_tally=''
+noowner=''
 for f in "${allfiles[@]}"; do
   [ -f "$f" ] || { printf '  MISSING  %s is not on disk\n' "$f"; fail=1; xref_ok=0; continue; }
   own=$(prefix_of "$f")
+  f_tested=0
   # Dedupe in place: `sort -u` would reorder line numbers lexically, and a
   # keyed sort would collapse two distinct tokens sharing one line.
   hits=$(code_tokens "$f" | awk '!seen[$0]++')
-  [ -n "$hits" ] || continue
+  if [ -z "$hits" ]; then
+    xref_tally="${xref_tally}${f}=0 "
+    continue
+  fi
 
   for p in $prefixes; do
     [ "$p" = "$own" ] && continue
     o=$(owner_of "$p")
-    [ -n "$o" ] && [ -f "$o" ] || continue
+    if [ -z "$o" ] || [ ! -f "$o" ]; then
+      # Reported once per prefix, not once per file: with no owning doc on disk
+      # nothing in the set can be checked against this prefix at all, and that
+      # is a failure rather than fourteen silent skips.
+      case " $noowner " in
+        *" $p "*) ;;
+        *) printf '  NOOWNER  prefix --%s- has no owning doc on disk (owner_of says %s) — NO file was checked against it\n' \
+             "$p" "${o:-<unset>}"
+           noowner="$noowner $p"; fail=1; xref_ok=0 ;;
+      esac
+      continue
+    fi
 
     mine=$(printf '%s\n' "$hits" | grep -- ":--${p}-")
     [ -n "$mine" ] || continue
@@ -596,13 +771,37 @@ for f in "${allfiles[@]}"; do
         *-\*)      continue ;;   # family stem: --nb-shadow-*
         "--${p}-") continue ;;   # the prefix itself, written bare
       esac
+      # Past the two exemptions, this reference is about to be adjudicated —
+      # count it here and only here, so the total is references TESTED and
+      # never references merely seen.
+      f_tested=$((f_tested + 1))
+      xref_tested=$((xref_tested + 1))
       printf '%s\n' "$declared" | grep -qx -- "$t" && continue
       printf '  UNDECLARED  %s:%s  %s is not declared in %s\n' "$f" "$ln" "$t" "$o"
-      fail=1; xref_ok=0
+      fail=1; xref_ok=0; xref_stale=1
     done < <(printf '%s\n' "$mine")
   done
+  xref_tally="${xref_tally}${f}=${f_tested} "
 done
-[ "$xref_ok" -eq 1 ] && echo "  ok" || \
+
+xref_floor=$((XREF_BASELINE - XREF_SLACK))
+[ "$xref_floor" -lt 0 ] && xref_floor=0
+if [ "$xref_tested" -lt "$xref_floor" ]; then
+  printf '  UNTESTED  only %s prefixed token reference(s) reached the declared-or-not test across the %s file(s), against a committed baseline of %s\n' \
+    "$xref_tested" "${#allfiles[@]}" "$XREF_BASELINE"
+  printf '            per file: %s\n' "$xref_tally"
+  echo "  ^ this check adjudicated less than it did when the baseline was recorded, so"
+  echo "    an ok here would certify references it never read. Either the extraction"
+  echo "    regressed (fix it), or cross-references were genuinely deleted (re-measure"
+  echo "    and lower XREF_BASELINE in a reviewed diff)."
+  fail=1; xref_ok=0
+elif [ "$xref_tested" -gt "$((XREF_BASELINE + XREF_SLACK))" ]; then
+  printf '  ratchet  %s prefixed token reference(s) adjudicated, above the committed baseline %s — raise XREF_BASELINE\n' \
+    "$xref_tested" "$XREF_BASELINE"
+fi
+
+[ "$xref_ok" -eq 1 ] && echo "  ok"
+[ "$xref_stale" -eq 1 ] && \
   echo "  ^ a doc names a token the doc owning that prefix does not declare"
 
 # ------------------------------------------------------- 9. dead tokens ------
@@ -611,8 +810,14 @@ done
 echo "==> checking for dead tokens (warning only)"
 dead_total=0
 for f in "${docs[@]}"; do
+  # The dead-token FINDINGS are warnings. "This doc has no prefix so the scan
+  # never ran" is not a finding, it is the absence of one, and it fails like any
+  # other check that could not run. It used to `continue` in silence.
   p=$(prefix_of "$f")
-  [ -n "$p" ] || continue
+  if [ -z "$p" ]; then
+    printf '  NOPREFIX %s has no registered short prefix — dead-token scan NOT run\n' "$f"
+    fail=1; continue
+  fi
 
   declared=$(grep -o -- "--${p}-[A-Za-z0-9_-]*[[:space:]]*:" "$f" \
     | sed 's/[[:space:]]*:$//' | sort -u)

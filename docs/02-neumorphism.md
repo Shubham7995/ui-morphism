@@ -1017,7 +1017,7 @@ Neumorphism is the highest-a11y-risk style in this set. The failure is structura
 
 WCAG relative luminance `L = 0.2126R + 0.7152G + 0.0722B` (linearised sRGB); ratio `= (L₁ + 0.05) / (L₂ + 0.05)`.
 
-- Light surface `#e6e7ee` → L = 0.8014.
+- Light surface `#e6e7ee` → L = 0.8015.
 - Dark shadow `#b8b9be` → L = 0.4861. Ratio = **1.59:1**.
 - Light shadow `#ffffff` → L = 1.0000. Ratio = **1.23:1**.
 - Generator default `#e0e0e0` vs `#bebebe` = **1.41:1**; vs `#ffffff` = **1.32:1**.

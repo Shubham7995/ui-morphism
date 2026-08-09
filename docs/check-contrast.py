@@ -4,15 +4,23 @@
 check-links.sh validates the *structure* of these docs. Nothing validated the
 *numbers*, in a set whose README advertises measured contrast ratios. This does.
 
-  1. every `N:1` / `N.N:1` / `N.NN:1` contrast claim is recomputed from the
-     colours named beside it, and must agree within half a rounding step
-  2. every stated relative luminance (`L 0.7512`, `L = 0.9416`, or a bare
-     `0.7512` cell in a luminance table) is recomputed from its hex
+  1. every `N:1` / `N.N:1` / `N.NN:1` / `N.NNN:1` contrast claim is recomputed
+     from the colours named beside it, and must agree within half a rounding
+     step
+  2. every stated relative luminance (`L 0.7512`, `L = 0.9416`, `L ≈ 0.0217`,
+     or a bare `0.7512` cell in a luminance table) is recomputed from its hex
   3. where a line states two luminances *and* a ratio, the ratio must follow
      from those two luminances — a row can be wrong three independent ways
      (bad L, bad L, and a ratio that matches neither) and only (3) sees all of it
   4. no claim may be rounded in the direction that makes it clear a WCAG
      threshold. W3C: values are not rounded up, so 2.999:1 fails 3:1.
+  5. the number of claims each file yields may not fall below a committed
+     baseline, so a future regression in the extraction regex cannot shrink
+     what is checked without failing the run
+  6. the number of claims each file VERIFIES may not fall below a committed
+     floor, and the number it EXCLUDES may not rise above a committed
+     ceiling, so a regression in ADJUDICATION cannot move the corpus out of
+     the maths and into a non-failing bucket without failing the run
 
 The maths is WCAG 2.x, exactly:
 
@@ -25,8 +33,9 @@ The maths is WCAG 2.x, exactly:
 TOLERANCE IS THE CLAIM'S OWN PRECISION, NOT A FIXED SLACK
 
 A figure is checked against half a rounding step at the precision it was
-written at: 0.005 for `15.46:1`, 0.055 for `7.8:1` (1dp keeps a hair of slack
-for the last-digit ambiguity a single decimal really has), 0.5 for `21:1`.
+written at: 0.0005 for `4.497:1`, 0.005 for `15.46:1`, 0.055 for `7.8:1` (1dp
+keeps a hair of slack for the last-digit ambiguity a single decimal really
+has), 0.5 for `21:1`.
 A flat 0.055 applied to a 2dp figure is eleven times looser than the figure
 claims to be, and lets `7.85` stand where the maths says `7.81`. Most of this
 set is written at 2dp, so the flat bar was the default case, not the edge.
@@ -35,6 +44,20 @@ Because the bar now matches the precision, "inside tolerance but not what
 rounding to its own precision gives" is a FAILURE (NEARMISS), not a note. At
 2dp and 0dp the class is empty by construction; at 1dp it is exactly the
 0.05–0.055 sliver, which is a wrong last digit and nothing else.
+
+A STATED LUMINANCE IS HELD TO THE SAME RULE. It used to be a flat 0.0005,
+justified as "stated luminances are given to 4dp"; doc 10 writes them to five
+throughout, so the bar was fifty times looser than the printed figure claims
+to be and `0.15760` could be written `0.15799` without a word. The bar is now
+half a step at the digits actually written — plus, and never instead of, the
+luminance range the OWNER's own printed precision allows. An α-composite
+printed `rgb(117.5, 118.7, 122.2)` has a luminance range, not a value, and
+tightening the claim's half-step without widening for the operand's would
+convict correct lines in exactly the place the tightening was aimed.
+
+A REPORTED VALUE IS TRUNCATED, NEVER ROUNDED. A failure line may not print a
+figure the pair does not have: `round(2.99534, 2)` is `3.0`, so the message
+saying a `3:1` claim fails used to say the maths gives 3.0.
 
 WHICH FIGURES ARE CHECKED, AND HOW A CLAIM FINDS ITS COLOURS
 
@@ -100,30 +123,87 @@ WHAT IS EXCLUDED, AND WHY (all counted and printed, none of them fail the run)
                  English word beside it — the same defect check-links.sh's
                  check 4 shipped with. Removing it put ~110 alpha claims under
                  the maths for the first time.
-  citation       the figure states a requirement rather than a measurement,
-                 recognised two structural ways: its value is exactly a
-                 canonical WCAG figure (3, 4.5, 7, 2.999), or it is introduced
-                 by relational notation (`≥`, `>=`, `<`), which names a bound.
-  no operands    no colour in scope at all.
+  citation       the figure states a requirement rather than a measurement.
+                 A requirement has nothing to be measured against, and that
+                 is the test: a canonical WCAG value (3, 4.5, 7, 2.999) is a
+                 citation ONLY WHERE NO OPERAND PAIR IS IN SCOPE — no clause
+                 naming two colours, and, in a table, no row naming two. The
+                 other form is relational notation (`≥`, `>=`, `<`) in front
+                 of the figure, which states a bound and names nothing to
+                 recompute, whatever else is on the line.
+                 The value alone used to be enough, and that made a third of
+                 the set unfalsifiable in the one place conformance is being
+                 asserted: `| #0071e3 | #f5f5f7 | 7:1 |` for a pair measuring
+                 4.31 exited 0, and so did `3.00:1` for 2.9953. Two colours
+                 plus a figure is a measurement no matter which figure it is,
+                 and the ROUNDUP check — which exists for exactly the values
+                 3, 4.5 and 7 — could not fire on a single claim while the
+                 value-only exemption stood.
+                 THE BUCKET IS PRINTED AS THREE NUMBERS, NOT ONE. It used to
+                 print as "bare WCAG thresholds with no colour operands", and
+                 that label was false for nine of its members and hid the one
+                 shape of the old exemption that survives. The split is:
+                   * citations with NO operand pair in scope — nothing to
+                     recompute, the honest majority;
+                   * relational bounds (`≥ 8:1`) that DO have a pair in scope
+                     — a bound still states no measurement, so this is a
+                     separate and defensible line rather than a blind spot;
+                   * canonical WCAG values that DO have a pair in scope and
+                     are exempted anyway because the cell is not bare. THIS
+                     IS THE REMAINING BLIND SPOT, it is exempt from MISMATCH,
+                     NEARMISS and ROUNDUP at once, and every one of its
+                     members is printed by file:line so it can be eyeballed
+                     rather than trusted. Seven today, all genuine.
+  no operands    no colour in scope at all, in a scope that could convict.
+                 A table row naming two colours is never in this bucket, even
+                 when the figure cell carries other words: the row is the
+                 unit, and the unit names the pair.
   one operand    one colour in scope; no pair to compute.
-  structural     inside a strikethrough span or a blockquote — the two ways a
-                 doc can mark a figure as deliberately wrong. This is the ONLY
+  structural     inside a STRIKETHROUGH span — the one way a doc can mark a
+                 figure as deliberately wrong. This is the ONLY
                  author-controlled suppression and it is structural on purpose.
                  An earlier check in this set was defeated by a keyword list,
                  because the words a doc uses to flag a bad value are the words
                  a real offence carries in its own comment. To have a figure
                  ignored here, mark it up; writing "incorrect" beside it does
                  nothing.
+                 A BLOCKQUOTE USED TO SUPPRESS TOO, AND IT WAS FAR TOO CHEAP.
+                 Structural is necessary but not sufficient: the marker also
+                 has to be one nobody reaches for by accident. Nobody writes
+                 `~~4.5:1~~` without meaning "this figure is wrong"; `> 4.5:1`
+                 is ordinary markdown — a callout, a pull quote, an admonition,
+                 a quoted paragraph of spec. A false figure moved into a
+                 routine callout exited 0 with nothing changing anywhere in the
+                 output but one INFO count. Strikethrough is kept because it is
+                 unambiguous. `>` is dropped because it is not, and a
+                 suppression marker that costs one character of ordinary
+                 formatting is a keyword list wearing punctuation.
                  A suppressed claim is still COUNTED — it lands in the claims
                  denominator and in the printed "suppressed by structure"
                  total. A claim that vanishes silently is indistinguishable
-                 from one that was never written, which is what a blockquote
-                 hiding a false figure relies on.
+                 from one that was never written, which is exactly what a
+                 figure hidden behind a marker relies on.
 
 KNOWN BLIND SPOTS, stated so nobody reads a green run as more than it is:
 
-  * a wrong figure landing on exactly 3, 4.5 or 7;
+  * a wrong figure landing on exactly 3, 4.5, 7 or 2.999 *and* written where
+    the cell is not a bare measurement — the only remaining shape of the
+    citation exemption. It is no longer merely stated here: the members are
+    counted and printed by file:line in their own INFO line, because a blind
+    spot nobody can enumerate is a blind spot nobody audits;
+  * a claim written to seven or more decimals: CLAIM_RE reads up to six, and
+    the deepest figure in the set is three. The fraction used to stop at
+    three, which put every 4dp figure in this bullet — and unlike a shrink,
+    an ADDED figure the regex cannot see leaves no trace at all: check 5 is a
+    floor, so injecting `9.9987:1` for a pair measuring 4.3134 produced
+    output byte-identical to the clean run. Widening to six costs nothing
+    (`tolerance_for` already handles arbitrary dp, and no figure in the set
+    changes bucket) and closes the reachable part of the hole;
   * a wrong figure inside a claim that really does carry an alpha value;
+  * a stated luminance with no colour literal to its left inside its own
+    clause: doc 08 §7 writes "C = 130.80 → L ≈ 0.2262" for a composite it
+    never prints as a colour, so there is nothing to recompute it from. 15 of
+    them, counted and printed rather than dropped;
   * operands named in words the docs never bind to a hex ("lime 16.63:1");
   * operands written in a colour space this file does not convert (`oklch()`,
     `oklab()`, `lab()`, `color()`) — read as no operands, not as wrong;
@@ -138,6 +218,67 @@ KNOWN BLIND SPOTS, stated so nobody reads a green run as more than it is:
 
 The INFO counts are the size of each.
 
+A GREEN RUN MUST MEAN SOMETHING WAS READ
+
+Every check above compares a number to a number, so every one of them passes
+vacuously over an empty set. Rewording each `N:1` in the doc set to "N to 1"
+took the run to zero claims and it still printed "All contrast figures agree
+with the WCAG maths" and exited 0; so did pointing it at a directory holding
+no markdown. Both now fail, and so does any file whose claim count drops
+below its committed CLAIM_BASELINE — the ratchet that makes a regression in
+the extraction regex visible, since a figure the regex stops matching is the
+one kind of defect that leaves no other trace.
+
+AND A GREEN RUN MUST MEAN SOMETHING WAS ADJUDICATED
+
+CLAIM_BASELINE guards the DENOMINATOR and nothing guarded the NUMERATOR, which
+left the whole corpus one line away from being green and unread. Inserting
+`return True` as the first statement of `alpha_bearing()` gave 576 claims, 0
+verified, 576 excluded, "All contrast figures agree with the WCAG maths",
+exit 0 — CLAIM_BASELINE cannot fire, because extraction was never touched. The
+plausible version of that edit is not sabotage but caution: writing
+`composite_scope = clause if alpha_bearing(clause) else wide` reads like "be
+safer about alpha" and quietly moves a figure out of adjudication for good.
+Every exclusion bucket in this file is non-failing by design, so any of them
+widening is a silent win for the run.
+
+So VERIFIED_BASELINE is a per-file FLOOR on the numerator, in the same shape
+and with the same ratchet semantics as CLAIM_BASELINE: below it fails, a file
+with no committed number fails, above it prints an advisory to raise it.
+
+IT IS PAIRED WITH EXCLUDED_CEILING, AND THAT IS NOT THE SAME FACT TWICE.
+
+The obvious objection is that verified and excluded are two views of one
+number, so flooring one already ceilings the other. They would be, if the
+claims total were fixed and there were two buckets. There are three —
+
+    claims = verified + excluded + convicted (MISMATCH / NEARMISS)
+
+— and the total is not fixed, so the floor and the ceiling see different
+regressions:
+
+  * a widened exclusion that swallows a VERIFIED claim moves verified down.
+    The floor catches it; the ceiling also would.
+  * a widened exclusion that swallows a CONVICTED claim leaves verified
+    untouched and turns a red run green. The floor cannot see it — verified
+    is still exactly at baseline — and the ceiling is the only thing in this
+    file that can. This is precisely the shape an author reaches for when a
+    figure they just wrote fails: not "delete the check", but "surely this
+    one is composited / a citation / not really a measurement".
+  * a doc gaining new figures raises claims. The floor stays satisfied
+    whatever those figures do; only the ceiling asks what happened to them.
+
+The ceiling's cost is that adding an unverifiable figure — one more "AA
+requires 4.5:1" in prose — fails the run until the number is raised in a
+reviewed diff. That is the feature, not the toll. The unverifiable buckets are
+where every defect this file has ever had went to hide; growth in them is
+exactly the event that should need a human to sign it. The ceiling falls, like
+the floor rises, only by advisory.
+
+Neither replaces the other and neither is a coverage guarantee. Together they
+say: this file adjudicated at least as much of this doc as it did the day
+these numbers were committed, and excused no more of it.
+
 Exits non-zero once, after printing every offence in every category.
 
 Usage:  ./check-contrast.py [--json] [--verbose] [file.md ...]
@@ -149,11 +290,10 @@ Pure standard library. Runs under `env -i PATH=/usr/bin:/bin python3`.
 """
 
 import json
+import math
 import os
 import re
 import sys
-
-L_TOLERANCE = 0.0005  # stated luminances are given to 4dp
 
 # A claim is checked at half a rounding step of ITS OWN precision. A flat bar
 # is only ever right for one precision, and applying 1dp's slack to the 2dp
@@ -168,20 +308,155 @@ def tolerance_for(dp):
     """Half a rounding step at `dp` decimal places."""
     if dp == 1:
         return TOLERANCE_1DP
-    return max(0.5 * 10.0 ** -dp, 1e-9)
+    return max(0.5 * 10.0 ** -dp, 1e-12)
 
-# The canonical WCAG figures. A claim whose value is exactly one of these is a
-# CITATION of a requirement, not a measurement — "AA requires 4.5:1", "the 3:1
-# floor", "2.999:1 fails". Across this set they appear 130+ times, constantly on
-# lines that also carry hexes ("rejects any accent below 4.5:1 against
-# `#0A0A0A`"), so treating them as measurements produces nothing but noise.
-# Citations are recomputed and counted when a pair does match, but they never
-# convict. The cost is stated plainly: a genuinely wrong figure that happens to
-# land on exactly 3, 4.5 or 7 is not caught by this check.
+
+def shown(value, dp):
+    """`value` at `dp` decimals, TRUNCATED toward zero — never rounded up.
+
+    A failure message must not itself read as clearing the bar it is reporting
+    a miss against. `round()` at two decimals prints 4.4999 as `4.50` and
+    2.9953 as `3.00`, so the MISMATCH line for a claim of `4.5:1` said
+    "computed 4.50:1" and the ROUNDUP line said "is 3.00:1 — under the 3:1
+    bar". Truncation cannot say that: every digit printed is a digit the value
+    really has, and a value below a bar prints below it.
+    """
+    q = 10.0 ** dp
+    return math.floor(value * q) / q
+
+# The canonical WCAG figures. A claim whose value is exactly one of these MAY
+# be a CITATION of a requirement rather than a measurement — "AA requires
+# 4.5:1", "the 3:1 floor", "2.999:1 fails". Across this set they appear 160+
+# times, constantly on lines that also carry hexes ("rejects any accent below
+# 4.5:1 against `#0A0A0A`").
+#
+# Membership is NOT sufficient on its own, and treating it as sufficient was
+# the largest hole this file has had. A third of every claim in the set — 188
+# of 570 — was exempt from MISMATCH, NEARMISS and ROUNDUP simultaneously, at
+# every precision the value can be written at (3, 3.0, 3.00, 4.5, 4.50, 7,
+# 7.00). The exemption was strongest exactly where a doc asserts conformance:
+# a table row `| #0071e3 | #f5f5f7 | 7:1 |` whose pair measures 4.3134 passed,
+# and so did `3.00:1` for 2.9953. ROUNDUP, written for these three values,
+# could not fire on a single claim in the set.
+#
+# The real distinction is structural, not numeric: "AA requires 4.5:1" names
+# nothing to measure, while "`#xxx` on `#yyy` — 4.5:1" names two colours and
+# is therefore a measurement. So the value only exempts where NO OPERAND PAIR
+# IS IN SCOPE (see `citation` in check_file). 2.999 is in this set because the
+# docs cite it five times as the canonical round-up failure; until CLAIM_RE
+# was widened to three decimals it was unreachable dead weight, because no
+# three-decimal figure could be extracted at all.
 WCAG_THRESHOLDS = {3.0, 4.5, 7.0, 2.999}
 
 # Thresholds a measured claim must not be rounded up through.
 ROUNDUP_BARS = (3.0, 4.5, 7.0)
+
+# COMMITTED CLAIM-EXTRACTION BASELINE — how many `N:1` figures each file
+# yields. This is a RATCHET, in the same shape and for the same reason as
+# check-links.sh's §4 row-coverage ratchet: a file may not yield FEWER claims
+# than the number recorded here, a file with no recorded number FAILS, and a
+# file that rises prints an advisory asking for the number to be raised. The
+# baseline only ever moves up, and only in a reviewed diff.
+#
+# It exists because of how the three-decimal hole failed. A claim CLAIM_RE
+# cannot match does not fail, does not report, and does not reach any INFO
+# bucket — it leaves the denominator, and the only evidence is a total that is
+# one smaller than it was. Every other check in this file compares a number to
+# a number; this one is the only defence against the checker quietly reading
+# less of the set than it used to, which is the failure mode that produces a
+# green run over unread text. Injecting `19.999:1` for a pair measuring 15.46
+# used to move exactly one number in the whole output, and nobody reads a
+# total for a decrement.
+#
+# Not a coverage guarantee. It says "no file yields fewer figures than it did
+# when this was measured", never "every figure in this file is checked" — the
+# INFO buckets are where that question is answered, and they are large.
+CLAIM_BASELINE = {
+    '00-comparison-matrix.md': 31,
+    '01-skeuomorphism.md': 45,
+    '02-neumorphism.md': 85,
+    '03-glassmorphism.md': 28,
+    '04-claymorphism.md': 56,
+    '05-minimalism.md': 47,
+    '06-maximalism.md': 97,
+    '07-brutalism.md': 50,
+    '08-liquid-glass.md': 22,
+    '09-bento-grid.md': 35,
+    '10-spatial-ui.md': 41,
+    'GLOSSARY.md': 9,
+    'MARKETPLACE.md': 18,
+    'README.md': 12,
+}
+
+# COMMITTED ADJUDICATION BASELINE — how many of those claims each file
+# actually puts through the WCAG maths and agrees with (the FLOOR), and how
+# many it excuses into a non-failing bucket (the CEILING). Same shape as
+# CLAIM_BASELINE, same ratchet discipline, and measured the same way: from a
+# clean run, never by hand.
+#
+# CLAIM_BASELINE guards the denominator. Nothing guarded the numerator, and
+# that is a whole class of defect rather than one bug. Putting `return True`
+# at the top of `alpha_bearing()` produced 576 claims, 0 verified, 576
+# excluded, "All contrast figures agree with the WCAG maths", exit 0: not one
+# number in the coverage section moved, because extraction was untouched. The
+# realistic form of the same edit is a caution, not a sabotage —
+# `composite_scope = clause if alpha_bearing(clause) else wide` — and it takes
+# a single figure out of adjudication for good.
+#
+# The two halves are not one fact written twice. claims = verified + excluded
+# + convicted, and the total moves, so:
+#   * an exclusion that swallows a VERIFIED claim drops the numerator — the
+#     floor fires;
+#   * an exclusion that swallows a CONVICTED claim leaves the numerator
+#     exactly at baseline and turns a red run green — only the ceiling fires;
+#   * new figures in a doc raise claims, and only the ceiling asks whether
+#     they were adjudicated or excused.
+#
+# The ceiling means a new unverifiable figure fails the run until the number
+# is raised in review. That is deliberate. Every hole this file has had lived
+# in the non-failing buckets, so those buckets growing is the event most worth
+# a human's signature. Floors only rise and ceilings only fall by advisory,
+# and only in a reviewed diff.
+#
+# A file that verifies nothing today records 0 rather than being left out: an
+# absent entry FAILS (there is no such thing as an unmeasured file), and a 0
+# floor still pairs with a real ceiling, which is what actually holds
+# 08-liquid-glass.md, MARKETPLACE.md and README.md in place.
+VERIFIED_BASELINE = {
+    '00-comparison-matrix.md': 8,
+    '01-skeuomorphism.md': 13,
+    '02-neumorphism.md': 17,
+    '03-glassmorphism.md': 2,
+    '04-claymorphism.md': 32,
+    '05-minimalism.md': 23,
+    '06-maximalism.md': 21,
+    '07-brutalism.md': 26,
+    '08-liquid-glass.md': 0,
+    '09-bento-grid.md': 7,
+    '10-spatial-ui.md': 7,
+    'GLOSSARY.md': 1,
+    'MARKETPLACE.md': 0,
+    'README.md': 0,
+}
+
+# excluded = claims - verified - MISMATCH - NEARMISS, per file, exactly as the
+# summary line computes it for the whole run.
+EXCLUDED_CEILING = {
+    '00-comparison-matrix.md': 23,
+    '01-skeuomorphism.md': 32,
+    '02-neumorphism.md': 68,
+    '03-glassmorphism.md': 26,
+    '04-claymorphism.md': 24,
+    '05-minimalism.md': 24,
+    '06-maximalism.md': 76,
+    '07-brutalism.md': 24,
+    '08-liquid-glass.md': 22,
+    '09-bento-grid.md': 28,
+    '10-spatial-ui.md': 34,
+    'GLOSSARY.md': 8,
+    'MARKETPLACE.md': 18,
+    'README.md': 12,
+}
 
 # ------------------------------------------------------------------ maths ---
 
@@ -218,11 +493,42 @@ HEX_RE = re.compile(r'(?<![&\w])#([0-9A-Fa-f]{3,8})\b')
 
 # A contrast claim. Guarded on both sides so `1.4.11` and `0.868 dp` cannot
 # produce one, and so `21:10` is not read as `21:1`.
-CLAIM_RE = re.compile(r'(?<![\d.])(\d{1,3}(?:\.\d{1,2})?):1(?![\d:])')
+#
+# THE FRACTION MUST REACH THREE DIGITS. At `{1,2}` a figure like `4.497:1`
+# matched NOTHING: the leading-digit alternative fails on the trailing `7`,
+# and every later start position is blocked by the lookbehind (`.497` is
+# preceded by `.`, `497` by `4`). The claim did not fail, did not report, did
+# not even reach the INFO buckets — it left the denominator entirely, and the
+# only trace was the claims total dropping by one. ELEVEN such claims are in
+# the set and they are the safety-critical ones: doc 10's own round-up-trap
+# worked examples (10:1179, 10:1183 at 4.497:1, 10:1196 at 4.495:1, and
+# plus README's own restatement of the first, in its check-10 entry — a line
+# number is deliberately not given there, because README is edited often and a
+# stale pointer is worse than none), 05:1176's 2.995:1, and the six `2.999:1`
+# citations at 01:832, 01:1039, 07:936, GLOSSARY:173, MARKETPLACE:429 and
+# MARKETPLACE:525 that state the rule this file's check 4 enforces.
+# `tolerance_for(3)` already returned 0.0005; nothing but the regex was in
+# the way.
+#
+# AND IT NOW REACHES SIX, because three had the same hole one digit further
+# out and the ratchet cannot see that direction. CLAIM_BASELINE is a FLOOR: it
+# fires on a figure that stops being extracted, and says nothing about a
+# figure that never was. Adding a table row claiming `9.9987:1` for a pair
+# measuring 4.3134 produced output byte-for-byte identical to the clean run
+# and exited 0 — no bucket moved, no count moved, nothing to read. Six digits
+# is not a guess at how deep a doc might go; it is the point past which the
+# figure is no longer plausibly a contrast ratio. `tolerance_for` already
+# handles arbitrary dp (0.5e-6 at 6dp, floored at 1e-12), `decimals()` reads
+# whatever is written, and the set contains nothing deeper than three — so
+# widening moved not one figure between buckets and cost nothing at all.
+CLAIM_RE = re.compile(r'(?<![\d.])(\d{1,3}(?:\.\d{1,6})?):1(?![\d:])')
 
-# `L 0.7512`, `L = 0.7512`, `L: 0.7512`. Capital L only — lowercase `l` is a
-# unit, a list marker and a variable name all over these docs.
-L_LABELLED_RE = re.compile(r'\bL[₁₂₀-₉]?\s*[=:]?\s*(0\.\d{3,6})\b')
+# `L 0.7512`, `L = 0.7512`, `L: 0.7512`, `L ≈ 0.0217`, `L ~ 0.0217`. Capital L
+# only — lowercase `l` is a unit, a list marker and a variable name all over
+# these docs. The approx forms are not decoration: docs 03 and 08 write six
+# luminances that way and every one of them was invisible while the separator
+# class was `[=:]` plus whitespace.
+L_LABELLED_RE = re.compile(r'\bL[₁₂₀-₉]?\s*(?:[=:]|≈|~)?\s*(0\.\d{3,6})\b')
 
 # A custom-property name, for resolving `8.87:1 with --clay-ink`.
 TOKEN_RE = re.compile(r'--[A-Za-z0-9_-]+')
@@ -230,8 +536,13 @@ TOKEN_RE = re.compile(r'--[A-Za-z0-9_-]+')
 # Named colours resolved as operands. Deliberately tiny: these two are the only
 # ones the set writes as words instead of hex ("15.6:1 with black text"), and
 # resolving a CSS named colour is colour parsing, not a suppression list.
+# A hyphen does NOT end the word here: `off-white` is not white and
+# `near-black` is not black — they are prose for "a colour near that one", and
+# reading them as the pure value invents a 21:1 pair out of a sentence that
+# names no colour at all (doc 06's do/don't table says exactly that). The same
+# guard keeps the CSS property `white-space` from being a colour.
 NAMED_COLOURS = {'white': (255, 255, 255), 'black': (0, 0, 0)}
-NAMED_RE = re.compile(r'\b(white|black)\b', re.IGNORECASE)
+NAMED_RE = re.compile(r'(?<![\w-])(white|black)(?![\w-])', re.IGNORECASE)
 
 # Colour functions. Opaque ones are operands; partially transparent ones are
 # what makes a claim composited. Both facts come from PARSING the value.
@@ -592,6 +903,36 @@ def table_row(line):
     return stripped.startswith('|') and not re.match(r'^\|[\s:|-]*$', stripped)
 
 
+TD_OPEN_RE = re.compile(r'<t[dh]\b[^<>]*>', re.IGNORECASE)
+TD_CLOSE_RE = re.compile(r'</t[dh]\s*>', re.IGNORECASE)
+
+
+def cell_at(line, index):
+    """(start, end) of the table CELL holding `index`; the whole line if none.
+
+    A ROW is the unit that names the pair. A CELL is the unit that states the
+    figure, and the two are not the same question. `| #fff | #000 | 15.49:1 |`
+    is a data row whose last cell measures its first two; doc 00's comparison
+    matrix is a table whose "cells" are multi-sentence paragraphs carrying
+    figures about surfaces the row never writes down. Read as clauses the two
+    shapes are indistinguishable, which is why the conviction rule below is
+    written on the cell.
+    """
+    if table_row(line):
+        pos = 0
+        for part in line.split('|'):
+            if pos <= index < pos + len(part):
+                return pos, pos + len(part)
+            pos += len(part) + 1
+        return 0, len(line)
+    opens = [m.end() for m in TD_OPEN_RE.finditer(line) if m.end() <= index]
+    if opens:
+        a = opens[-1]
+        close = TD_CLOSE_RE.search(line, a)
+        return a, close.start() if close and close.start() > index else len(line)
+    return 0, len(line)
+
+
 def html_rows(lines):
     """lineno -> text of the enclosing HTML `<tr>…</tr>`, and its header row.
 
@@ -676,17 +1017,37 @@ def resolved_operands(text, tokens):
 # ------------------------------------------------- structural suppressions ---
 # The one exclusion that is not about colour: a line that deliberately prints a
 # WRONG figure in order to correct it. Detected by STRUCTURE only — inside a
-# strikethrough span, or inside a blockquote. There is no keyword list here on
+# strikethrough span, and nothing else. There is no keyword list here on
 # purpose: an earlier check in this set was defeated by exactly that, because
 # the words a doc uses to flag a bad value are the words a real offence carries
 # in its own comment. If a doc wants a figure ignored it must mark it up.
+#
+# BLOCKQUOTE USED TO SUPPRESS AS WELL, AND IT WAS TOO CHEAP TO KEEP.
+# "Structural, not lexical" is the right rule and it was not the whole rule:
+# the marker also has to be one an author cannot reach by accident, because a
+# suppression is a hole the doc is allowed to punch in its own check. `~~` and
+# `>` are not comparable on that axis. Nobody writes `~~4.5:1~~` without
+# meaning "this figure is wrong" — the span exists to strike a value out. A
+# `>` line is ordinary markdown: a callout, an admonition, a pull quote, a
+# quoted paragraph of the spec, a note block in every doc in this set. Moving
+# a false figure into one exited 0 with nothing changing anywhere in the
+# output but a single INFO count, which is the same defect as hiding it behind
+# the word "over" with a different character.
+#
+# So the whole-line blockquote span is gone and strikethrough is the only
+# suppression. The set has exactly one suppressed claim today —
+# 00-comparison-matrix.md:41, the struck-through `~~3.13:1~~` — and it is
+# unaffected; no line in the set is blockquoted AND carries a figure, so this
+# moved nothing. The alternative was to keep blockquote and print file:line for
+# every suppressed claim, so that a hole punched this way at least leaves a
+# line in the output. That is strictly worse: it makes the run noisier in
+# order to preserve a marker with no legitimate use here, when deleting the
+# marker costs the doc set nothing.
 
 STRIKE_RE = re.compile(r'~~.+?~~', re.DOTALL)
 
 
 def suppressed_spans(line):
-    if re.match(r'^\s{0,3}>', line):
-        return [(0, len(line))], 'blockquote'
     spans = [(m.start(), m.end()) for m in STRIKE_RE.finditer(line)]
     return spans, 'strikethrough' if spans else None
 
@@ -816,15 +1177,23 @@ def check_file(path, findings, stats):
             unit_ops, wide_ops = as_modes(unit_ops), as_modes(wide_ops)
 
         # ---------------------------------------------- 2. stated luminance ---
-        stated = []  # (position, value, source)
+        # (position, value, source, digits). `digits` is how many decimals the
+        # doc actually wrote, and it is what sets the bar: a flat 0.0005 was
+        # fifty times looser than doc 10's five-decimal luminances claim to be,
+        # and let 0.15760 be written 0.15799 without a word. Same principle as
+        # the ratio tolerance, and the same function computes it.
+        stated = []
         for m in L_LABELLED_RE.finditer(line):
-            stated.append((m.start(1), float(m.group(1)), 'labelled'))
+            stated.append((m.start(1), float(m.group(1)), 'labelled',
+                           len(m.group(1).split('.')[1])))
         if row:
+            # The bare-cell form is only ever written to four decimals in this
+            # set. Reading three would sweep in every alpha value in a table.
             pos = 0
             for cell in line.split('|'):
                 c = re.sub(r'[`*\s]', '', cell)
                 if re.fullmatch(r'0\.\d{4}', c):
-                    stated.append((pos, float(c), 'table cell'))
+                    stated.append((pos, float(c), 'table cell', 4))
                 pos += len(cell) + 1
 
         # A stated luminance belongs to the colour literal on its LEFT — the
@@ -843,7 +1212,7 @@ def check_file(path, findings, stats):
         # row's, so the row is the unit there, exactly as for a ratio.
         literals = colour_literals(line)
 
-        for pos, value, source in sorted(stated):
+        for pos, value, source, digits in sorted(stated):
             if any(a <= pos < b for a, b in strike):
                 stats['suppressed'] = stats.get('suppressed', 0) + 1
                 continue
@@ -857,29 +1226,45 @@ def check_file(path, findings, stats):
                 stats['lum_unbound'] = stats.get('lum_unbound', 0) + 1
                 continue
             actual = luminance(owner[2])
-            if abs(actual - value) > L_TOLERANCE:
+            # The owner is known only as precisely as it was written, exactly
+            # as for a ratio operand: doc 10 prints an α-composite as
+            # `rgb(117.5, 118.7, 122.2)`, so its luminance is a range, not a
+            # point. Luminance is monotone in every channel, so the range is
+            # bounded by the two corners. The claim's own half-step is added
+            # to that range, never substituted for it — tightening the bar to
+            # the printed precision without this would convict correct lines.
+            slack = owner[3]
+            lo = hi = actual
+            if slack:
+                lo = luminance(tuple(max(0.0, c - slack) for c in owner[2]))
+                hi = luminance(tuple(min(255.0, c + slack) for c in owner[2]))
+            tol = tolerance_for(digits)
+            if value < lo - tol or value > hi + tol:
                 findings.append({
                     'kind': 'LUMINANCE', 'file': name, 'line': n,
-                    'stated': value, 'actual': round(actual, 4),
-                    'colour': owner[1], 'source': source,
+                    'stated': value, 'actual': shown(actual, digits + 1),
+                    'nearest': shown(lo if value < lo else hi, digits + 1),
+                    'dp': digits, 'colour': owner[1], 'source': source,
                     'text': line.strip()[:160],
                 })
             else:
                 stats['lum_verified'] = stats.get('lum_verified', 0) + 1
 
         # ----------------------------------------------------- 1. + 3. + 4. ---
-        row_lum_values = [v for _, v, _ in sorted(stated)]
+        row_lum_values = [v for _, v, _, _ in sorted(stated)]
 
         for m in CLAIM_RE.finditer(line):
             claim_text = m.group(0)
             claim = float(m.group(1))
             # Counted BEFORE the suppression test, so a suppressed claim shows
             # up in the denominator and in the "suppressed by structure" total.
-            # Counting after meant a blockquote could delete a figure from the
-            # run without leaving a trace: the totals were identical whether
-            # the line existed or not, which is exactly what hiding a false
-            # figure behind a `>` relies on.
+            # Counting after meant a marked-up line could delete a figure from
+            # the run without leaving a trace: the totals were identical
+            # whether the line existed or not, which is exactly what hiding a
+            # false figure behind a marker relies on.
             stats['claims'] = stats.get('claims', 0) + 1
+            by_file = stats.setdefault('claims_by_file', {})
+            by_file[name] = by_file.get(name, 0) + 1
             if any(a <= m.start() < b for a, b in strike):
                 stats['suppressed'] = stats.get('suppressed', 0) + 1
                 stats.setdefault('suppressed_kinds', set()).add(strike_kind)
@@ -890,17 +1275,75 @@ def check_file(path, findings, stats):
             clause_ops = colour_operands(clause)
             bare = is_bare(clause, claim_text)
 
+            # Can this figure be convicted at all — does its own unit name two
+            # colours? Outside a table the unit is the clause; inside one the
+            # row names the pair and a CELL states the figure, so the question
+            # splits in two: does the row name a pair, and is this cell that
+            # row's measurement of it?
+            #
+            # A cell is the row's measurement when it states exactly one figure
+            # and names no colour of its own. That is what separates
+            # `| #fff | #000 | 15.49:1 zz |` — where the junk is noise around
+            # the row's one figure — from doc 00's comparison matrix, whose
+            # cells are paragraphs naming their own colours and their own
+            # several figures, and from doc 06's "(6.64:1 / 6.45:1)", two
+            # figures against a cream ground the row never writes down. The
+            # old gate was `is_bare` on the CLAUSE, and it broke on contact
+            # with one extra word: `15.49:1 zz` and `x 15.49:1` both stopped
+            # being bare, both scored zero clause operands, and both were
+            # filed under "no operands" — the non-failing bucket — while the
+            # row went on naming the pair in plain sight.
+            ca, cb = cell_at(line, m.start())
+            cell = line[ca:cb]
+            cell_bare = is_bare(cell, claim_text)
+            row_measurement = (len(CLAIM_RE.findall(cell)) == 1
+                               and not colour_operands(cell))
+
+            clause_pairable = len({op[0] for op in clause_ops}) >= 2
+            wide_pairable = len({op[0] for op in wide_ops}) >= 2
+            convicts = clause_pairable or (row and wide_pairable
+                                           and row_measurement)
+
             # A citation is a figure that states a requirement rather than a
             # measurement, recognised two structural ways and no other:
-            #   * the value is exactly a canonical WCAG figure (3, 4.5, 7,
-            #     2.999) — the set writes those 130+ times as requirements,
-            #     routinely on lines that also carry hexes;
-            #   * the figure is introduced by relational notation (`≥`, `>=`,
-            #     `<`), which states a bound and names nothing to recompute.
-            # Citations are still recomputed and counted when a pair matches;
-            # they simply never convict.
-            citation = (claim in WCAG_THRESHOLDS
-                        or bool(BOUND_RE.search(line[:m.start()])))
+            #   * relational notation (`≥`, `>=`, `<`) immediately in front of
+            #     the figure, which states a bound and names nothing to
+            #     recompute — true regardless of what else is on the line;
+            #   * a canonical WCAG value (3, 4.5, 7, 2.999) that is NOT a bare
+            #     measurement cell in a row naming two colours.
+            #
+            # The second clause used to be "the value is canonical", full
+            # stop, and that alone made 188 of 570 claims — a third of the set
+            # — exempt from MISMATCH, NEARMISS and ROUNDUP simultaneously, at
+            # every precision the value can be written at (3, 3.0, 3.00, 4.5,
+            # 4.50, 7, 7.00). It was strongest exactly where a doc asserts
+            # conformance: `| #0071e3 | #f5f5f7 | 7:1 |` for a pair measuring
+            # 4.3134 exited 0, `3.00:1` for 2.9953 exited 0, and ROUNDUP —
+            # written for these three values and no others — could not fire on
+            # a single claim in the set.
+            #
+            # A BARE CELL is the strictest structural evidence a doc set gives
+            # that a figure is a measurement: the row names two colours and
+            # the cell says nothing but the number. Prose is not enough, and
+            # measurably so — "`#5B3AE0` against `#F4F1FB` is 6.02:1,
+            # comfortably over the 3:1 requirement" and "rejects any accent
+            # below 4.5:1 against `#0A0A0A`" both name a pair and both cite,
+            # so a clause-level rule reports six correct lines in this set as
+            # wrong. What survives as a blind spot is a canonical value
+            # written in prose, or in a cell that says anything else; what
+            # does not survive is a conformance table asserting 7:1 for 4.31.
+            bounded = bool(BOUND_RE.search(line[:m.start()]))
+            citation = (bounded
+                        or (claim in WCAG_THRESHOLDS
+                            and not (row and wide_pairable and cell_bare)))
+
+            # Does an operand pair exist anywhere this figure could have been
+            # measured against? Not the same question as `convicts`, which
+            # additionally demands the cell be the row's measurement. This is
+            # the weaker "were two colours in scope at all", and it is what
+            # decides whether a citation is honestly unmeasurable or is a
+            # canonical value sitting next to a pair with an exemption.
+            pair_in_scope = clause_pairable or (row and wide_pairable)
 
             # 3. self-consistency: two stated luminances plus a ratio. Checked
             # independently of the colours, because a row can state operands
@@ -914,7 +1357,7 @@ def check_file(path, findings, stats):
             # and its own ratio against an unstated white ground, and pairing
             # one measurement's L with the other's convicted four correct
             # figures on the strength of an arithmetic relation nobody claimed.
-            lum_values = [v for p, v, _ in sorted(stated)
+            lum_values = [v for p, v, _, _ in sorted(stated)
                           if any(a <= p < b for a, b in clause_spans_here)]
             if len(lum_values) < 2 and row:
                 lum_values = row_lum_values
@@ -990,12 +1433,21 @@ def check_file(path, findings, stats):
                     })
                 else:
                     stats['verified'] = stats.get('verified', 0) + 1
+                    # Per file, for the VERIFIED_BASELINE floor. The global
+                    # total cannot carry that check: one file gaining a
+                    # verified figure would paper over another losing one,
+                    # which is the whole point of doing it per file in
+                    # CLAIM_BASELINE too.
+                    v_by_file = stats.setdefault('verified_by_file', {})
+                    v_by_file[name] = v_by_file.get(name, 0) + 1
                 # 4. never round in the direction that makes a claim pass.
                 for t in ROUNDUP_BARS if not citation else ():
                     if claim >= t > match[0]:
+                        rdp = max(2, decimals(claim_text) + 2)
                         findings.append({
                             'kind': 'ROUNDUP', 'file': name, 'line': n,
-                            'claim': claim, 'actual': round(match[0], 2),
+                            'claim': claim, 'actual': shown(match[0], rdp),
+                            'dp': rdp,
                             'threshold': t, 'pair': [match[1], match[2]],
                             'text': line.strip()[:160],
                         })
@@ -1003,16 +1455,33 @@ def check_file(path, findings, stats):
                 continue
 
             # Unverified, and not composited: classify why.
+            #
+            # The citation bucket is split three ways on the way in, because
+            # printing it as one number labelled "bare WCAG thresholds with no
+            # colour operands" was false for nine of its 174 members and hid
+            # the last surviving shape of the value-only exemption. A
+            # canonical 3 / 4.5 / 7 written in prose beside two hexes is
+            # exempt from MISMATCH, NEARMISS and ROUNDUP simultaneously, and
+            # that fact was invisible inside an aggregate whose label said the
+            # operands were not there. Every member of that third bucket is
+            # recorded by file:line and printed unconditionally: an
+            # unenumerable blind spot is one nobody ever audits.
             if citation:
                 stats['threshold'] = stats.get('threshold', 0) + 1
-                continue
-
-            operand_count = len(clause_ops) if clause_ops else (
-                len(unit_ops) if bare else 0)
-            if operand_count == 0:
-                stats['no_operands'] = stats.get('no_operands', 0) + 1
-                stats.setdefault('no_operands_where', []).append(
-                    '%s:%d  %s' % (name, n, claim_text))
+                if not pair_in_scope:
+                    stats['cite_bare'] = stats.get('cite_bare', 0) + 1
+                elif bounded:
+                    # `≥ 8:1` beside a pair. A bound states no measurement
+                    # whatever is next to it, so this is a distinct line
+                    # rather than a blind spot — but it is not "no operand
+                    # pair in scope" either, and saying so was the lie.
+                    stats['cite_bound_pair'] = stats.get('cite_bound_pair', 0) + 1
+                    stats.setdefault('cite_bound_pair_where', []).append(
+                        '%s:%d  %s' % (name, n, claim_text))
+                else:
+                    stats['cite_value_pair'] = stats.get('cite_value_pair', 0) + 1
+                    stats.setdefault('cite_value_pair_where', []).append(
+                        '%s:%d  %s' % (name, n, claim_text))
                 continue
 
             # A claim only CONVICTS when its own unit really does name both
@@ -1022,39 +1491,57 @@ def check_file(path, findings, stats):
             # invents a pair the sentence never meant. Inside a table the row is
             # the unit — that is what a row is for — so a row that names two
             # colours must agree with the figure in it.
-            clause_pairable = len({op[0] for op in clause_ops}) >= 2
-            wide_pairable = len({op[0] for op in wide_ops}) >= 2
-            ops = clause_ops if clause_pairable else wide_ops
-            convicts = clause_pairable or (row and wide_pairable)
-            if not convicts:
-                stats['single_operand'] = stats.get('single_operand', 0) + 1
-                stats.setdefault('single_operand_where', []).append(
-                    '%s:%d  %s  (best available pair does not match)'
-                    % (name, n, claim_text))
+            #
+            # THE CONVICTS TEST RUNS FIRST. It used to run after an
+            # `operand_count == 0` early return that read the CLAUSE, so a
+            # table row that named both colours escaped the moment its figure
+            # cell held one extra word: `| #fff | #000 | 15.49:1 zz |` and
+            # `| … | x 15.49:1 |` both stopped being bare, both scored zero
+            # clause operands, and both were filed under "no operands" — the
+            # non-failing bucket — while the row went on naming the pair. The
+            # comment above promised the opposite and could never be reached.
+            if convicts:
+                ops = clause_ops if clause_pairable else wide_ops
+                b = best_pair(ops, claim)
+                dp = max(2, decimals(claim_text) + 2)
+                findings.append({
+                    'kind': 'MISMATCH', 'file': name, 'line': n,
+                    'claim': claim, 'actual': shown(b[0], dp), 'dp': dp,
+                    'pair': [b[1], b[2]],
+                    'candidates': sorted({o[0] for o in ops}),
+                    'text': line.strip()[:160],
+                })
+                # A wrong figure that is ALSO on the passing side of a bar the
+                # maths does not clear is two separate problems, and the second
+                # one is the one that ships an inaccessible control. Tightening
+                # the tolerance moved several of these out of the matched
+                # branch, so the bar test runs on the convicting pair as well.
+                for t in ROUNDUP_BARS if not citation else ():
+                    if claim >= t > b[0]:
+                        findings.append({
+                            'kind': 'ROUNDUP', 'file': name, 'line': n,
+                            'claim': claim, 'actual': shown(b[0], dp),
+                            'dp': dp,
+                            'threshold': t, 'pair': [b[1], b[2]],
+                            'text': line.strip()[:160],
+                        })
+                        break
                 continue
 
-            b = best_pair(ops, claim)
-            findings.append({
-                'kind': 'MISMATCH', 'file': name, 'line': n,
-                'claim': claim, 'actual': round(b[0], max(2, decimals(claim_text))),
-                'pair': [b[1], b[2]],
-                'candidates': sorted({o[0] for o in ops}),
-                'text': line.strip()[:160],
-            })
-            # A wrong figure that is ALSO on the passing side of a bar the
-            # maths does not clear is two separate problems, and the second
-            # one is the one that ships an inaccessible control. Tightening
-            # the tolerance moved several of these out of the matched branch,
-            # so the bar test runs on the convicting pair as well.
-            for t in ROUNDUP_BARS if not citation else ():
-                if claim >= t > b[0]:
-                    findings.append({
-                        'kind': 'ROUNDUP', 'file': name, 'line': n,
-                        'claim': claim, 'actual': round(b[0], 2),
-                        'threshold': t, 'pair': [b[1], b[2]],
-                        'text': line.strip()[:160],
-                    })
-                    break
+            # Nothing convicting: say which of the two innocent shapes it is.
+            # A figure with one colour beside it is a different report from a
+            # figure with none, and both are INFO.
+            operand_count = len(clause_ops) if clause_ops else (
+                len(unit_ops) if bare else 0)
+            if operand_count == 0:
+                stats['no_operands'] = stats.get('no_operands', 0) + 1
+                stats.setdefault('no_operands_where', []).append(
+                    '%s:%d  %s' % (name, n, claim_text))
+                continue
+            stats['single_operand'] = stats.get('single_operand', 0) + 1
+            stats.setdefault('single_operand_where', []).append(
+                '%s:%d  %s  (best available pair does not match)'
+                % (name, n, claim_text))
 
 
 # ------------------------------------------------------------------ main ---
@@ -1075,39 +1562,141 @@ def main(argv):
     findings = []
     stats = {
         'claims': 0, 'verified': 0, 'composited': 0, 'threshold': 0,
+        'cite_bare': 0, 'cite_bound_pair': 0, 'cite_value_pair': 0,
         'no_operands': 0, 'single_operand': 0, 'suppressed': 0, 'nearmiss': 0,
         'lum_verified': 0, 'lum_unbound': 0, 'consistency_verified': 0,
         'tiers': {}, 'composited_where': [], 'no_operands_where': [],
         'single_operand_where': [], 'nearmiss_where': [],
+        'cite_bound_pair_where': [], 'cite_value_pair_where': [],
+        'claims_by_file': {}, 'verified_by_file': {},
         'suppressed_kinds': set(),
     }
     for p in paths:
-        check_file(p, findings, stats)
+        if os.path.exists(p):
+            check_file(p, findings, stats)
+
+    # ------------------------------------------------------ 5. + vacuity ---
+    # A green run has to mean "the figures were read and they agree". Without
+    # this it also means "there were no figures", and the two are printed
+    # identically. Rewording every `N:1` in the set to "N to 1" took the run
+    # from 572 claims to 0 and it still said "All contrast figures agree with
+    # the WCAG maths" and exited 0; so did pointing it at a directory with no
+    # markdown in it. check-links.sh carries exactly this tripwire.
+    coverage = []
+    seen = [os.path.basename(p) for p in paths if os.path.exists(p)]
+    if not seen:
+        coverage.append({'kind': 'NOTHINGREAD', 'file': '(none)', 'line': 0,
+                         'detail': 'no .md file was read at all'})
+    elif stats['claims'] == 0:
+        coverage.append({'kind': 'NOCLAIMS', 'file': ', '.join(seen), 'line': 0,
+                         'detail': 'not one N:1 figure was extracted'})
+    for b in seen:
+        got = stats.get('claims_by_file', {}).get(b, 0)
+        base = CLAIM_BASELINE.get(b)
+        if base is None:
+            coverage.append({'kind': 'NOBASELINE', 'file': b, 'line': 0,
+                             'claims': got, 'baseline': None})
+        elif got < base:
+            coverage.append({'kind': 'SHRANK', 'file': b, 'line': 0,
+                             'claims': got, 'baseline': base})
+    ratchet = [(b, stats.get('claims_by_file', {}).get(b, 0),
+                CLAIM_BASELINE[b]) for b in seen
+               if b in CLAIM_BASELINE
+               and stats.get('claims_by_file', {}).get(b, 0) > CLAIM_BASELINE[b]]
+
+    # ------------------------------------------ 6. adjudication conservation ---
+    # CLAIM_BASELINE guards the denominator; this guards the numerator. Without
+    # it an exclusion bucket can absorb the whole corpus — `return True` at the
+    # top of `alpha_bearing()` gives 0 verified, 576 excluded and a green run —
+    # because every bucket in the INFO block is non-failing by design and the
+    # coverage section only ever asks how many figures were EXTRACTED.
+    #
+    # The floor alone is not enough, and the ceiling is not the same fact
+    # written twice. claims = verified + excluded + convicted — three buckets,
+    # and the total moves — so an exemption that widens just far enough to
+    # swallow a MISMATCH leaves verified exactly at its floor, leaves the
+    # claims total alone, and turns a red run green. Nothing else in this file
+    # can see that. `excluded` is computed here exactly as the summary line
+    # computes it for the whole run, so the per-file numbers add up to the
+    # printed totals by construction rather than by agreement.
+    bad_by_file, nm_by_file = {}, {}
+    for f in findings:
+        if f['kind'] == 'MISMATCH':
+            bad_by_file[f['file']] = bad_by_file.get(f['file'], 0) + 1
+        elif f['kind'] == 'NEARMISS':
+            nm_by_file[f['file']] = nm_by_file.get(f['file'], 0) + 1
+
+    conservation = []
+    verified_by_file, excluded_by_file = {}, {}
+    for b in seen:
+        v = stats['verified_by_file'].get(b, 0)
+        x = (stats['claims_by_file'].get(b, 0) - v
+             - bad_by_file.get(b, 0) - nm_by_file.get(b, 0))
+        verified_by_file[b], excluded_by_file[b] = v, x
+        floor = VERIFIED_BASELINE.get(b)
+        ceiling = EXCLUDED_CEILING.get(b)
+        if floor is None:
+            conservation.append({'kind': 'NOFLOOR', 'file': b, 'line': 0,
+                                 'verified': v, 'baseline': None})
+        elif v < floor:
+            conservation.append({'kind': 'UNVERIFIED', 'file': b, 'line': 0,
+                                 'verified': v, 'baseline': floor})
+        if ceiling is None:
+            conservation.append({'kind': 'NOCEILING', 'file': b, 'line': 0,
+                                 'excluded': x, 'baseline': None})
+        elif x > ceiling:
+            conservation.append({'kind': 'ABSORBED', 'file': b, 'line': 0,
+                                 'excluded': x, 'baseline': ceiling})
+    # Advisories, in the same direction-of-travel sense as the claim ratchet:
+    # a floor may only be raised and a ceiling may only be lowered, and only
+    # in a reviewed diff.
+    adj_ratchet = [('verified', b, verified_by_file[b], VERIFIED_BASELINE[b])
+                   for b in seen if b in VERIFIED_BASELINE
+                   and verified_by_file[b] > VERIFIED_BASELINE[b]]
+    adj_ratchet += [('excluded', b, excluded_by_file[b], EXCLUDED_CEILING[b])
+                    for b in seen if b in EXCLUDED_CEILING
+                    and excluded_by_file[b] < EXCLUDED_CEILING[b]]
 
     findings.sort(key=lambda f: (f['file'], f['line'], f['kind']))
     mismatches = [f for f in findings
                   if f['kind'] in ('MISMATCH', 'NEARMISS', 'LUMINANCE',
                                    'INCONSISTENT', 'ROUNDUP')]
+    failed = bool(mismatches) or bool(coverage) or bool(conservation)
 
     if as_json:
         out = dict(stats)
         out['suppressed_kinds'] = sorted(k for k in stats['suppressed_kinds'] if k)
+        out['excluded_by_file'] = excluded_by_file
         print(json.dumps({
             'files': [os.path.basename(p) for p in paths],
-            'tolerance': {'%ddp' % d: tolerance_for(d) for d in (0, 1, 2)},
-            'luminance_tolerance': L_TOLERANCE,
+            'tolerance': {'%ddp' % d: tolerance_for(d)
+                          for d in (0, 1, 2, 3, 4, 5, 6)},
+            'luminance_tolerance': 'half a step at the digits written',
             'findings': findings,
+            'coverage': coverage,
+            'ratchet': [{'file': b, 'claims': g, 'baseline': z}
+                        for b, g, z in ratchet],
+            # A consumer that sees failed:true with nothing in the payload
+            # explaining it is back to reading prose, and the conservation
+            # section is the one that fails with no finding attached to a line.
+            'conservation': conservation,
+            'adjudication_ratchet': [{'measure': w, 'file': b, 'count': g,
+                                      'baseline': z}
+                                     for w, b, g, z in adj_ratchet],
             'summary': out,
-            'failed': bool(mismatches),
+            'failed': failed,
         }, indent=2, sort_keys=True))
-        return 1 if mismatches else 0
+        return 1 if failed else 0
 
     print('==> checking recomputed contrast ratios in %d .md file(s)'
           % len(paths))
     bad = [f for f in findings if f['kind'] == 'MISMATCH']
     for f in bad:
-        print('  MISMATCH  %s:%d  claims %s:1, computed %s:1 (%s vs %s)'
-              % (f['file'], f['line'], f['claim'], f['actual'],
+        # `%.*f` on a TRUNCATED value: the message may not print a figure the
+        # pair does not have. `round(2.99534, 2)` is `3.0`, so the line that
+        # says a claim of 3:1 is wrong used to say the maths gives 3.0.
+        print('  MISMATCH  %s:%d  claims %s:1, computed %.*f:1 (%s vs %s)'
+              % (f['file'], f['line'], f['claim'], f['dp'], f['actual'],
                  f['pair'][0], f['pair'][1]))
         print('            candidates on the line: %s'
               % ' '.join(f['candidates']))
@@ -1125,9 +1714,12 @@ def main(argv):
     print('==> checking stated relative luminances')
     lum = [f for f in findings if f['kind'] == 'LUMINANCE']
     for f in lum:
-        print('  LUMINANCE %s:%d  %s states L %.4f, computes to %.4f (%s)'
-              % (f['file'], f['line'], f['colour'], f['stated'], f['actual'],
-                 f['source']))
+        # Printed at the precision the doc chose plus one digit. At a fixed
+        # 4dp a five-decimal claim and its five-decimal refutation printed as
+        # the same number, and the finding read as a tie.
+        print('  LUMINANCE %s:%d  %s states L %.*f, computes to %.*f (%s)'
+              % (f['file'], f['line'], f['colour'], f['dp'], f['stated'],
+                 f['dp'] + 1, f['actual'], f['source']))
     print('  ok' if not lum else '  ^ a stated luminance does not belong to the colour beside it')
 
     print('==> checking ratios follow from their own stated luminances')
@@ -1146,17 +1738,95 @@ def main(argv):
                  f['actual'], f['threshold']))
     print('  ok' if not ru else '  ^ W3C: values are not rounded up to meet a threshold')
 
+    print('==> checking claim extraction has not regressed (coverage ratchet)')
+    for c in coverage:
+        if c['kind'] == 'NOTHINGREAD':
+            print('  NOTHINGREAD  no .md file was read — an unread set is not '
+                  'a passing set')
+        elif c['kind'] == 'NOCLAIMS':
+            print('  NOCLAIMS     %d file(s) read and not one N:1 figure was '
+                  'extracted' % len(seen))
+        elif c['kind'] == 'NOBASELINE':
+            print('  NOBASELINE   %s yields %d claim(s) and has no committed '
+                  'baseline — add one to CLAIM_BASELINE'
+                  % (c['file'], c['claims']))
+        else:
+            print('  SHRANK       %s yields %d claim(s), below its committed '
+                  'baseline of %d — a figure stopped being extracted'
+                  % (c['file'], c['claims'], c['baseline']))
+    for b, got, base in ratchet:
+        print('  ratchet      %s now yields %d claim(s), above its baseline of '
+              '%d — raise it in CLAIM_BASELINE' % (b, got, base))
+    print('  ok' if not coverage else
+          '  ^ a claim the regex stops matching leaves no other trace')
+
+    print('==> checking adjudication has not regressed '
+          '(verified floor / excluded ceiling)')
+    for c in conservation:
+        if c['kind'] == 'NOFLOOR':
+            print('  NOFLOOR      %s verifies %d claim(s) and has no committed '
+                  'floor — add one to VERIFIED_BASELINE'
+                  % (c['file'], c['verified']))
+        elif c['kind'] == 'UNVERIFIED':
+            print('  UNVERIFIED   %s verifies %d claim(s), below its committed '
+                  'floor of %d — %d figure(s) left the maths without failing'
+                  % (c['file'], c['verified'], c['baseline'],
+                     c['baseline'] - c['verified']))
+        elif c['kind'] == 'NOCEILING':
+            print('  NOCEILING    %s excuses %d claim(s) and has no committed '
+                  'ceiling — add one to EXCLUDED_CEILING'
+                  % (c['file'], c['excluded']))
+        elif c['kind'] == 'ABSORBED':
+            print('  ABSORBED     %s excuses %d claim(s), above its committed '
+                  'ceiling of %d — an exclusion bucket grew by %d'
+                  % (c['file'], c['excluded'], c['baseline'],
+                     c['excluded'] - c['baseline']))
+    for what, b, got, base in adj_ratchet:
+        verb, edge, move, where = (
+            ('verifies', 'floor', 'raise', 'VERIFIED_BASELINE')
+            if what == 'verified' else
+            ('excuses', 'ceiling', 'lower', 'EXCLUDED_CEILING'))
+        print('  ratchet      %s now %s %d claim(s) against a committed %s of '
+              '%d — %s it in %s' % (b, verb, got, edge, base, move, where))
+    print('  ok' if not conservation else
+          '  ^ a figure moved into a non-failing bucket leaves no other trace')
+
     print('==> claims that cannot be recomputed (INFO — never a failure)')
     print('  info     %3d composited: an alpha-bearing colour value is in scope'
           % stats['composited'])
-    print('  info     %3d bare WCAG thresholds with no colour operands' % stats['threshold'])
+    # The citation bucket, split three ways. It used to print as one number
+    # labelled "bare WCAG thresholds with no colour operands", which was false
+    # for nine of its members and hid the last surviving shape of the
+    # value-only exemption inside an aggregate whose label denied it existed.
+    print('  info     %3d requirement citations with no operand pair in scope'
+          % stats['cite_bare'])
+    print('  info     %3d relational bound(s) (≥ / ≤ / <) WITH a pair in scope '
+          '— a bound states no measurement' % stats['cite_bound_pair'])
+    for w in stats['cite_bound_pair_where']:
+        print('             %s' % w)
+    print('  info     %3d canonical WCAG value(s) WITH a pair in scope, '
+          'exempted as citations (the remaining blind spot)'
+          % stats['cite_value_pair'])
+    # Printed unconditionally, not behind --verbose: this is the one bucket
+    # whose members are exempt from MISMATCH, NEARMISS and ROUNDUP at once,
+    # and a blind spot nobody can enumerate is a blind spot nobody audits.
+    for w in stats['cite_value_pair_where']:
+        print('             %s' % w)
     print('  info     %3d figures with no colour operands in scope' % stats['no_operands'])
     print('  info     %3d figures naming only one colour (no pair to compute)'
           % stats['single_operand'])
     print('  info     %3d suppressed by structure (%s)'
           % (stats['suppressed'],
              ', '.join(sorted(k for k in stats['suppressed_kinds'] if k))
-             or 'strikethrough / blockquote; none present'))
+             or 'strikethrough only; none present'))
+    # Printed for the same reason a suppressed claim is counted: a figure that
+    # leaves the run without a line is indistinguishable from one nobody
+    # wrote. Doc 08 §7 states luminances of composites it never prints as a
+    # colour ("C = 130.80 → L ≈ 0.2262"), so there is nothing to recompute
+    # them from — but the count says so out loud instead of the denominator
+    # quietly being smaller.
+    print('  info     %3d stated luminance(s) with no colour to their left in '
+          'the same clause' % stats['lum_unbound'])
     if verbose:
         for label, key in (('composited', 'composited_where'),
                            ('no operands', 'no_operands_where'),
@@ -1176,7 +1846,7 @@ def main(argv):
     print('  %d ratio/luminance consistency check(s) passed, %d failed.'
           % (stats['consistency_verified'], len(inc)))
 
-    if mismatches:
+    if failed:
         print()
         print('FAILED — see above.')
         return 1

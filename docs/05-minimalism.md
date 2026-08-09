@@ -1137,7 +1137,7 @@ Minimalism has fewer visual channels than any other style in this set, so state 
 | Selected | Accent-tinted background plus a 2px accent inline-start bar | `background: var(--min-accent-subtle)`, `box-shadow: inset 2px 0 0 var(--min-accent)` |
 | Disabled | 50% opacity, `cursor: not-allowed`, `aria-disabled` | Never rely on opacity alone to communicate *why* |
 | Loading | Determinate bar when progress is known; a 2px indeterminate bar otherwise. No spinners over 24px, no skeleton shimmer | 1200ms loop; announce via `aria-busy` + visually-hidden "Loading" |
-| Error | 1px `var(--min-danger)` border plus a text message with an icon; never colour-only | Message at `var(--min-text-sm)`, `--min-danger` on `--min-surface-1` = 4.9:1 |
+| Error | 1px `var(--min-danger)` border plus a text message with an icon; never colour-only | Message at `var(--min-text-sm)`, `--min-danger` on `--min-surface-1` = 4.83:1 in light mode |
 | Empty | Single sentence plus one primary action; no illustration larger than 96px | — |
 
 **Durations.** 100ms for colour-only feedback on a control the pointer is already over; 150ms for hover/active; 200ms for local expansion (accordion, popover); 300ms for full-panel transitions. Nothing in this style should exceed 300ms — the whole point is that the interface gets out of the way.

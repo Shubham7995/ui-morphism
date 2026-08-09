@@ -846,7 +846,7 @@ Relative luminance for the core tokens (WCAG formula, sRGB):
 | `#4a3f2d` ink | 0.0520 | `#d9cfbc` darkest stop (L 0.6301) | **6.67:1** |
 | `#6b5c44` muted | 0.1120 | `#e8e0d2` face | **4.95:1** |
 | `#7a6a4e` strong border | 0.1500 | `#e8e0d2` face | **4.01:1** |
-| `#7a6a4e` strong border | 0.1500 | `#d8cfbe` chassis (L 0.6296) | **3.40:1** |
+| `#7a6a4e` strong border | 0.1500 | `#d8cfbe` chassis (L 0.6294) | **3.40:1** |
 | `#b8a98e` hairline | 0.4052 | `#e8e0d2` face | 1.76:1 — **decorative only** |
 | `#ede4d2` dark ink | 0.7814 | `#2e2920` dark face (L 0.0227) | **11.4:1** |
 | `#8a7a5e` dark border | 0.2013 | `#2e2920` dark face | **3.46:1** |

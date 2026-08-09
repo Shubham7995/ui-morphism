@@ -1181,17 +1181,17 @@ Never round a ratio up through its threshold. 4.497:1 fails 4.5:1; 2.96:1 fails 
 **Dark glass, light text, worst-case white backdrop** (a blown-out photo, a light-mode page behind). Fill `#14161C` = rgb(20, 22, 28). The shipped dark `--sp-panel` is `rgba(22,24,30,α)` = `#16181E`, two 8-bit steps lighter; it shifts every ratio below by at most 0.35 of a point and changes no conclusion, so both are quoted where it matters.
 
 - **α = 0.585** → composite `rgb(117.5, 118.7, 122.2)` → `L = 0.18350`. Against pure white text: `1.05 / 0.23350` = **4.497:1 — fails**. This is the round-up trap: it is not "4.5:1".
-- The exact 4.5:1 crossing against pure white text is **α = 0.5853**. Against the ink token actually paired with dark glass, `--sp-ink-1` dark `#F5F6FA` (`L = 0.92226`), it is **α = 0.6082**; with the `#16181E` token fill, **α = 0.6135**.
+- The exact 4.5:1 crossing against pure white text is **α = 0.5853**. Against the ink token actually paired with dark glass, `--sp-ink-1` dark `#F5F6FA` (`L = 0.92226`), it is **α = 0.6083**; with the `#16181E` token fill, **α = 0.6135**.
 - **α = 0.62** → composite `rgb(109.3, 110.5, 114.3)` → `L = 0.15760` → **5.06:1** against white, **4.68:1** against `#F5F6FA` (4.60:1 with the `#16181E` fill). First two-decimal step that passes with margin.
 - **α = 0.72** (the shipped `--sp-panel`) → composite `rgb(85.8, 87.2, 91.6)` → `L = 0.09589` → `1.05 / 0.14589` = **7.20:1** against white, **6.66:1** against `#F5F6FA`. Passes AA and AAA for body text.
 - **α = 0.83** → `L = 0.04762` → **10.76:1** / **9.96:1**. Not wrong, just more than twice the headroom AA asks for.
 - **α = 0.90** (`--sp-panel-legible` dark) → `L = 0.02661` → **12.69:1** against `#F5F6FA`.
 
-So the honest rule for a backdrop you do not control is **α ≥ 0.62 for dark glass carrying light body text** — not 0.83. The 0.72 default is not the compromise it looks like; against pure white text it already clears AAA (7.20:1). Against the real `#F5F6FA` ink it reaches 6.66:1 — AAA needs α ≥ 0.7335 there, so 0.72 is AA with a wide margin and just short of AAA.
+So the honest rule for a backdrop you do not control is **α ≥ 0.62 for dark glass carrying light body text** — not 0.83. The 0.72 default is not the compromise it looks like; against pure white text it already clears AAA (7.20:1). Against the real `#F5F6FA` ink it reaches 6.66:1 — AAA needs α ≥ 0.7336 there, so 0.72 is AA with a wide margin and just short of AAA.
 
 **Light glass, dark text, worst-case black backdrop.** This is where luminance-averaging does real damage. A white fill at alpha α over black composites to `rgb(255α, 255α, 255α)` — its luminance is *not* α, it is the sRGB transfer function applied to α. With `--sp-ink-1` light `#101014` (`L = 0.00531`):
 
-- **α = 0.20** → composite `rgb(51, 51, 51)` → `L = 0.03311` → `0.08311 / 0.05531` = **1.50:1**. The luminance-averaging model claims 4.52:1 for exactly this case. Anyone who trusted it shipped body text at a third of the contrast they believed they had.
+- **α = 0.20** → composite `rgb(51, 51, 51)` → `L = 0.03310` → `0.08310 / 0.05531` = **1.50:1**. The luminance-averaging model claims 4.52:1 for exactly this case. Anyone who trusted it shipped body text at a third of the contrast they believed they had.
 - **α = 0.40** → `rgb(102,102,102)` → `L = 0.13287` → **3.31:1** — large text only, never body copy.
 - **α = 0.483** → `L = 0.19864` → **4.495:1 — still fails.** The exact crossing is **α = 0.4833**; α = 0.484 → **4.51:1**.
 - **α = 0.60** → `L = 0.31855` → **6.66:1**.
