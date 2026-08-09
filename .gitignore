@@ -1,0 +1,22 @@
+# Local Claude Code tooling state
+.claude/tdd-guard/data/
+
+# macOS
+.DS_Store
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Python (check-contrast.py)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node (future plugin scaffolding)
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
