@@ -1,0 +1,185 @@
+/* ---------------------------------------------------------------------------
+ * Glassmorphism — `--um-glassmorphism-*` grammar bridge.
+ *
+ * assets/tokens.css carries the style's own `--glass-*` names verbatim from
+ * docs/03-glassmorphism.md §4. ui-morphism-core:token-emit speaks the shared
+ * grammar `--um-<style>-<group>[-<variant>]` defined in
+ * docs/00-comparison-matrix.md §7. This file is the mapping between them, and
+ * it matches the table-by-table mapping in ../references/tokens.md.
+ *
+ * Direction: `--um-glassmorphism-*` reads from `--glass-*`, never the reverse,
+ * so the verbatim §4 block stays the single place a value is written. Load
+ * tokens.css first, then this file. One copy covers every theme: each alias is
+ * a var() reference, so it inherits whichever of tokens.css's three theme
+ * blocks (bare :root dark, guarded light media query, explicit [data-theme])
+ * is active. Duplicating the aliases per theme is how the two lists drift.
+ *
+ * Groups deliberately NOT populated for this style:
+ *   elev      — the elevation ladder is not a separate token. A rung is the
+ *               unit: fill alpha + blur radius + border alpha + shadow, per
+ *               ../references/tokens.md §14. A parallel `elev` ramp would be a
+ *               second name for the same five steps.
+ *   font      — §4 fixes a type scale and a weight floor but no families; the
+ *               recipes use `system-ui`. Nothing to tokenise.
+ *   tracking  — §4 ships no letter-spacing values. The 0.12em in §7 is the
+ *               SC 1.4.12 test condition, not a design token.
+ *   accent-2… — glass carries one accent. Colour variety belongs to the ground.
+ *
+ * Tokens with no home in the closed group vocabulary (§7.3), which therefore
+ * keep their `--glass-*` names and are consumed directly. The list is closed on
+ * purpose, and core's rule is explicit: a concept with no entry gets a value
+ * with a comment, not a twenty-third group and not an invented variant. Every
+ * one of these is still validated by ui-morphism-core:a11y-validate — an alias
+ * is a naming convenience, not the thing that makes a value safe.
+ *   --glass-brightness      optional backdrop lift (1.06 dark / 0.98 light).
+ *                           There is no `brightness` group word, and it is an
+ *                           optional part of the backdrop-filter chain rather
+ *                           than a surface property.
+ *   --glass-backdrop-1…4    the composed `blur() saturate()` shorthands. These
+ *                           are compositions of two tokens, not a token.
+ *   --glass-ground-1…3      the three mesh-gradient hues. `bg` is a single
+ *                           bare token in the vocabulary — a page has one
+ *                           ground — and a gradient stop is not a second one.
+ *   --glass-fill-0          rung 0, the inline chip. `surface` runs 1-4.
+ *   --glass-text-scrim      the scrim behind body text. α ≥ 0.56 is solved, not
+ *                           chosen (§7: the crossing is 0.55734), and it is a
+ *                           hard clamp no intensity may lower. It is not a
+ *                           `surface` rung: it sits inside a pane rather than
+ *                           being one.
+ *   --glass-solid-1/2/4     the opaque mirror. Ships outside @supports, under
+ *                           reduced-transparency and prefers-contrast, at
+ *                           intensity 0, in print, and on low-end hardware. §4
+ *                           gives three solids for five rungs: rung 0 borrows
+ *                           solid-1, rung 3 borrows solid-2. Do not interpolate
+ *                           new hexes. Each is a second value for a rung that
+ *                           already has a `surface-N` name, so aliasing them
+ *                           would put two different colours behind one name.
+ *   --glass-r-xl            the fifth radius. `radius` runs sm/md/lg/pill.
+ *   --glass-inner-bottom    the optional bottom inset. The vocabulary carries
+ *                           one `shadow-inset` slot and §4 marks this one
+ *                           optional, so the top highlight takes the slot.
+ *   the focus halo          `0 0 0 5px rgba(0,0,0,0.55)`, a box-shadow that is
+ *                           additive to the outline and never a substitute for
+ *                           it. `focus` is color/width/offset; a halo is a
+ *                           fourth thing, and it lives in the focus recipe in
+ *                           ../references/recipes.md rather than in a token.
+ *
+ * Not tokenisable at all, and therefore absent by design:
+ *   feTurbulence `baseFrequency: 0.8` / `numOctaves: 4`. SVG filter primitives
+ *   do not read CSS custom properties, so the grain recipe lives in the inline
+ *   <filter> markup (../references/recipes.md §1) and only its opacity is a
+ *   token.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- ground. Emit this block ONLY in generated-ground mode. When the
+     project already owns a vivid, structured backdrop, glass populates no `bg`
+     group at all — it is a treatment that depends on a ground it does not own
+     (../references/tokens.md §9). ---- */
+  --um-glassmorphism-bg:                    var(--glass-ground-base);
+
+  /* ---- the fill ladder. Translucent, and only ever declared inside the
+     @supports block; the solid mirror keeps its own names below.
+     §4 ships five rungs (0-4); the vocabulary's `surface` group is 1-4, and it
+     ascends. Rungs 1-4 map straight across. Rung 0 — the inline chip, the one
+     rung with no shadow — keeps `--glass-fill-0`, because `surface-0` is not a
+     name the closed list has and renumbering the ladder to fit would put the
+     card at `surface-0` and desynchronise every rung reference in
+     ../references/tokens.md §14. ---- */
+  --um-glassmorphism-surface-1:             var(--glass-fill-1);
+  --um-glassmorphism-surface-2:             var(--glass-fill-2);
+  --um-glassmorphism-surface-3:             var(--glass-fill-3);
+  --um-glassmorphism-surface-4:             var(--glass-fill-4);
+
+  /* ---- backdrop filter parts. Blur scales with elevation, not with size. ---- */
+  --um-glassmorphism-blur-0:                var(--glass-blur-0);
+  --um-glassmorphism-blur-1:                var(--glass-blur-1);
+  --um-glassmorphism-blur-2:                var(--glass-blur-2);
+  --um-glassmorphism-blur-3:                var(--glass-blur-3);
+  --um-glassmorphism-blur-4:                var(--glass-blur-4);
+  --um-glassmorphism-saturate:              var(--glass-saturate);
+
+  /* ---- edges. The 1px hairline is structural: forced-colors strips shadows,
+     so a shadow-only edge leaves the pane with no boundary at all. Where the
+     border is the only thing marking a control it must be solved to 3:1
+     against the composite by ui-morphism-core:a11y-validate — these two
+     values are the resting appearance, not a compliant boundary. ---- */
+  --um-glassmorphism-border:                var(--glass-border-color);
+  --um-glassmorphism-border-strong:         var(--glass-border-strong);
+
+  --um-glassmorphism-radius-sm:             var(--glass-r-sm);
+  --um-glassmorphism-radius-md:             var(--glass-r-md);
+  --um-glassmorphism-radius-lg:             var(--glass-r-lg);
+  --um-glassmorphism-radius-pill:           var(--glass-r-pill);
+
+  /* ---- shadows. Wide blur, negative spread, never a hard offset. ---- */
+  --um-glassmorphism-shadow-1:              var(--glass-shadow-1);
+  --um-glassmorphism-shadow-2:              var(--glass-shadow-2);
+  --um-glassmorphism-shadow-3:              var(--glass-shadow-3);
+  /* The vocabulary carries one `shadow-inset` slot. It goes to the top
+     highlight, which is the structural one: it is what makes a flat translucent
+     rectangle read as a lit slab edge. §4 marks the bottom inset optional, and
+     it keeps `--glass-inner-bottom`. */
+  --um-glassmorphism-shadow-inset:          var(--glass-inner-top);
+
+  /* ---- texture ---- */
+  --um-glassmorphism-noise-opacity:         var(--glass-noise-opacity);
+
+  /* ---- foreground. Pure #FFF blooms against a bright backdrop, which is why
+     ink is 0.94 rather than 1. Muted never goes below 0.60. ---- */
+  --um-glassmorphism-ink:                   var(--glass-fg);
+  --um-glassmorphism-ink-muted:             var(--glass-fg-muted);
+  --um-glassmorphism-accent:                var(--glass-accent);
+
+  /* ---- danger. §6's error row: border to #ff6b81 at 0.55 alpha, fill +1 rung,
+     blur kept. State is never signalled by transparency alone, so this always
+     travels with text and ARIA. §4 declares no custom property for it. ---- */
+  --um-glassmorphism-danger:                rgba(255, 107, 129, 0.55);
+
+  /* ---- motion ---- */
+  --um-glassmorphism-dur-fast:              var(--glass-dur-out);
+  --um-glassmorphism-dur-base:              var(--glass-dur-in);
+  --um-glassmorphism-dur-slow:              var(--glass-dur-blur);
+  --um-glassmorphism-ease-standard:         var(--glass-ease);
+  --um-glassmorphism-ease-exit:             var(--glass-ease-out);
+
+  /* ---- focus. Two-tone by construction: a solid outline plus a dark halo, so
+     one of the two always has contrast against an unknowable backdrop. §4
+     declares no focus custom properties; these are the §5 and §6 literals
+     promoted to tokens. The halo is additive to the outline and is never a
+     substitute for it — forced-colors deletes box-shadow. ---- */
+  --um-glassmorphism-focus-color:           #ffffff;
+  --um-glassmorphism-focus-width:           2px;
+  --um-glassmorphism-focus-offset:          2px;
+
+  /* ---- hit target. Theme-independent. SC 2.5.8's floor is 24px; glass sits at
+     44 because a ~1.2:1 hairline over a moving composite is not an aimable
+     edge. ---- */
+  --um-glassmorphism-target-min:            var(--glass-target-min);
+
+  /* ---- type. §4 fixes the scale as raw numbers rather than custom properties,
+     so these are literals from that table, not var() references. ---- */
+  --um-glassmorphism-text-xs:               12px;
+  --um-glassmorphism-text-sm:               14px;
+  --um-glassmorphism-text-base:             16px;
+  --um-glassmorphism-text-lg:               20px;
+  --um-glassmorphism-text-xl:               24px;
+  --um-glassmorphism-text-2xl:              32px;
+  --um-glassmorphism-text-3xl:              44px;
+
+  --um-glassmorphism-leading-body:          1.5;
+  --um-glassmorphism-leading-display:       1.15;
+
+  /* §4: avoid weights under 400 on glass. Thin type disappears into a blurred
+     backdrop long before it disappears on an opaque one. */
+  --um-glassmorphism-weight-min:            400;
+
+  /* ---- space. §4's ramp; card padding is 20–24px. ---- */
+  --um-glassmorphism-space-1:               4px;
+  --um-glassmorphism-space-2:               8px;
+  --um-glassmorphism-space-3:               12px;
+  --um-glassmorphism-space-4:               16px;
+  --um-glassmorphism-space-5:               24px;
+  --um-glassmorphism-space-6:               32px;
+  --um-glassmorphism-space-7:               48px;
+}

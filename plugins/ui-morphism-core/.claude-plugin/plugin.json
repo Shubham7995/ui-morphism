@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "ui-morphism-core",
+  "displayName": "UI Morphism Core",
+  "version": "0.1.0",
+  "description": "Shared foundation for the ui-morphism style skills: host-framework detection, the --um-<style>-<group>-<variant> token grammar and its five emitters, the WCAG 2.2 contrast and CSS accessibility validator, the intensity contract, and the common audit-report format. Installed automatically as a dependency of any style plugin.",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/MARKETPLACE.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "design-tokens",
+    "accessibility",
+    "wcag",
+    "contrast",
+    "tailwind",
+    "css",
+    "validator"
+  ],
+  "metadata": {
+    "sourceDoc": "docs/MARKETPLACE.md",
+    "docSection": "7",
+    "lastResearched": "2026-08-09",
+    "contrastReference": "docs/check-contrast.py",
+    "grammarReference": "docs/00-comparison-matrix.md#7-shared-token-naming-convention"
+  }
+}

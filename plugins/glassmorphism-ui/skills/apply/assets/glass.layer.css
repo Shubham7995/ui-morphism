@@ -1,0 +1,252 @@
+/* ---------------------------------------------------------------------------
+ * glassmorphism-ui — the accessibility and ground layer.
+ *
+ * Source of truth: docs/03-glassmorphism.md §13 output 3 ("glass.layer.css — a
+ * @layer glass { … } containing the ground, grain filter, focus-ring recipe and
+ * all four accessibility media blocks, ordered so app styles can override it"),
+ * built from §5's vanilla recipe blocks 1, 4, 6 and 7, §7's escape-hatch
+ * requirements and §6's reduced-motion handling.
+ *
+ * Why a cascade layer: everything here is a floor, not a preference. Wrapping it
+ * in `@layer glass` means an unlayered app rule always wins on specificity ties,
+ * so a project can restyle the surfaces without having to out-specify the
+ * accessibility blocks — which stay last inside the layer and keep applying.
+ *
+ * What this file does NOT contain: the translucent fills and the blur
+ * declarations. Those live with the components, inside
+ * `@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))`,
+ * with the opaque declaration outside it (../references/recipes.md §1). Keeping
+ * them out of here is what lets this file be dropped into a project unchanged.
+ *
+ * Selector contract: `.glass` is the surface, `.glass--0` … `.glass--4` are the
+ * five elevation rungs, `.glass-btn` is a control on glass, `.glass-stage` is the
+ * ground. When the skill emits into a project that names things differently, it
+ * rewrites this selector list and nothing else.
+ *
+ * The grain filter itself is markup, not CSS — SVG filter primitives do not read
+ * custom properties. Render the <filter id="glass-grain"> block from
+ * ../references/recipes.md §1 exactly once per page, near the document root.
+ * ------------------------------------------------------------------------- */
+
+@layer glass {
+  /* ---------------------------------------------------------------- ground
+     Glass is invisible without one. Two to four saturated hues over the base,
+     with a luminance range you control (§3). Verbatim from §5 block 1. */
+
+  .glass-stage {
+    min-height: 100svh;
+    padding: 48px;
+    display: grid;
+    place-items: center;
+    background-color: var(--glass-ground-base);
+    background-image:
+      radial-gradient(60rem 40rem at 12% 18%, color-mix(in oklab, var(--glass-ground-1) 70%, transparent), transparent 60%),
+      radial-gradient(50rem 36rem at 88% 24%, color-mix(in oklab, var(--glass-ground-2) 70%, transparent), transparent 62%),
+      radial-gradient(46rem 34rem at 50% 96%, color-mix(in oklab, var(--glass-ground-3) 60%, transparent), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  /* The contrast clamp, §7 option 1 — "put a linear-gradient(rgba(0,0,0,.35),
+     rgba(0,0,0,.55)) darkening layer between the ground and the glass". It is
+     the first background-image layer, so it paints on top of the blobs and
+     under every child: no extra element, no new stacking context, and nothing
+     that could accidentally become a backdrop root.
+
+     With a 12% white fill, white body text clears 4.5:1 while the backdrop
+     stays at or below roughly #646464 (sRGB 100); the 3:1 large-text/UI ceiling
+     is roughly #868686 (sRGB 134). Clamping the ground is the only one of §7's
+     three fixes that keeps the panel reading as glass. Verify the result with
+     ui-morphism-core:a11y-validate — this class is the mechanism, not a
+     guarantee, because the ceiling depends on the fill rung above it. */
+  .glass-stage--clamped {
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.55)),
+      radial-gradient(60rem 40rem at 12% 18%, color-mix(in oklab, var(--glass-ground-1) 70%, transparent), transparent 60%),
+      radial-gradient(50rem 36rem at 88% 24%, color-mix(in oklab, var(--glass-ground-2) 70%, transparent), transparent 62%),
+      radial-gradient(46rem 34rem at 50% 96%, color-mix(in oklab, var(--glass-ground-3) 60%, transparent), transparent 60%);
+  }
+
+  /* ----------------------------------------------------------------- grain
+     Sits above the fill and below the content, at 2–5% opacity. Kills the
+     banding a blurred gradient produces, and adds the microtexture real glass
+     has. §5 block 4. The parent carries `isolation: isolate` and must never
+     carry `opacity` — that would make it a backdrop root and kill the blur. */
+
+  .glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    filter: url(#glass-grain);
+    opacity: var(--glass-noise-opacity);
+    pointer-events: none;
+  }
+
+  /* ----------------------------------------------------------------- focus
+     A single-colour ring cannot work on glass: the ring's surroundings are
+     unknowable, and they change as the user scrolls. The two-tone ring is a
+     2px solid outline plus a 5px dark halo behind it, so one of the two always
+     has contrast. The halo is additive — never collapse this into one ring, and
+     never replace the outline with a box-shadow, because forced-colors deletes
+     box-shadow entirely. §5 block 6, §7 "Focus-visible strategy". */
+
+  .glass-btn:focus-visible,
+  .glass--interactive:focus-visible,
+  .glass :focus-visible {
+    outline: var(--um-glassmorphism-focus-width, 2px) solid var(--um-glassmorphism-focus-color, #ffffff);
+    outline-offset: var(--um-glassmorphism-focus-offset, 2px);
+    box-shadow: var(--um-glassmorphism-focus-halo, 0 0 0 5px rgba(0, 0, 0, 0.55));
+  }
+
+  /* A focusable element that scrolls under a sticky glass bar and stays partly
+     visible through it does not satisfy SC 2.4.11 (§7). Set the value to the
+     bar's own height. The 64px default is §8's own worked example of a
+     full-width glass header, and the skill replaces it with the measured height
+     of the emitted `GlassNav`. */
+  :where(.glass-stage) :is(a, button, input, select, textarea, summary, [tabindex]) {
+    scroll-margin-top: var(--glass-sticky-height, 64px);
+  }
+
+  /* -------------------------------------------- escape hatch 1: transparency
+     Two signals, both honoured. The media query covers Chrome and Edge 118+;
+     Safari does not implement it as of August 2026, and Safari is the platform
+     whose users are most likely to have Reduce Transparency switched on. The
+     attribute hook is what an in-app "Reduce transparency" toggle sets on
+     <html>, and it is not optional coverage — it is the coverage. §7. */
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .glass--0,
+    .glass--1,
+    .glass--2,
+    .glass--3,
+    .glass--4,
+    .glass-btn {
+      background-color: var(--glass-solid-2);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    .glass::after { display: none; }
+    .glass-stage { background-attachment: scroll; }
+  }
+
+  :root[data-transparency="reduced"] :is(.glass, .glass--0, .glass--1, .glass--2, .glass--3, .glass--4, .glass-btn) {
+    background-color: var(--glass-solid-2);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  :root[data-transparency="reduced"] .glass::after { display: none; }
+
+  /* ------------------------------------------------ escape hatch 2: contrast
+     `prefers-contrast: more` produces the opaque variant as well, and pulls the
+     border up to the text colour so the pane's edge stops depending on a
+     hairline that measures ~1.2:1 over a light composite. §5 block 7, §7. */
+
+  @media (prefers-contrast: more) {
+    .glass,
+    .glass--0,
+    .glass--1,
+    .glass--2,
+    .glass--3,
+    .glass--4,
+    .glass-btn {
+      background-color: var(--glass-solid-1);
+      border-color: var(--glass-fg);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    .glass::after { display: none; }
+  }
+
+  /* ------------------------------------------- escape hatch 3: forced colors
+     The UA overrides colours but does NOT override `backdrop-filter`. A blur
+     left alive here smears the forced-colour backdrop and destroys the point of
+     the mode, so it is nulled by hand. Forced colors also strips shadows
+     entirely, which is the second reason the 1px border is mandatory: without
+     it the pane would have no boundary at all in the mode that needs one most.
+     System colour keywords only. §5 block 7, §7. */
+
+  @media (forced-colors: active) {
+    .glass,
+    .glass--0,
+    .glass--1,
+    .glass--2,
+    .glass--3,
+    .glass--4,
+    .glass-btn {
+      background-color: Canvas;
+      color: CanvasText;
+      border: 1px solid CanvasText;
+      box-shadow: none;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      forced-color-adjust: none;
+    }
+
+    .glass::after { display: none; }
+
+    .glass-btn:focus-visible,
+    .glass--interactive:focus-visible,
+    .glass :focus-visible {
+      outline: 2px solid Highlight;
+      box-shadow: none;
+    }
+  }
+
+  /* ---------------------------------------------- escape hatch 4: reduced motion
+     Durations collapse to 1ms rather than being removed — removing a transition
+     causes state-change flashes. The transform components go entirely, the
+     opacity crossfade stays, and `background-attachment: fixed` becomes
+     `scroll`: parallax-feeling grounds are a vestibular trigger and fixed
+     attachment is also a scroll-performance liability on iOS Safari. Nothing
+     here removes a state-carrying property. §6. */
+
+  @media (prefers-reduced-motion: reduce) {
+    .glass,
+    .glass-btn {
+      transition-duration: 1ms;
+      animation-duration: 1ms;
+      animation-iteration-count: 1;
+    }
+
+    .glass-btn:active { transform: none; }
+    .glass-stage { background-attachment: scroll; }
+  }
+
+  /* ------------------------------------------------------------------ print
+     `backdrop-filter` does not exist in print, email HTML or PDF export, so the
+     export pipeline needs a solid variant (§9, §13 checklist). The doc ships no
+     print palette — these are plain black on white rather than a `--glass-solid-*`
+     token, because paper is white and printing a dark card floods the page with
+     ink. That is the one colour pair in this file not taken from §4. */
+
+  @media print {
+    .glass,
+    .glass--0,
+    .glass--1,
+    .glass--2,
+    .glass--3,
+    .glass--4,
+    .glass-btn {
+      background-color: #ffffff;
+      color: #000000;
+      border: 1px solid #000000;
+      box-shadow: none;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
+    .glass::after { display: none; }
+
+    .glass-stage {
+      background-image: none;
+      background-color: #ffffff;
+      min-height: 0;
+      padding: 0;
+    }
+  }
+}

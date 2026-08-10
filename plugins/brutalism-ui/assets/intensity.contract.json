@@ -1,0 +1,68 @@
+{
+  "style": "brutalism",
+  "default": 60,
+  "sourceDoc": "docs/07-brutalism.md",
+  "docSection": "13",
+  "baselineAtZero": "A bordered, square, flat, fully usable control on a cream ground with a visible 3px focus outline. Doc §12 identifies this as neubrutalism's own minimalism fallback: the style is flat design plus a border and an offset, and dialling both to their floor lands exactly here.",
+  "knobs": {
+    "shadowOffset": {
+      "unit": "px",
+      "anchors": [[0, 0], [50, 4], [100, 12]],
+      "emitAs": "integer px — round the resolved value at emit time",
+      "note": "Doc §13: linear, integer-rounded, 4px at 50. The contract carries the unrounded curve (5.6 at the default 60) and the skill rounds to 6px when it writes --nb-sx / --nb-sy, because rounding inside the curve would make the monotonicity sweep read a staircase where the doc states a line. At 0 the set switches to §8's named .nb--flat fallback: border only, no shadow."
+    },
+    "borderWidth": {
+      "unit": "px",
+      "anchors": [
+        [0, 1], [24.9, 1],
+        [25, 2], [49.9, 2],
+        [50, 3], [74.9, 3],
+        [75, 4], [99.9, 4],
+        [100, 5]
+      ],
+      "note": "Doc §13: stepped 1 / 2 / 3 / 4 / 5 at 0 / 25 / 50 / 75 / 100. Plateaus encode the hold; the 0.1-wide ramps sit below each boundary so no integer intensity lands inside one."
+    },
+    "radius": {
+      "unit": "px",
+      "anchors": [[0, 12], [50, 5], [100, 0]],
+      "note": "Doc §13: inverse linear, 5px at 50. Inverse but monotone — rule 1 permits this. 12px is the ceiling; at or above it this is claymorphism."
+    },
+    "chroma": {
+      "unit": "%",
+      "at0": 35,
+      "at100": 100,
+      "note": "Doc §13: percentage of the source accent's OKLCH C, with L and H held so contrast never moves with the knob."
+    },
+    "tilt": {
+      "unit": "deg",
+      "at0": 0,
+      "at100": 3,
+      "note": "Doc §13: decorative badges and stickers only, never a focusable or an ancestor of one."
+    }
+  },
+  "clamps": {
+    "shadowOffset": { "min": 0 },
+    "borderWidth": { "min": 1 },
+    "radius": { "min": 0, "max": 12 },
+    "chroma": { "min": 35, "max": 100 },
+    "tilt": { "min": 0, "max": 3 }
+  },
+  "contextCaps": [
+    {
+      "when": { "scope": "product" },
+      "cap": 45,
+      "reason": "Doc §9: dense product UI takes this style as an accent, not a skin. Doc §13 additionally hard-clamps shadowOffset to 4px, borderWidth to 2px and tilt to 0 under this scope; those three are applied by the skill after resolution and reported alongside the cap."
+    }
+  ],
+  "clampsNotExpressibleHere": {
+    "shadowBlur": "exactly 0, always — not a knob, an invariant",
+    "shadowSpread": "0 except 1px on the xl and 2xl rungs",
+    "focusOutline": ">= 3px at >= 2px offset",
+    "targetMin": ">= 24x24 CSS px, 44px shipped",
+    "accentFillsPerView": "<= 3",
+    "shadowLayersPerElement": "<= 2",
+    "darkBorder": "never #000 on a dark surface",
+    "tiltOnFocusableAncestor": "never",
+    "note": "These are style invariants rather than knob bounds: they constrain the emitted CSS, not the value of a knob, so ui-morphism-core:a11y-validate and ../skills/audit/references/checklist.md enforce them. Recorded here so the clamp table is readable as the complete list."
+  }
+}

@@ -1,0 +1,139 @@
+---
+name: audit
+description: >-
+  Use to check a UI that ALREADY uses a bento or varied-span tile grid against this
+  pattern's own invariants, when the user names it or describes its concrete moves and
+  wants a review rather than a change. The invariants it owns: the reading-flow guard — DOM
+  order versus visual order, `grid-auto-flow: dense` or `order` over focusable tiles
+  without a `reading-flow` guard, which is an SC 1.3.2 conformance failure; one heading and
+  zero-or-one links per tile, and the two-links-under-a-full-tile-overlay trap; the
+  dominant tile's share of the section and the distinct-span count; interactive-border
+  alpha against the 3:1 crossing; scrim strength over cover imagery; fixed `grid-auto-rows`
+  clipping text at 200% zoom; single-column collapse at 320px; and the tile-image byte
+  budget. Writes a report only; never edits — use bento-grid-ui:apply to build, convert or
+  restructure a grid. This is NOT a general design, taste, visual-craft or AI-slop audit,
+  and not a general accessibility, layout or responsive-design sweep: it will not answer
+  "is my design good", "critique this UI", "find the AI tells", "review my animations" or
+  "audit my site's accessibility". Dedicated design-quality, de-slopping, animation and
+  a11y tools answer those better and should win them. Do not use for frosted panels
+  (glassmorphism-ui:audit), Liquid Glass refraction (liquid-glass-ui:audit), hard-bordered
+  restyling (brutalism-ui:audit), soft extrusion (neumorphism-ui:audit) or depth ladders
+  (spatial-ui:audit).
+argument-hint: "[scope glob] [--budget-images=600KB] [--sticky-header=88px]"
+allowed-tools: Read Glob Grep Bash(node ${CLAUDE_SKILL_DIR}/../apply/scripts/assign-spans.mjs *)
+license: MIT
+metadata:
+  sourceDoc: docs/09-bento-grid.md
+  docSection: "13"
+  lastResearched: "2026-08-08"
+---
+
+# Bento grid: audit
+
+Review an existing bento or tile grid and produce a written report. **This skill does not edit
+source files.** It reads, measures and reports. If the user wants the findings fixed, hand off
+to `bento-grid-ui:apply` with the report attached.
+
+The audit exists because this pattern's failures are structural, and structural failures are
+invisible to the tools people already run. Lighthouse and axe will not tell you that
+`grid-auto-flow: dense` moved tile seven above tile three, that a tile contains two links under
+a full-tile overlay so the second is unclickable, that `grid-auto-rows: 180px` clips its own
+content at 200% zoom, or that the section ships 2.4MB of screenshots because no image carries a
+`sizes` attribute. Every one of those is a shipped bento in the wild.
+
+## Before you start
+
+1. Run `ui-morphism-core:detect-stack` to locate the styling system and the component root. You
+   need it to know which files hold the grid and which hold the tiles.
+2. Read `references/checklist.md`. It is the checklist you are running, in order.
+3. Establish scope. Default is the section the user named plus the stylesheet that governs it.
+4. Ask what the **sticky header height** is, if there is one. SC 2.4.11 findings depend on it and
+   it is not derivable from the grid's own CSS.
+
+## Procedure
+
+1. **Inventory the grid.** Find the container: `display: grid` with a spanning child, a
+   `BentoGrid`-shaped component, or a Tailwind `grid-cols-*` list whose children carry
+   `col-span-*` / `row-span-*`. Record for each tile: its span, its content type, its link count,
+   its heading level, its media and that media's declared dimensions.
+
+2. **Recompute the composition.** Feed the inventory to the planner as JSON:
+
+   ```
+   node ${CLAUDE_SKILL_DIR}/../apply/scripts/assign-spans.mjs <inventory.json> --json --no-fail
+   ```
+
+   Its `checks` array gives the decidable composition findings — hero count, distinct spans, tile
+   count, one link per tile, dominant-tile area share, uniformity, empty cells, reveal budget,
+   growable rows, sparse flow, mobile collapse — and its `tiles` array gives the span the content
+   *would* have been assigned, which is the most useful column in the report when the shipped
+   spans disagree with the content weight. `--no-fail` because an audit reports rather than
+   exits.
+
+3. **Run `ui-morphism-core:a11y-validate`** for all nine universal checks. Ask it for: body and
+   muted text on both tile backgrounds, the accent on tile, the interactive border against the
+   tile, the focus ring against the tile, and white text over the scrim composited on **pure
+   white** imagery — the only safe assumption with CMS or user-supplied photographs. Never
+   compute a ratio here.
+
+4. **Check reading order by hand.** This is the finding the pattern exists to catch and it is
+   not automatable. Read the DOM order, read the visual order the CSS produces, and say whether
+   they are the same. Look specifically for `grid-auto-flow: dense`, `order`, negative
+   `grid-row-start`, absolute positioning of sequential content, and any `reading-flow` used
+   without a correct DOM order underneath.
+
+5. **Check the tile interiors.** One `<h3>` per tile at the right level under the section's
+   `<h2>`; zero or one links; `role="list"` present on the `<ul>`; no `role="grid"`; decorative
+   images at `alt=""` and informative screenshots with real alt text or a visible caption; chips
+   and icon buttons sizing from `--bento-target-min` rather than a literal.
+
+6. **Measure the budgets.** Total section image bytes against ≤ 600KB (warn) and ≤ 1.2MB (fail).
+   Largest tile image against ≤ 200KB. Autoplaying videos against one per section at ≤ 2MB with a
+   poster. `backdrop-filter` element count against ≤ 1. Unsized media against a CLS budget of
+   0.02. Missing `sizes` attributes, which are the most common single cause of a blown budget.
+
+7. **Check the escape hatches.** `prefers-reduced-motion: reduce` neutralising transform,
+   animation and tile video; `forced-colors: active` giving every tile a `CanvasText` border,
+   dropping shadows, hiding the scrim and using `Highlight` for focus.
+
+8. **Write the report** using the `ui-morphism-core` report template. Name it `bento-audit.md`
+   unless the user asks otherwise.
+
+## What the report contains
+
+Core owns the template and the section order — Summary, Contrast table, Checklist, Budgets,
+Corrections, Refusals, Manual TODOs. This style supplies:
+
+- **Per-tile table**: shipped span, span the content weight implies, content type, computed
+  text/background contrast, image weight, alt-text status, link count, heading level. One row per
+  tile. Where the shipped and implied spans differ, say which is right and why.
+- **Composition metrics**: tile count, distinct spans, dominant tile's share of the section area
+  against §3's 30–40%, measured largest:smallest area ratio, empty cells, grid rows.
+- **Reading-order verdict**: DOM order versus visual order, stated as same or different, with the
+  offending declaration when different. This is the headline finding of a bento audit.
+- **Contrast table**: three decimal places, unrounded, including the scrim composite against pure
+  white imagery.
+- **Budget table**: the six numbers from step 6, each against its limit.
+- **Corrections**: empty by construction — this skill changes nothing. What the user should
+  change goes in recommendations, ordered by severity.
+- **Manual TODOs**: always at least these three, because none is computable from source. Tab
+  through the whole section and confirm focus moves left-to-right and top-to-bottom with no
+  jumps. Render at 320px and confirm one column with no horizontal scroll. Render at 200% text
+  zoom and confirm no tile clips its content.
+
+## Severity, so the report is actionable rather than a list
+
+- **Fail** — a text pair below 4.5:1 or an interactive border below 3:1; `grid-auto-flow: dense`
+  over focusable tiles with no `reading-flow` guard; two links in a tile under a full-tile
+  overlay; a card wrapped entirely in one `<a>`; `role="grid"`; a fixed `grid-auto-rows` clipping
+  text; horizontal scroll at 320px; text over imagery with no scrim; a missing focus indicator; a
+  target below 24×24; image bytes above 1.2MB.
+- **Risk** — inside the letter of the rules but fragile: muted text at 4.66:1 with no headroom; a
+  hairline border on a tile that is a control; more than nine tiles; a CMS-driven tile count; a
+  dominant tile outside the 30–40% band; image bytes above 600KB; missing `sizes`; unsized media.
+- **Note** — style-fidelity findings that are not compliance findings: more than five distinct
+  spans; mixed radii or gaps; icon-per-tile where the 2024–2026 wave uses product screenshots;
+  a uniform grid presented as a bento; hover motion on non-interactive tiles.
+
+Do not upgrade a Note to a Fail to make the report look decisive, and do not soften a Fail
+because the composition is otherwise good. The severity is the useful part.

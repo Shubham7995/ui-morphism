@@ -1,0 +1,115 @@
+/* ------------------------------------------------------------------
+ * bento-grid-ui — token layer
+ * Source of truth: docs/09-bento-grid.md §4 (Anatomy & Design Tokens).
+ * Emitted verbatim from that section; 42 declared --bento-* properties.
+ * Do not hand-edit values here. Re-derive them from the doc, or emit a
+ * palette-substituted copy through ui-morphism-core:token-emit.
+ * ------------------------------------------------------------------ */
+
+:root {
+  /* ---- grid ---- */
+  --bento-cols: 12;
+  --bento-gap: 16px;
+  --bento-gap-lg: 24px;
+  --bento-row: 180px;
+  --bento-max-w: 1280px;
+
+  /* ---- surface ---- */
+  --bento-page-bg: #ffffff;
+  --bento-tile-bg: #f5f5f7;
+  --bento-tile-bg-raised: #ffffff;
+  --bento-border: 1px solid rgba(0, 0, 0, 0.06);
+  --bento-border-interactive: 1px solid rgba(0, 0, 0, 0.45);
+
+  /* ---- shape ---- */
+  --bento-radius: 24px;
+  --bento-radius-media: 12px;
+  --bento-radius-chip: 999px;
+
+  /* ---- elevation ---- */
+  --bento-shadow-rest: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --bento-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+
+  /* ---- spacing ---- */
+  --bento-pad-sm: 20px;
+  --bento-pad-md: 24px;
+  --bento-pad-lg: 32px;
+  --bento-pad-stack: 16px;
+  --bento-pad-tight: 8px;
+
+  /* ---- targets ---- */
+  /* Sized for the chips and icon buttons inside a tile, not the tile: those are
+     the only elements here that can fall under the SC 2.5.8 floor. Bumped to
+     the touch minimum on coarse pointers below. */
+  --bento-target-min: 24px;
+
+  /* ---- colour ---- */
+  --bento-fg: #1d1d1f;
+  --bento-fg-muted: #6e6e73;
+  --bento-accent: #0071e3;
+  --bento-focus: #0071e3;
+  --bento-scrim: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.72) 0%,
+    rgba(0, 0, 0, 0.28) 45%,
+    rgba(0, 0, 0, 0) 70%
+  );
+
+  /* ---- type ---- */
+  --bento-eyebrow: 600 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bento-eyebrow-tracking: 0.06em;
+  --bento-title: 600 clamp(20px, 1.4vw + 12px, 28px)/1.2 system-ui, -apple-system, sans-serif;
+  --bento-title-tracking: -0.02em;
+  --bento-hero: 600 clamp(28px, 2.6vw + 8px, 44px)/1.1 system-ui, -apple-system, sans-serif;
+  --bento-hero-tracking: -0.03em;
+  --bento-body: 400 16px/1.5 system-ui, -apple-system, sans-serif;
+  --bento-stat: 700 clamp(40px, 4vw, 72px)/1 system-ui, -apple-system, sans-serif;
+  --bento-stat-tracking: -0.04em;
+
+  /* ---- motion ---- */
+  --bento-dur-press: 90ms;
+  --bento-dur-hover: 180ms;
+  --bento-dur-reveal: 320ms;
+  --bento-stagger: 40ms;
+  --bento-ease: cubic-bezier(0.2, 0, 0, 1);
+  --bento-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --bento-lift: -2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bento-page-bg: #000000;
+    --bento-tile-bg: #161617;
+    --bento-tile-bg-raised: #1d1d1f;
+    --bento-border: 1px solid rgba(255, 255, 255, 0.08);
+    --bento-border-interactive: 1px solid rgba(255, 255, 255, 0.35);
+    --bento-shadow-rest: 0 1px 2px rgba(0, 0, 0, 0.40);
+    --bento-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
+    --bento-fg: #f5f5f7;
+    --bento-fg-muted: #a1a1a6;
+    --bento-accent: #0a84ff;
+    --bento-focus: #0a84ff;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bento-page-bg: #000000;
+  --bento-tile-bg: #161617;
+  --bento-tile-bg-raised: #1d1d1f;
+  --bento-border: 1px solid rgba(255, 255, 255, 0.08);
+  --bento-border-interactive: 1px solid rgba(255, 255, 255, 0.35);
+  --bento-shadow-rest: 0 1px 2px rgba(0, 0, 0, 0.40);
+  --bento-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
+  --bento-fg: #f5f5f7;
+  --bento-fg-muted: #a1a1a6;
+  --bento-accent: #0a84ff;
+  --bento-focus: #0a84ff;
+}
+
+/* Touch. This is the same breakpoint story as the grid: under 768px the layout
+   collapses to one column, every tile is full-width, and the in-tile chips stop
+   being mouse targets and start being thumb targets. 24px clears the SC 2.5.8
+   floor but not a fingertip. Placed last so it wins in both themes. */
+@media (pointer: coarse) {
+  :root { --bento-target-min: 44px; }
+}

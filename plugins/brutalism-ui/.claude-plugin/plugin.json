@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "brutalism-ui",
+  "displayName": "Brutalism & Neubrutalism UI",
+  "version": "0.1.0",
+  "description": "Neubrutalist restyling. Emits a border-first token layer with a six-step zero-blur hard-shadow scale, rewrites components to border-plus-offset surfaces with the hover-into-its-own-shadow interaction, flips the border token to a light ink in dark mode, and self-audits every emitted pair against WCAG 2.2.",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/07-brutalism.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "brutalism",
+    "neubrutalism",
+    "neobrutalism",
+    "hard-shadow",
+    "sticker-ui",
+    "anti-design",
+    "design-tokens"
+  ],
+  "dependencies": [
+    { "name": "ui-morphism-core", "version": "^0.1.0" }
+  ],
+  "metadata": {
+    "sourceDoc": "docs/07-brutalism.md",
+    "docSection": "13",
+    "lastResearched": "2026-08-08",
+    "statusIn2026": "mainstream",
+    "a11yRisk": "medium",
+    "perfCost": "low"
+  }
+}

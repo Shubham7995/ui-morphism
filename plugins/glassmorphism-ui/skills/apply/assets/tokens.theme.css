@@ -1,0 +1,178 @@
+/* ---------------------------------------------------------------------------
+ * glassmorphism-ui — Tailwind CSS v4 mirror of the token layer
+ *
+ * Source of truth: docs/03-glassmorphism.md §5 "Tailwind CSS v4". The @theme
+ * block and the `glass-*` composite utility are reproduced verbatim from that
+ * recipe. The `:root[data-theme="light"]` block after them is the §4 light-ground
+ * list mapped mechanically into the same Tailwind namespace — same values, same
+ * order, no new numbers.
+ *
+ * Three invariants this file exists to protect (00-comparison-matrix.md §7.4
+ * Rule 4, and doc §5):
+ *   1. `@theme` is never nested inside @media, @layer or any other at-rule.
+ *      Theme switching happens outside it, on ordinary selectors.
+ *   2. The ladder is complete — 0,1,2,3,4 in both the --blur-glass-* and
+ *      --color-glass-fill-* namespaces. A missing rung makes `glass-0` resolve
+ *      to nothing and the pane renders fully transparent.
+ *   3. The v4 matcher is written `--value(--namespace-*)` with no space before
+ *      the `*`. With a space the matcher never resolves, the utility silently
+ *      falls back to the opaque fill, and `glass-2` is never glass.
+ * ------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+@theme {
+  /* Extra blur stops so the elevation ladder maps 1:1 to utilities. */
+  --blur-glass-0: 8px;
+  --blur-glass-1: 12px;
+  --blur-glass-2: 20px;
+  --blur-glass-3: 28px;
+  --blur-glass-4: 40px;
+
+  /* The 0 step must exist or `glass-0` resolves to nothing and the pane is
+     transparent. Keep the ladder complete: 0,1,2,3,4 in both namespaces. */
+  --color-glass-fill-0: rgba(255, 255, 255, 0.06);
+  --color-glass-fill-1: rgba(255, 255, 255, 0.10);
+  --color-glass-fill-2: rgba(255, 255, 255, 0.14);
+  --color-glass-fill-3: rgba(255, 255, 255, 0.18);
+  --color-glass-fill-4: rgba(255, 255, 255, 0.24);
+  --color-glass-edge: rgba(255, 255, 255, 0.22);
+  --color-glass-edge-strong: rgba(255, 255, 255, 0.34);
+  --color-glass-solid: #1d2130;
+
+  --radius-glass: 16px;
+  --radius-glass-lg: 28px;
+
+  --shadow-glass-1: 0 1px 2px rgba(0, 0, 0, 0.16);
+  --shadow-glass-2: 0 8px 32px -8px rgba(0, 0, 0, 0.38);
+  --shadow-glass-3: 0 24px 64px -16px rgba(0, 0, 0, 0.48);
+
+  --ease-glass: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Composite utility: opaque first, glass only where supported. */
+@utility glass-* {
+  border-width: 1px;
+  border-color: var(--color-glass-edge);
+  border-radius: var(--radius-glass);
+  background-color: var(--color-glass-solid);
+  box-shadow: var(--shadow-glass-2), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+
+  /* v4 matcher syntax is `--value(--namespace-*)` — no space before the `*`.
+     With a space the matcher never resolves and the utility silently falls
+     back to the opaque fill, so `glass-2` is never glass. */
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: --value(--color-glass-fill-*);
+    -webkit-backdrop-filter: blur(--value(--blur-glass-*)) saturate(160%);
+    backdrop-filter: blur(--value(--blur-glass-*)) saturate(160%);
+  }
+
+  @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+    background-color: var(--color-glass-solid);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  @media (forced-colors: active) {
+    background-color: Canvas;
+    border-color: CanvasText;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Theme switching. Outside @theme, on ordinary selectors, because @theme may
+ * not be nested. Values are doc §4's light-ground column, unchanged.
+ *
+ * Glassmorphism is dark-first: the @theme block above already carries the dark
+ * values, so the guarded media query is the LIGHT one and the explicit
+ * [data-theme="light"] block repeats it in full. A partial override is the bug
+ * that leaves half the palette on the other theme and produces dark text on a
+ * dark scrim.
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --color-glass-fill-0: rgba(15, 18, 28, 0.28);
+    --color-glass-fill-1: rgba(15, 18, 28, 0.36);
+    --color-glass-fill-2: rgba(15, 18, 28, 0.44);
+    --color-glass-fill-3: rgba(15, 18, 28, 0.52);
+    --color-glass-fill-4: rgba(15, 18, 28, 0.60);
+    --color-glass-edge: rgba(15, 18, 28, 0.14);
+    --color-glass-edge-strong: rgba(15, 18, 28, 0.22);
+    --color-glass-solid: #f7f8fc;
+    --shadow-glass-1: 0 1px 2px rgba(15, 18, 28, 0.08);
+    --shadow-glass-2: 0 8px 32px -8px rgba(15, 18, 28, 0.16);
+    --shadow-glass-3: 0 24px 64px -16px rgba(15, 18, 28, 0.22);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-glass-fill-0: rgba(255, 255, 255, 0.06);
+  --color-glass-fill-1: rgba(255, 255, 255, 0.10);
+  --color-glass-fill-2: rgba(255, 255, 255, 0.14);
+  --color-glass-fill-3: rgba(255, 255, 255, 0.18);
+  --color-glass-fill-4: rgba(255, 255, 255, 0.24);
+  --color-glass-edge: rgba(255, 255, 255, 0.22);
+  --color-glass-edge-strong: rgba(255, 255, 255, 0.34);
+  --color-glass-solid: #1d2130;
+  --shadow-glass-1: 0 1px 2px rgba(0, 0, 0, 0.16);
+  --shadow-glass-2: 0 8px 32px -8px rgba(0, 0, 0, 0.38);
+  --shadow-glass-3: 0 24px 64px -16px rgba(0, 0, 0, 0.48);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-glass-fill-0: rgba(15, 18, 28, 0.28);
+  --color-glass-fill-1: rgba(15, 18, 28, 0.36);
+  --color-glass-fill-2: rgba(15, 18, 28, 0.44);
+  --color-glass-fill-3: rgba(15, 18, 28, 0.52);
+  --color-glass-fill-4: rgba(15, 18, 28, 0.60);
+  --color-glass-edge: rgba(15, 18, 28, 0.14);
+  --color-glass-edge-strong: rgba(15, 18, 28, 0.22);
+  --color-glass-solid: #f7f8fc;
+  --shadow-glass-1: 0 1px 2px rgba(15, 18, 28, 0.08);
+  --shadow-glass-2: 0 8px 32px -8px rgba(15, 18, 28, 0.16);
+  --shadow-glass-3: 0 24px 64px -16px rgba(15, 18, 28, 0.22);
+}
+
+/* ---------------------------------------------------------------------------
+ * Tokens with no Tailwind namespace (00-comparison-matrix.md §7.4 Rule 4: the
+ * `saturate`, `noise`, `focus` and `target` groups map to no utility namespace).
+ * They stay plain custom properties and are consumed with var().
+ * ------------------------------------------------------------------------- */
+
+:root {
+  --glass-saturate: 160%;
+  --glass-brightness: 1.06;
+  --glass-text-scrim: rgba(9, 9, 14, 0.56);
+  --glass-noise-opacity: 0.035;
+  --glass-target-min: 44px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --glass-saturate: 150%;
+    --glass-brightness: 0.98;
+    --glass-text-scrim: rgba(255, 255, 255, 0.72);
+    --glass-noise-opacity: 0.028;
+  }
+}
+
+:root[data-theme="dark"] {
+  --glass-saturate: 160%;
+  --glass-brightness: 1.06;
+  --glass-text-scrim: rgba(9, 9, 14, 0.56);
+  --glass-noise-opacity: 0.035;
+}
+
+:root[data-theme="light"] {
+  --glass-saturate: 150%;
+  --glass-brightness: 0.98;
+  --glass-text-scrim: rgba(255, 255, 255, 0.72);
+  --glass-noise-opacity: 0.028;
+}

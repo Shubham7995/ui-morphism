@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "bento-grid-ui",
+  "displayName": "Bento Grid UI",
+  "version": "0.1.0",
+  "description": "Build or convert an asymmetric modular tile layout — Apple-style feature grids, dashboards, portfolio indexes and overview screens. Assigns spans by content weight on a locked gutter, keeps DOM order equal to reading order, normalises the tile frame and media, and self-audits every emitted grid against WCAG 2.2.",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/09-bento-grid.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "bento",
+    "grid",
+    "layout",
+    "feature-section",
+    "dashboard",
+    "css-grid",
+    "design-tokens"
+  ],
+  "dependencies": [
+    { "name": "ui-morphism-core", "version": "^0.1.0" }
+  ],
+  "metadata": {
+    "sourceDoc": "docs/09-bento-grid.md",
+    "docSection": "13",
+    "lastResearched": "2026-08-08",
+    "statusIn2026": "mainstream",
+    "a11yRisk": "medium",
+    "perfCost": "low"
+  }
+}

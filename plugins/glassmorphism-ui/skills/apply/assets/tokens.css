@@ -1,0 +1,181 @@
+/* ---------------------------------------------------------------------------
+ * glassmorphism-ui — token layer
+ *
+ * Source of truth: docs/03-glassmorphism.md §4 "Anatomy & Design Tokens",
+ * "Ready-to-paste custom properties". Every declaration below is reproduced
+ * verbatim from that block; nothing is added, removed or re-ordered.
+ *
+ * Polarity note (doc §4, and 00-comparison-matrix.md §7.4 Rule 3): glassmorphism
+ * is the one dark-first style in the set, so the DARK values live on bare :root,
+ * the LIGHT override is the guarded media query, and the complete light list is
+ * duplicated under :root[data-theme="light"]. The rule is mirrored, not broken.
+ *
+ * Name mapping to the shared --um-glassmorphism-* grammar is in
+ * ../references/tokens.md. Emit through ui-morphism-core:token-emit; this file
+ * is the reference copy and the drop-in sheet for projects that want the doc's
+ * CSS unchanged.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Ground (glass needs a vivid backdrop; this is the default) ---- */
+  --glass-ground-1: #6d3bff;
+  --glass-ground-2: #00c2ff;
+  --glass-ground-3: #ff4d9d;
+  --glass-ground-base: #0b0b12;
+
+  /* ---- Fills ---- */
+  --glass-fill-0: rgba(255, 255, 255, 0.06);
+  --glass-fill-1: rgba(255, 255, 255, 0.10);
+  --glass-fill-2: rgba(255, 255, 255, 0.14);
+  --glass-fill-3: rgba(255, 255, 255, 0.18);
+  --glass-fill-4: rgba(255, 255, 255, 0.24);
+  --glass-text-scrim: rgba(9, 9, 14, 0.56);
+
+  /* ---- Backdrop filter parts ---- */
+  --glass-blur-0: 8px;
+  --glass-blur-1: 12px;
+  --glass-blur-2: 20px;
+  --glass-blur-3: 28px;
+  --glass-blur-4: 40px;
+  --glass-saturate: 160%;
+  --glass-brightness: 1.06;
+  --glass-backdrop-1: blur(var(--glass-blur-1)) saturate(var(--glass-saturate));
+  --glass-backdrop-2: blur(var(--glass-blur-2)) saturate(var(--glass-saturate));
+  --glass-backdrop-3: blur(var(--glass-blur-3)) saturate(var(--glass-saturate));
+  --glass-backdrop-4: blur(var(--glass-blur-4)) saturate(var(--glass-saturate));
+
+  /* ---- Edges ---- */
+  --glass-border-color: rgba(255, 255, 255, 0.22);
+  --glass-border-strong: rgba(255, 255, 255, 0.34);
+  --glass-r-sm: 10px;
+  --glass-r-md: 16px;
+  --glass-r-lg: 22px;
+  --glass-r-xl: 28px;
+  --glass-r-pill: 999px;
+
+  /* ---- Shadows ---- */
+  --glass-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.16);
+  --glass-shadow-2: 0 8px 32px -8px rgba(0, 0, 0, 0.38);
+  --glass-shadow-3: 0 24px 64px -16px rgba(0, 0, 0, 0.48);
+  --glass-inner-top: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --glass-inner-bottom: inset 0 -1px 0 rgba(0, 0, 0, 0.14);
+
+  /* ---- Texture ---- */
+  --glass-noise-opacity: 0.035;
+
+  /* ---- Foreground ---- */
+  --glass-fg: rgba(255, 255, 255, 0.94);
+  --glass-fg-muted: rgba(255, 255, 255, 0.66);
+  --glass-accent: #7dd3fc;
+
+  /* ---- Motion ---- */
+  --glass-dur-in: 180ms;
+  --glass-dur-out: 120ms;
+  --glass-dur-blur: 260ms;
+  --glass-ease: cubic-bezier(0.2, 0, 0, 1);
+  --glass-ease-out: cubic-bezier(0.3, 0, 0.8, 0.15);
+
+  /* ---- Hit targets (theme-independent: declared once, on bare :root) ---- */
+  --glass-target-min: 44px;   /* 24px is the SC 2.5.8 floor; 44 because a
+                                 ~1.2:1 hairline is not an aimable edge */
+
+  /* ---- Opaque fallback surfaces (used by @supports + a11y queries) ---- */
+  --glass-solid-1: #171a24;
+  --glass-solid-2: #1d2130;
+  --glass-solid-4: #232838;
+}
+
+/* Light ground override. Glass on a light backdrop must be a DARK tint,
+   not a lighter white, or it vanishes.
+   This doc is the one dark-first style in the set, so the polarity of rule (3)
+   is inverted here: dark values live on bare `:root`, the light override is
+   guarded with `:not([data-theme="dark"])`, and the full light token list is
+   duplicated under `:root[data-theme="light"]` below. An explicit toggle then
+   beats the OS preference in both directions — which is exactly what the
+   guarded-media-query pattern in docs 01, 02, 05, 07 and 09 buys, mirrored. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --glass-ground-base: #eef1f8;
+    --glass-fill-0: rgba(15, 18, 28, 0.28);
+    --glass-fill-1: rgba(15, 18, 28, 0.36);
+    --glass-fill-2: rgba(15, 18, 28, 0.44);
+    --glass-fill-3: rgba(15, 18, 28, 0.52);
+    --glass-fill-4: rgba(15, 18, 28, 0.60);
+    --glass-text-scrim: rgba(255, 255, 255, 0.72);
+    --glass-saturate: 150%;
+    --glass-brightness: 0.98;
+    --glass-border-color: rgba(15, 18, 28, 0.14);
+    --glass-border-strong: rgba(15, 18, 28, 0.22);
+    --glass-shadow-1: 0 1px 2px rgba(15, 18, 28, 0.08);
+    --glass-shadow-2: 0 8px 32px -8px rgba(15, 18, 28, 0.16);
+    --glass-shadow-3: 0 24px 64px -16px rgba(15, 18, 28, 0.22);
+    --glass-inner-top: inset 0 1px 0 rgba(255, 255, 255, 0.60);
+    --glass-inner-bottom: inset 0 -1px 0 rgba(15, 18, 28, 0.06);
+    --glass-noise-opacity: 0.028;
+    --glass-fg: rgba(12, 14, 22, 0.94);
+    --glass-fg-muted: rgba(12, 14, 22, 0.62);
+    --glass-accent: #0369a1;
+    --glass-solid-1: #ffffff;
+    --glass-solid-2: #f7f8fc;
+    --glass-solid-4: #ffffff;
+  }
+}
+
+/* Explicit overrides for apps with a manual theme toggle. Both lists are
+   COMPLETE — a partial override leaves half the palette on the other theme's
+   values, which is the bug that produces dark text on a dark scrim. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --glass-ground-base: #0b0b12;
+  --glass-fill-0: rgba(255, 255, 255, 0.06);
+  --glass-fill-1: rgba(255, 255, 255, 0.10);
+  --glass-fill-2: rgba(255, 255, 255, 0.14);
+  --glass-fill-3: rgba(255, 255, 255, 0.18);
+  --glass-fill-4: rgba(255, 255, 255, 0.24);
+  --glass-text-scrim: rgba(9, 9, 14, 0.56);
+  --glass-saturate: 160%;
+  --glass-brightness: 1.06;
+  --glass-border-color: rgba(255, 255, 255, 0.22);
+  --glass-border-strong: rgba(255, 255, 255, 0.34);
+  --glass-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.16);
+  --glass-shadow-2: 0 8px 32px -8px rgba(0, 0, 0, 0.38);
+  --glass-shadow-3: 0 24px 64px -16px rgba(0, 0, 0, 0.48);
+  --glass-inner-top: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  --glass-inner-bottom: inset 0 -1px 0 rgba(0, 0, 0, 0.14);
+  --glass-noise-opacity: 0.035;
+  --glass-fg: rgba(255, 255, 255, 0.94);
+  --glass-fg-muted: rgba(255, 255, 255, 0.66);
+  --glass-accent: #7dd3fc;
+  --glass-solid-1: #171a24;
+  --glass-solid-2: #1d2130;
+  --glass-solid-4: #232838;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --glass-ground-base: #eef1f8;
+  --glass-fill-0: rgba(15, 18, 28, 0.28);
+  --glass-fill-1: rgba(15, 18, 28, 0.36);
+  --glass-fill-2: rgba(15, 18, 28, 0.44);
+  --glass-fill-3: rgba(15, 18, 28, 0.52);
+  --glass-fill-4: rgba(15, 18, 28, 0.60);
+  --glass-text-scrim: rgba(255, 255, 255, 0.72);
+  --glass-saturate: 150%;
+  --glass-brightness: 0.98;
+  --glass-border-color: rgba(15, 18, 28, 0.14);
+  --glass-border-strong: rgba(15, 18, 28, 0.22);
+  --glass-shadow-1: 0 1px 2px rgba(15, 18, 28, 0.08);
+  --glass-shadow-2: 0 8px 32px -8px rgba(15, 18, 28, 0.16);
+  --glass-shadow-3: 0 24px 64px -16px rgba(15, 18, 28, 0.22);
+  --glass-inner-top: inset 0 1px 0 rgba(255, 255, 255, 0.60);
+  --glass-inner-bottom: inset 0 -1px 0 rgba(15, 18, 28, 0.06);
+  --glass-noise-opacity: 0.028;
+  --glass-fg: rgba(12, 14, 22, 0.94);
+  --glass-fg-muted: rgba(12, 14, 22, 0.62);
+  --glass-accent: #0369a1;
+  --glass-solid-1: #ffffff;
+  --glass-solid-2: #f7f8fc;
+  --glass-solid-4: #ffffff;
+}

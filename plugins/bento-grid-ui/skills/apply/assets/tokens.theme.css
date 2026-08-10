@@ -1,0 +1,149 @@
+/* ------------------------------------------------------------------
+ * bento-grid-ui — Tailwind v4 @theme mirror of tokens.css
+ * Source of truth: docs/09-bento-grid.md §4 (values) and §5 (Tailwind
+ * recipe). Every value below is identical to the corresponding
+ * --bento-* property in tokens.css; only the property name changes, so
+ * that Tailwind generates a utility for it.
+ *
+ * Paste after `@import "tailwindcss";` in your entry stylesheet.
+ *
+ * Namespace mapping is ui-morphism-core's (token-emit/references/
+ * tailwind-mapping.md): colour → --color-*, radius → --radius-*,
+ * shadow → --shadow-*, space/padding/gap/row → --spacing-*,
+ * ease → --ease-*, keyframe binding → --animate-*.
+ *
+ * Two rules that are not negotiable:
+ *   1. @theme is never nested inside an at-rule. Dark values therefore
+ *      live in the plain :root blocks at the bottom of this file, in
+ *      core's dark-mode emission shape.
+ *   2. Reference these from markup by their generated utility name
+ *      (rounded-bento, ease-bento, auto-rows-bento-row). Bracket
+ *      syntax takes a *literal*, so `ease-[--ease-bento]` emits
+ *      `transition-timing-function: --ease-bento`, which is invalid and
+ *      dropped silently. To point at a custom property use v4's
+ *      parenthesis shorthand: ease-(--bento-ease).
+ * ------------------------------------------------------------------ */
+
+@theme {
+  /* ---- colour ---- */
+  --color-bento-page: #ffffff;
+  --color-bento-tile: #f5f5f7;
+  --color-bento-tile-raised: #ffffff;
+  --color-bento-fg: #1d1d1f;
+  --color-bento-muted: #6e6e73;
+  --color-bento-accent: #0071e3;
+  --color-bento-focus: #0071e3;
+
+  /* ---- shape ---- */
+  --radius-bento: 24px;
+  --radius-bento-media: 12px;
+  --radius-bento-chip: 999px;
+
+  /* ---- grid + spacing ---- */
+  --spacing-bento-gap: 16px;
+  --spacing-bento-gap-lg: 24px;
+  --spacing-bento-row: 180px;
+  --spacing-bento-pad-sm: 20px;
+  --spacing-bento-pad-md: 24px;
+  --spacing-bento-pad-lg: 32px;
+  --spacing-bento-pad-stack: 16px;
+  --spacing-bento-pad-tight: 8px;
+  --spacing-bento-target: 24px;
+
+  /* ---- elevation ---- */
+  --shadow-bento: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-bento-hover: 0 8px 24px rgb(0 0 0 / 0.08), 0 2px 6px rgb(0 0 0 / 0.04);
+
+  /* ---- motion ---- */
+  --ease-bento: cubic-bezier(0.2, 0, 0, 1);
+  --ease-bento-exit: cubic-bezier(0.4, 0, 1, 1);
+  --animate-bento-in: bento-in 320ms var(--ease-bento) both;
+}
+
+@keyframes bento-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Tailwind v4 has no theme namespace for raw durations, tracking steps,
+   composite `font` shorthands, gradients or translate distances, so these
+   stay as plain custom properties. They are the same values as tokens.css
+   and are consumed with the parenthesis shorthand — for example
+   duration-(--bento-dur-hover) or translate-y-(--bento-lift). */
+:root {
+  --bento-cols: 12;
+  --bento-max-w: 1280px;
+
+  --bento-border: 1px solid rgba(0, 0, 0, 0.06);
+  --bento-border-interactive: 1px solid rgba(0, 0, 0, 0.45);
+
+  --bento-target-min: 24px;
+
+  --bento-scrim: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.72) 0%,
+    rgba(0, 0, 0, 0.28) 45%,
+    rgba(0, 0, 0, 0) 70%
+  );
+
+  --bento-eyebrow: 600 13px/1.3 system-ui, -apple-system, "Segoe UI", sans-serif;
+  --bento-eyebrow-tracking: 0.06em;
+  --bento-title: 600 clamp(20px, 1.4vw + 12px, 28px)/1.2 system-ui, -apple-system, sans-serif;
+  --bento-title-tracking: -0.02em;
+  --bento-hero: 600 clamp(28px, 2.6vw + 8px, 44px)/1.1 system-ui, -apple-system, sans-serif;
+  --bento-hero-tracking: -0.03em;
+  --bento-body: 400 16px/1.5 system-ui, -apple-system, sans-serif;
+  --bento-stat: 700 clamp(40px, 4vw, 72px)/1 system-ui, -apple-system, sans-serif;
+  --bento-stat-tracking: -0.04em;
+
+  --bento-dur-press: 90ms;
+  --bento-dur-hover: 180ms;
+  --bento-dur-reveal: 320ms;
+  --bento-stagger: 40ms;
+  --bento-lift: -2px;
+}
+
+/* Dark mode, in ui-morphism-core's emission shape: the media-query branch
+   is written so an explicit light choice wins, and the attribute branch is
+   duplicated so a class/attribute toggle wins in both directions. Pair with
+   `@custom-variant dark (&:where(.dark, .dark *));` if the project toggles
+   dark mode with a class rather than [data-theme]. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bento-page: #000000;
+    --color-bento-tile: #161617;
+    --color-bento-tile-raised: #1d1d1f;
+    --color-bento-fg: #f5f5f7;
+    --color-bento-muted: #a1a1a6;
+    --color-bento-accent: #0a84ff;
+    --color-bento-focus: #0a84ff;
+
+    --shadow-bento: 0 1px 2px rgb(0 0 0 / 0.40);
+    --shadow-bento-hover: 0 8px 24px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.35);
+
+    --bento-border: 1px solid rgba(255, 255, 255, 0.08);
+    --bento-border-interactive: 1px solid rgba(255, 255, 255, 0.35);
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-bento-page: #000000;
+  --color-bento-tile: #161617;
+  --color-bento-tile-raised: #1d1d1f;
+  --color-bento-fg: #f5f5f7;
+  --color-bento-muted: #a1a1a6;
+  --color-bento-accent: #0a84ff;
+  --color-bento-focus: #0a84ff;
+
+  --shadow-bento: 0 1px 2px rgb(0 0 0 / 0.40);
+  --shadow-bento-hover: 0 8px 24px rgb(0 0 0 / 0.55), 0 2px 6px rgb(0 0 0 / 0.35);
+
+  --bento-border: 1px solid rgba(255, 255, 255, 0.08);
+  --bento-border-interactive: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+/* Touch: the in-tile chips and icon buttons stop being mouse targets below
+   768px. Placed last so it wins in both themes. */
+@media (pointer: coarse) {
+  :root { --bento-target-min: 44px; }
+}

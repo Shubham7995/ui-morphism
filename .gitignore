@@ -1,5 +1,5 @@
-# Local Claude Code tooling state
-.claude/tdd-guard/data/
+# Local Claude Code tooling state (written at any depth, not just the repo root)
+**/.claude/tdd-guard/
 
 # macOS
 .DS_Store

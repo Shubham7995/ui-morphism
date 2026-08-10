@@ -1,0 +1,138 @@
+/* ---------------------------------------------------------------------------
+ * Neubrutalism — `--um-brutalism-*` grammar bridge.
+ *
+ * assets/tokens.css carries the style's own `--nb-*` names verbatim from
+ * docs/07-brutalism.md §4. ui-morphism-core:token-emit speaks the shared
+ * grammar `--um-<style>-<group>[-<variant>]` defined in
+ * docs/00-comparison-matrix.md §7. This file is the mapping between them, taken
+ * from that section's §7.5 migration map and its §7.4 worked brutalism example.
+ *
+ * Direction: `--um-brutalism-*` reads from `--nb-*`, not the reverse, so the
+ * verbatim §4 block stays the single place a value is written. Load
+ * tokens.css first, then this file. Both themes work with no duplication here,
+ * because every alias is a var() reference and inherits whichever theme block
+ * in tokens.css is active.
+ *
+ * Groups deliberately NOT populated for this style:
+ *   elev      — docs §4: "There is no separate elevation token group,
+ *               deliberately." Elevation *is* offset distance, so the
+ *               `shadow` ladder is the elevation ladder. Two names for one
+ *               ramp is how a scale drifts.
+ *   saturate  — no backdrop-filter exists in this style, so there is nothing
+ *               to saturate.
+ *   noise     — no grain layer. Paper grain over hard geometry is the
+ *               "organic brutalism" dialect (docs §12), not the base style.
+ *   accent-subtle — docs §3: flat saturated fills only, "no desaturated tints".
+ *   radius-pill   — the style has no pill geometry.
+ *
+ * Tokens with no home in the closed group vocabulary (§7.3), which therefore
+ * keep their `--nb-*` names and are consumed directly:
+ *   --nb-surface-sunk   the recessed/disabled fill. Not a `surface-N`, which
+ *                       ascends; not `bg`.
+ *   --nb-overlay        modal scrim.
+ *   --nb-shadow-sm      the 2px step. The vocabulary's shadow ladder is five
+ *                       rungs and this style ships six; §7.4's worked brutalism
+ *                       example maps 1/4/6/10/16, so the 2px step — load-bearing
+ *                       for inputs and for the reduced-motion hover cue — is
+ *                       carried under its own name.
+ *   --nb-sx-rev / --nb-sy-rev / --nb-shadow-rev
+ *                       the inverted "lift up-left" variant.
+ *   --nb-accent-2…5     accents two through five. The vocabulary carries one
+ *                       action hue (`accent`, `accent-fg`, `accent-subtle`);
+ *                       this style's palette is five flat saturated fills with
+ *                       no emphasis ordering between them, which the closed
+ *                       list does not model and should not grow to model.
+ *                       Every one of the five is contrast-checked against
+ *                       --nb-on-accent whether or not it carries a `--um-*`
+ *                       name; the alias is a naming convenience, not the
+ *                       thing that makes a colour safe.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- ground and planes ---- */
+  --um-brutalism-bg:               var(--nb-bg);
+  --um-brutalism-surface-1:        var(--nb-surface);
+
+  /* ---- foreground ---- */
+  --um-brutalism-ink:              var(--nb-ink);
+  --um-brutalism-ink-muted:        var(--nb-ink-muted);
+  --um-brutalism-ink-inverse:      var(--nb-on-accent);
+
+  /* ---- boundaries. This style has exactly one border colour, and it is the
+     control boundary, so `border` and `border-strong` are the same token. Both
+     must clear 3:1 against the adjacent surface in BOTH themes — which is why
+     tokens.css flips it to a light ink under dark. ---- */
+  --um-brutalism-border:           var(--nb-border);
+  --um-brutalism-border-strong:    var(--nb-border);
+
+  /* ---- action hues. Max three visible in one viewport (NN/g).
+     The vocabulary's `accent` group is (bare) / `fg` / `subtle` — one action
+     hue and its foreground — so only the primary and its ink alias here.
+     Accents 2 through 5 keep their `--nb-*` names below: a five-fill flat
+     palette is a fact about this style, not a shared concept, and §7.3's list
+     is closed on purpose. ---- */
+  --um-brutalism-accent:           var(--nb-accent);
+  --um-brutalism-accent-fg:        var(--nb-on-accent);
+  --um-brutalism-danger:           var(--nb-danger);
+
+  /* ---- geometry ---- */
+  --um-brutalism-radius-sm:        var(--nb-radius);
+  --um-brutalism-radius-md:        var(--nb-radius);
+  --um-brutalism-radius-lg:        var(--nb-radius);
+
+  /* ---- shadow ladder = elevation ladder. Blur and spread are 0; the 1px
+     spread on steps 4 and 5 matches the reference library. ---- */
+  --um-brutalism-shadow-1:         var(--nb-shadow-xs);
+  --um-brutalism-shadow-2:         var(--nb-shadow);
+  --um-brutalism-shadow-3:         var(--nb-shadow-lg);
+  --um-brutalism-shadow-4:         var(--nb-shadow-xl);
+  --um-brutalism-shadow-5:         var(--nb-shadow-2xl);
+  --um-brutalism-shadow-press:     0 0 0 0 var(--nb-border);
+
+  /* ---- the contract: blur is zero, and declaring the zero is the point ---- */
+  --um-brutalism-blur:             0px;
+
+  /* ---- space ---- */
+  --um-brutalism-space-1:          var(--nb-space-1);
+  --um-brutalism-space-2:          var(--nb-space-2);
+  --um-brutalism-space-3:          var(--nb-space-3);
+  --um-brutalism-space-4:          var(--nb-space-4);
+  --um-brutalism-space-5:          var(--nb-space-5);
+  --um-brutalism-space-6:          var(--nb-space-6);
+  --um-brutalism-space-7:          var(--nb-space-7);
+  --um-brutalism-space-8:          var(--nb-space-8);
+
+  /* ---- type ---- */
+  --um-brutalism-font-body:        var(--nb-font-body);
+  --um-brutalism-font-display:     var(--nb-font-display);
+  --um-brutalism-font-mono:        var(--nb-font-mono);
+
+  --um-brutalism-text-xs:          var(--nb-text-xs);
+  --um-brutalism-text-sm:          var(--nb-text-sm);
+  --um-brutalism-text-base:        var(--nb-text-base);
+  --um-brutalism-text-lg:          var(--nb-text-lg);
+  --um-brutalism-text-xl:          var(--nb-text-xl);
+  --um-brutalism-text-2xl:         var(--nb-text-2xl);
+  --um-brutalism-text-3xl:         var(--nb-text-display);
+
+  --um-brutalism-weight-body:      var(--nb-fw-body);
+  --um-brutalism-weight-heading:   var(--nb-fw-heading);
+  --um-brutalism-weight-display:   var(--nb-fw-display);
+
+  --um-brutalism-leading-tight:    var(--nb-leading-tight);
+  --um-brutalism-leading-body:     var(--nb-leading-body);
+
+  --um-brutalism-tracking-tight:   var(--nb-track-tight);
+  --um-brutalism-tracking-label:   var(--nb-track-label);
+
+  /* ---- motion. No `dur-slow`: docs §6 bans anything above 200ms. ---- */
+  --um-brutalism-dur-fast:         var(--nb-dur-fast);
+  --um-brutalism-dur-base:         var(--nb-dur);
+  --um-brutalism-ease-standard:    var(--nb-ease);
+
+  /* ---- focus and targets ---- */
+  --um-brutalism-focus-color:      var(--nb-focus-color);
+  --um-brutalism-focus-width:      var(--nb-focus-w);
+  --um-brutalism-focus-offset:     var(--nb-focus-offset);
+  --um-brutalism-target-min:       var(--nb-target-min);
+}

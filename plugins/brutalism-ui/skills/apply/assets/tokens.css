@@ -1,0 +1,125 @@
+/* ---------------------------------------------------------------------------
+ * Neubrutalism token layer.
+ *
+ * Source of truth: docs/07-brutalism.md §4, "Ready-to-paste custom property
+ * block". The declarations below are reproduced verbatim from that block; the
+ * only addition is this header. Do not edit values here — edit the doc, then
+ * re-copy.
+ *
+ * Every ratio quoted in the comments uses #0A0A0A (--nb-ink / --nb-on-accent)
+ * as the dark operand, never pure #000000. #000000 appears only as --nb-border.
+ *
+ * These are the doc's canonical reference values, not the resolution of any one
+ * intensity: §4 ships radius 0 (the neobrutalism.com dialect) with a 4px offset
+ * and a 2px border. Intensity overrides exactly four of them, on the root
+ * element rather than here — --nb-sx, --nb-sy, --nb-bw and --nb-radius — per
+ * the resolved table in ../references/tokens.md §4. The `chroma` knob scales
+ * accent OKLCH C between 35% and 100% with L and H held. Every scaled accent
+ * goes to ui-morphism-core:a11y-validate before it ships; nothing in this file
+ * computes a contrast ratio.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- surfaces ---- */
+  --nb-bg:            #FEF6E4;
+  --nb-surface:       #FFFFFF;
+  --nb-surface-sunk:  #F2EAD8;
+  --nb-ink:           #0A0A0A;
+  --nb-ink-muted:     #3D3D3D;
+  --nb-border:        #000000;
+  --nb-on-accent:     #0A0A0A;
+
+  /* ---- accents (ratios are vs --nb-on-accent #0A0A0A; all pass >=4.5:1) ---- */
+  --nb-accent:        #FFDC58;  /* 14.74:1 */
+  --nb-accent-2:      #FF6B9D;  /*  7.39:1 */
+  --nb-accent-3:      #A3E635;  /* 13.13:1 */
+  --nb-accent-4:      #67E8F9;  /* 13.66:1 */
+  --nb-accent-5:      #FF7A1A;  /*  7.59:1 */
+  --nb-danger:        #FF4D4D;  /*  6.05:1 */
+  --nb-overlay:       rgb(0 0 0 / 0.80);
+
+  /* ---- geometry ---- */
+  --nb-bw:            2px;
+  --nb-bw-thick:      4px;
+  --nb-radius:        0px;
+  --nb-radius-soft:   5px;
+
+  /* ---- hard shadows: blur and spread are always 0 ---- */
+  --nb-sx:            4px;
+  --nb-sy:            4px;
+  --nb-sx-rev:        -4px;
+  --nb-sy-rev:        -4px;
+  --nb-shadow-xs:     1px 1px 0 0 var(--nb-border);
+  --nb-shadow-sm:     2px 2px 0 0 var(--nb-border);
+  --nb-shadow:        var(--nb-sx) var(--nb-sy) 0 0 var(--nb-border);
+  --nb-shadow-lg:     6px 6px 0 0 var(--nb-border);
+  --nb-shadow-xl:     10px 10px 0 1px var(--nb-border);
+  --nb-shadow-2xl:    16px 16px 0 1px var(--nb-border);
+  --nb-shadow-rev:    var(--nb-sx-rev) var(--nb-sy-rev) 0 0 var(--nb-border);
+
+  /* ---- type ---- */
+  --nb-font-display: "Archivo Black", "Lexend Mega", system-ui, sans-serif;
+  --nb-font-body:    "Space Grotesk", "Public Sans", Inter, system-ui, sans-serif;
+  --nb-font-mono:    "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+  --nb-fw-body:      500;
+  --nb-fw-heading:   700;
+  --nb-fw-display:   900;
+  --nb-track-tight:  -0.02em;
+  --nb-track-label:   0.06em;
+
+  --nb-text-xs:      0.75rem;
+  --nb-text-sm:      0.875rem;
+  --nb-text-base:    1rem;
+  --nb-text-lg:      1.25rem;
+  --nb-text-xl:      1.5rem;
+  --nb-text-2xl:     2rem;
+  --nb-text-display: clamp(2.5rem, 8vw, 5.5rem);
+  --nb-leading-tight: 1.05;
+  --nb-leading-body:  1.55;
+
+  /* ---- space ---- */
+  --nb-space-1: 4px;  --nb-space-2: 8px;  --nb-space-3: 12px; --nb-space-4: 16px;
+  --nb-space-5: 24px; --nb-space-6: 32px; --nb-space-7: 48px; --nb-space-8: 64px;
+  --nb-pad-card: 24px;
+
+  /* ---- motion ---- */
+  --nb-dur-fast: 100ms;
+  --nb-dur:      150ms;
+  --nb-ease:     cubic-bezier(0.2, 0, 0, 1);
+
+  /* ---- focus / targets ---- */
+  --nb-focus-color:  #0A0A0A;
+  --nb-focus-w:      3px;
+  --nb-focus-offset: 2px;
+  --nb-target-min:   44px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --nb-bg:           #22222E;
+    --nb-surface:      #2E2E38;
+    --nb-surface-sunk: #1A1A24;
+    --nb-ink:          #F5F0E6;
+    --nb-ink-muted:    #B9B4AC;
+    /* Light border in dark mode. Keeping #000 (as ekmas does) against the
+       #2E2E38 dark surface gives 1.56:1 and fails WCAG 1.4.11. */
+    --nb-border:       #F5F0E6;
+    --nb-on-accent:    #0A0A0A;
+    --nb-focus-color:  #FFFFFF;
+    --nb-overlay:      rgb(0 0 0 / 0.85);
+  }
+}
+
+:root[data-theme="dark"] {
+  --nb-bg:           #22222E;
+  --nb-surface:      #2E2E38;
+  --nb-surface-sunk: #1A1A24;
+  --nb-ink:          #F5F0E6;
+  --nb-ink-muted:    #B9B4AC;
+  --nb-border:       #F5F0E6;
+  --nb-on-accent:    #0A0A0A;
+  --nb-focus-color:  #FFFFFF;
+  --nb-overlay:      rgb(0 0 0 / 0.85);
+}

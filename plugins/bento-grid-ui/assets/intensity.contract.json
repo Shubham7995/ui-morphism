@@ -1,0 +1,78 @@
+{
+  "style": "bento-grid",
+  "default": 45,
+  "sourceDoc": "docs/09-bento-grid.md",
+  "docSection": "13",
+  "baselineAtZero": "A uniform card grid: one span for every tile, square corners, tile background equal to the page background, media fully inset at a concentric radius, no reveal and no hover lift. Separation comes from the gap and the hairline border alone. Recognisable as plain, fully accessible, and the planner's uniform-is-not-bento check says out loud that this is a card grid rather than a bento.",
+  "knobs": {
+    "spanVariance": {
+      "anchors": [[0, 1.0], [45, 2.0], [100, 3.0]],
+      "note": "Doc §13. Target largest:smallest tile-area ratio. 1.0 is a uniform card grid; 3.0 is a 2x2 hero beside 1x1 units. The closed span vocabulary quantises this into four bands, and assign-spans.mjs reports the ratio the emitted composition actually measures next to the requested one."
+    },
+    "radius": {
+      "unit": "px",
+      "anchors": [[0, 0], [45, 24], [100, 32]],
+      "note": "Doc §13. 0px is brutalist / Live Tile; 24px is the Apple default; 32px is clay-adjacent. One value for every tile in the grid."
+    },
+    "surfaceDelta": {
+      "unit": "luminance points",
+      "anchors": [[0, 0], [45, 8], [100, 24]],
+      "note": "Doc §13. Luminance points between page and tile background. 0 means tiles are defined by the gap alone; 24 is strongly separated cards."
+    },
+    "mediaBleed": {
+      "unit": "%",
+      "anchors": [[0, 0], [45, 40], [100, 100]],
+      "note": "Doc §13. How far tile media runs past the padding box. 0% is fully inset with a concentric radius; 100% is full-bleed cover."
+    },
+    "motion": {
+      "anchors": [[0, 0], [45, 45], [100, 100]],
+      "note": "Doc §13. 0 is no reveal and no hover lift; 50 is a 320ms reveal with a -2px lift; 100 is a 400ms reveal, -4px lift, 1.03 media scale and per-tile parallax. Hard-clamped to 0 under prefers-reduced-motion."
+    }
+  },
+  "clamps": {
+    "spanVariance": { "min": 1.0, "max": 3.0 },
+    "radius": { "min": 0, "max": 32 },
+    "surfaceDelta": { "min": 0, "max": 24 },
+    "mediaBleed": { "min": 0, "max": 100 },
+    "motion": { "min": 0, "max": 100 }
+  },
+  "contextCaps": [
+    {
+      "when": { "contentShape": "comparable" },
+      "cap": 0,
+      "reason": "Doc §9: comparison demands equal visual weight. A larger tile reads as \"recommended\" whether you meant it or not."
+    },
+    {
+      "when": { "tileCountBand": "under-4" },
+      "cap": 0,
+      "reason": "Doc §9: three things is a card row wearing a costume."
+    },
+    {
+      "when": { "tileSource": "cms" },
+      "cap": 25,
+      "reason": "Doc §9: a bento composition is hand-tuned. A source returning 4 items one day and 11 the next breaks it, so the layout is held near-uniform where a changing count degrades safely."
+    },
+    {
+      "when": { "tileCountBand": "over-9" },
+      "cap": 45,
+      "reason": "Doc §13: size encodes importance only while the eye holds the whole composition. Past nine tiles the section needs a hierarchy break before variance helps."
+    }
+  ],
+  "implementationNote": "scripts/assign-spans.mjs resolves intensity inline rather than shelling out to ui-morphism-core:token-emit, because the planner needs the effective value to make span decisions in the same pass and a plan must be computable offline. Its capsFor() and segment() are the same four caps and the same anchored curves declared here, and assign-spans.test.mjs pins both against this file. This contract remains the authority: when the two disagree, the planner is wrong.",
+  "clampsNotExpressibleHere": {
+    "distinctSpansPerGrid": "<= 5",
+    "dominantTilesPerGrid": "exactly 1, or 0 in the uniform and mild bands",
+    "gutter": "one value per section per breakpoint: 16px desktop, 12px below 768px, 24px editorial",
+    "gridAutoRows": "minmax(<row>, auto), never a bare length",
+    "interactiveBorderAlpha": ">= 0.45 light, >= 0.35 dark (the 3:1 crossings are 0.4199 and 0.3294)",
+    "scrimOverImagery": "darkest stop >= rgba(0,0,0,0.55)",
+    "hitTargetInsideTile": ">= 24px, >= 44px under @media (pointer: coarse)",
+    "revealSequence": "<= 400ms total, reveal + stagger x n",
+    "linksPerTile": "0 or 1",
+    "headingsPerTile": "exactly 1, at <h3> under the section <h2>",
+    "autoplayingVideo": "<= 1 per section, <= 2MB, poster required",
+    "backdropFilterElements": "<= 1 in the section",
+    "sectionImageBytes": "warn > 600KB, fail > 1.2MB; largest tile image <= 200KB",
+    "note": "These constrain the composition and the emitted markup rather than the value of a knob, so scripts/assign-spans.mjs and ui-morphism-core:a11y-validate enforce them. Recorded here so the clamp table reads as the complete list."
+  }
+}

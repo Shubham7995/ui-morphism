@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "glassmorphism-ui",
+  "displayName": "Glassmorphism UI",
+  "version": "0.1.0",
+  "description": "Frosted-glass surfaces. Emits the five-rung backdrop-blur elevation ladder with a matching opaque mirror, rewrites target components with the @supports fallback and the four accessibility escape hatches baked in, and measures every text pair against the worst-case composited backdrop rather than the declared background-color.",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/03-glassmorphism.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "glassmorphism",
+    "backdrop-filter",
+    "frosted",
+    "acrylic",
+    "translucent",
+    "blur",
+    "design-tokens",
+    "accessibility"
+  ],
+  "dependencies": [
+    { "name": "ui-morphism-core", "version": "^0.1.0" }
+  ],
+  "metadata": {
+    "sourceDoc": "docs/03-glassmorphism.md",
+    "docSection": "13",
+    "lastResearched": "2026-08-08",
+    "statusIn2026": "mainstream",
+    "a11yRisk": "high",
+    "perfCost": "medium"
+  }
+}

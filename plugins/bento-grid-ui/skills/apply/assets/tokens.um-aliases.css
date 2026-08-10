@@ -1,0 +1,127 @@
+/* ---------------------------------------------------------------------------
+ * Bento grid — `--um-bento-grid-*` grammar bridge.
+ *
+ * assets/tokens.css carries the style's own `--bento-*` names verbatim from
+ * docs/09-bento-grid.md §4. ui-morphism-core:token-emit speaks the shared
+ * grammar `--um-<style>[-<group>][-<variant>]` defined in
+ * docs/00-comparison-matrix.md §7, whose style segment for this doc is
+ * `bento-grid` — spelled out, never abbreviated (§7 is explicit that
+ * `--um-lg-*` versus `--um-gl-*` is the two-character collision the long names
+ * exist to prevent).
+ *
+ * Direction: `--um-bento-grid-*` reads from `--bento-*`, never the reverse, so
+ * the verbatim §4 block stays the single place a value is written. Load
+ * tokens.css first, then this file. One copy covers every theme: each alias is
+ * a var() reference, so it inherits whichever of tokens.css's theme blocks
+ * (bare :root light, guarded dark media query, explicit [data-theme="dark"],
+ * and the trailing pointer-coarse target bump) is active. Duplicating the
+ * aliases per theme is how two lists drift.
+ *
+ * Groups deliberately NOT populated for this style:
+ *   elev      — a bento tile sits on one plane. The two shadows are a resting
+ *               and a hover state of the same tile, not an elevation ladder,
+ *               and §12 is explicit that depth is not what this pattern
+ *               encodes: size is. A parallel `elev` ramp would name a
+ *               hierarchy the layout does not have.
+ *   blur      — §13 caps `backdrop-filter` at one element per section, and
+ *               that one element is glassmorphism-ui's job. Nothing here is
+ *               blurred, and unlike minimalism and brutalism this style does
+ *               not make the zero a contract, so there is no `blur-0` either.
+ *   saturate  — no backdrop-filter, so nothing to saturate.
+ *   noise     — no grain layer.
+ *   danger    — a bento section is marketing and overview surface. §4 ships no
+ *               destructive semantic, and inventing one would be this plugin
+ *               deciding a thing the doc declined to decide.
+ *   accent-fg / accent-subtle
+ *             — §4 ships one accent and no foreground pair for it: the accent
+ *               is used for links and focus, never as a fill behind text.
+ *
+ * Tokens with no home in the closed group vocabulary (§7.3), which therefore
+ * keep their `--bento-*` names and are consumed directly:
+ *   --bento-cols / --bento-max-w / --bento-row / --bento-gap-lg
+ *                       grid geometry. The vocabulary covers surfaces and
+ *                       type, not track sizing, and this is the one style in
+ *                       the set whose primary output IS track sizing.
+ *   --bento-pad-*       the four tile padding steps are bound to span size
+ *                       rather than to a spacing ramp step, so they are not
+ *                       `space-N`.
+ *   --bento-scrim       a gradient, not a colour.
+ *   --bento-lift        the hover translate distance.
+ *   --bento-*-tracking  per-role tracking that travels with its font shorthand.
+ *
+ * A note on `font` and `text`. §4 ships composite `font` shorthands
+ * (`--bento-title` is `600 clamp(...)/1.2 system-ui, ...`) rather than separate
+ * family, size, weight and leading tokens. The vocabulary's `font`, `text`,
+ * `weight` and `leading` groups are all single-valued, so a shorthand cannot be
+ * split across them without this file inventing four values the doc does not
+ * state. The shorthands are therefore aliased whole under `font`, which is the
+ * group whose concept ("family stacks", the thing a `font` shorthand is built
+ * from) they are nearest to, and the mapping is called out here rather than
+ * left for a reader to infer from a surprising name.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- ground and surfaces ---- */
+  --um-bento-grid-bg: var(--bento-page-bg);
+  --um-bento-grid-surface-1: var(--bento-tile-bg);
+  --um-bento-grid-surface-2: var(--bento-tile-bg-raised);
+
+  /* ---- ink ---- */
+  --um-bento-grid-ink: var(--bento-fg);
+  --um-bento-grid-ink-muted: var(--bento-fg-muted);
+
+  /* ---- borders ----
+   * §4 declares these as complete `1px solid <colour>` shorthands rather than
+   * as colours, and the aliases carry them unchanged. `border-strong` is the
+   * control boundary the vocabulary requires: it is the interactive border,
+   * whose alpha (0.45 light, 0.35 dark) is set from the 3:1 crossings computed
+   * in §7 — 0.4199 and 0.3294 — and not from taste. */
+  --um-bento-grid-border: var(--bento-border);
+  --um-bento-grid-border-strong: var(--bento-border-interactive);
+
+  /* ---- accent ---- */
+  --um-bento-grid-accent: var(--bento-accent);
+
+  /* ---- radius ----
+   * §4 ships three radii with a fixed relationship: the tile radius, the media
+   * radius that keeps nested media concentric, and the pill for chips. `sm` is
+   * the media radius because it is the smaller of the two real corners. */
+  --um-bento-grid-radius-sm: var(--bento-radius-media);
+  --um-bento-grid-radius-md: var(--bento-radius);
+  --um-bento-grid-radius-pill: var(--bento-radius-chip);
+
+  /* ---- shadow ----
+   * Two rungs, and they are states rather than levels. `shadow-1` rests,
+   * `shadow-2` is the hover of the same tile. */
+  --um-bento-grid-shadow-1: var(--bento-shadow-rest);
+  --um-bento-grid-shadow-2: var(--bento-shadow-hover);
+
+  /* ---- space ----
+   * The gutter is the one spacing value this style locks: §3 is explicit that
+   * spans vary and the gutter does not. */
+  --um-bento-grid-space-2: var(--bento-pad-tight);
+  --um-bento-grid-space-4: var(--bento-gap);
+
+  /* ---- type ---- */
+  --um-bento-grid-font-body: var(--bento-body);
+  --um-bento-grid-font-display: var(--bento-hero);
+
+  /* ---- motion ---- */
+  --um-bento-grid-dur-fast: var(--bento-dur-press);
+  --um-bento-grid-dur-base: var(--bento-dur-hover);
+  --um-bento-grid-dur-slow: var(--bento-dur-reveal);
+  --um-bento-grid-ease-standard: var(--bento-ease);
+  --um-bento-grid-ease-exit: var(--bento-ease-exit);
+
+  /* ---- focus ----
+   * §7 fixes the width and offset: the ring sits on the tile, not the inner
+   * link, so `overflow: hidden` cannot clip it. */
+  --um-bento-grid-focus-color: var(--bento-focus);
+  --um-bento-grid-focus-width: 3px;
+  --um-bento-grid-focus-offset: 2px;
+
+  /* ---- target ----
+   * Follows --bento-target-min, so it picks up the @media (pointer: coarse)
+   * bump from 24px to 44px at the bottom of tokens.css automatically. */
+  --um-bento-grid-target-min: var(--bento-target-min);
+}

@@ -1,0 +1,73 @@
+{
+  "style": "glassmorphism",
+  "default": 50,
+  "sourceDoc": "docs/03-glassmorphism.md",
+  "docSection": "13",
+  "baselineAtZero": "The opaque mirror rung: a --glass-solid-* fill, a 1px border, the inner top highlight, the shadow and the radius, with no @supports branch, no backdrop-filter and no grain. A bordered opaque tinted card — recognisable as plain, fully accessible, and the same surface every browser gets from the fallback path anyway.",
+  "knobsAreForRung": 1,
+  "knobs": {
+    "fillAlpha": {
+      "at0": 0.04,
+      "anchors": [[0, 0.04], [50, 0.10], [100, 0.30]],
+      "note": "Doc §13. The primary legibility lever. Rung 1 (card) defaults to 0.10 at intensity 50; rung 2 (nav) to 0.14. Ceiling is 0.30 on the light tone and 0.72 on the dark tone — above 0.30 light it stops being glass. The knob minimum is the value at intensity 1, not at 0: intensity 0 is the discrete opaque rung."
+    },
+    "blurRadius": {
+      "unit": "px",
+      "anchors": [[0, 4], [50, 12], [100, 48]],
+      "note": "Doc §13. Rung 1 defaults to 12px, rung 2 to 20px. Hard-capped at 20px on scroll-pinned surfaces and 24px on full-viewport overlays regardless of intensity."
+    },
+    "saturation": {
+      "unit": "%",
+      "anchors": [[0, 100], [50, 160], [100, 200]],
+      "note": "Doc §13. Below 130% the material reads grey and dead."
+    },
+    "borderAlpha": {
+      "anchors": [[0, 0.10], [50, 0.16], [100, 0.45]],
+      "note": "Doc §13. Never allowed to reach 0; the border is structural. Rung 1 defaults to 0.16, rung 2 to 0.22."
+    },
+    "grainOpacity": {
+      "anchors": [[0, 0.0], [50, 0.035], [100, 0.06]],
+      "note": "Doc §4 and §13. Above 0.06 it reads as compression artefacts. The dark tone — the ink tint used on a light ground — defaults to 0.028 instead."
+    }
+  },
+  "clamps": {
+    "fillAlpha": { "min": 0.04, "max": 0.30 },
+    "blurRadius": { "min": 0, "max": 48 },
+    "saturation": { "min": 100, "max": 200 },
+    "borderAlpha": { "min": 0.10, "max": 0.45 },
+    "grainOpacity": { "min": 0.0, "max": 0.06 }
+  },
+  "contextCaps": [
+    {
+      "when": { "perfTarget": "low-end" },
+      "cap": 0,
+      "reason": "Doc §8 fallback 5: on navigator.hardwareConcurrency <= 4, navigator.deviceMemory <= 4 or navigator.connection.saveData, ship the opaque mirror and set data-glass=\"off\". Intensity 0 is exactly that surface, so the cap is the intensity-0 rung rather than a separate code path."
+    },
+    {
+      "when": { "backdropControl": "arbitrary" },
+      "cap": 0,
+      "reason": "Doc §7 and anti-pattern 12: over a ground the project does not control — user uploads, third-party iframes, unstyled embeds — a mandatory opaque scrim goes between backdrop and pane and the result is a tinted card, not glass. The opaque rung is that surface. Say so to the user rather than shipping a bet on the backdrop."
+    }
+  ],
+  "contextClamps": [
+    {
+      "when": { "perfTarget": "mobile" },
+      "clamps": { "blurRadius": { "max": 20 } },
+      "reason": "Doc §8 budget: surfaces <= 3, blurred area <= 30%, every pinned surface at the 20px blur cap."
+    },
+    {
+      "when": { "a11yFloor": "AAA" },
+      "clamps": { "fillAlpha": { "min": 0.56 } },
+      "reason": "Doc §7 calls AAA effectively unreachable with glass without a text scrim. The 0.56 floor is ceilTo(0.55734, 2) — the two-decimal alpha above the 4.5:1 crossing for white text over a worst-case pure-white backdrop."
+    }
+  ],
+  "deviation": "MARKETPLACE.md §7.2 rule 5 gives sibling styles a numeric intensity cap (liquid-glass and spatial-ui cap at 45 on an arbitrary backdrop). Doc 03 names no such number for glassmorphism. The two caps above therefore resolve to 0 — the doc's own opaque-mirror answer for both contexts — and the remaining doc-stated context limits are expressed as knob clamps under contextClamps, which core's resolver does not consume. The skill applies contextClamps itself and reports each one on the same audit line as a resolved cap. Recorded here because a derivation the doc does not state must be visible.",
+  "clampsNotExpressibleHere": {
+    "textScrimAlpha": ">= 0.56 whenever body text sits on glass over an unclamped ground (§7: the crossing is 0.55734; at 0.555 white text reaches only 4.46:1)",
+    "targetMin": ">= 44px, never below the 24x24 SC 2.5.8 floor",
+    "simultaneousGlassSurfaces": "<= 3 mobile, <= 5 desktop",
+    "blurredViewportArea": "<= 30% mobile, <= 50% desktop",
+    "stackedTranslucentLayers": "<= 3",
+    "note": "These constrain the emitted sheet and the composition rather than the value of a knob, so scripts/glass-scan.mjs and ui-morphism-core:a11y-validate enforce them. Recorded here so the clamp table reads as the complete list."
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "ui-morphism",
+  "description": "Ten researched UI surface styles as executable skills — tokens, components, and an accessibility validator for each.",
+  "version": "0.1.0",
+  "owner": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "plugins": [
+    {
+      "name": "ui-morphism-core",
+      "source": "./plugins/ui-morphism-core",
+      "displayName": "UI Morphism Core",
+      "description": "Shared foundation for the ui-morphism style skills: host-framework detection, the --um-<style>-<group>-<variant> token grammar and its emitters, the WCAG 2.2 contrast and CSS accessibility validator, the intensity 0-100 contract with its clamp and context-cap mechanisms, and the common audit-report format. Installed automatically as a dependency of any style plugin. Not a design skill: it decides nothing about how a UI should look.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/00-comparison-matrix.md",
+      "license": "MIT",
+      "keywords": [
+        "design-tokens",
+        "accessibility",
+        "wcag",
+        "tailwind",
+        "css",
+        "validator"
+      ],
+      "category": "design-system"
+    },
+    {
+      "name": "brutalism-ui",
+      "source": "./plugins/brutalism-ui",
+      "displayName": "Brutalism & Neubrutalism UI",
+      "description": "One named visual language, applied on request: neubrutalism. Hard 2-5px ink borders, zero-blur offset shadows, flat saturated fills, chunky display type, and the hover-into-its-own-shadow interaction, with measured token values and an explicit when-not-to-use. Fires on the named style, not on general design-quality requests.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/07-brutalism.md",
+      "license": "MIT",
+      "keywords": [
+        "brutalism",
+        "neubrutalism",
+        "neobrutalism",
+        "hard-shadow",
+        "sticker-ui",
+        "anti-design"
+      ],
+      "category": "ui-style"
+    },
+    {
+      "name": "glassmorphism-ui",
+      "source": "./plugins/glassmorphism-ui",
+      "displayName": "Glassmorphism UI",
+      "description": "One named visual language, applied on request: glassmorphism. Backdrop-blur navbars, cards, modals and command palettes, with the @supports opaque fallback, the -webkit- twin, the four accessibility escape hatches and worst-case composited contrast measured at both extremes of the ground. Fires on the named style, not on general design-quality requests.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/03-glassmorphism.md",
+      "license": "MIT",
+      "keywords": [
+        "glassmorphism",
+        "backdrop-filter",
+        "frosted",
+        "acrylic",
+        "translucent",
+        "blur"
+      ],
+      "category": "ui-style"
+    },
+    {
+      "name": "bento-grid-ui",
+      "source": "./plugins/bento-grid-ui",
+      "displayName": "Bento Grid UI",
+      "description": "One named layout pattern, applied on request: the bento grid. Asymmetric modular tiles where size encodes importance on a locked gutter — feature sections, dashboards, portfolio indexes — with spans assigned by content weight, DOM order held equal to reading order, and a per-tile audit. Fires on the named pattern, not on general layout or design-quality requests.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/09-bento-grid.md",
+      "license": "MIT",
+      "keywords": [
+        "bento",
+        "grid",
+        "layout",
+        "feature-section",
+        "dashboard",
+        "css-grid"
+      ],
+      "category": "ui-style"
+    }
+  ]
+}

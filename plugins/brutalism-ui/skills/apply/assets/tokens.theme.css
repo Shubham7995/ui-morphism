@@ -1,0 +1,77 @@
+/* ---------------------------------------------------------------------------
+ * Neubrutalism — Tailwind v4 @theme mirror of assets/tokens.css.
+ *
+ * Source of truth: docs/07-brutalism.md §5, "Tailwind CSS v4". Values match
+ * assets/tokens.css (docs §4) exactly; only the custom-property names change,
+ * because Tailwind v4 derives utilities from namespaced theme variables.
+ *
+ * Two invariants, both enforced by ui-morphism-core:token-emit:
+ *   1. @theme is never nested inside @media, @layer, or any other at-rule.
+ *   2. Theme switching happens outside @theme, on ordinary selectors — which is
+ *      why the .dark block below sits on its own.
+ *
+ * No plugin is required. The shadow, border, and radius are all one-value
+ * tokens, which is why this style maps onto @theme with no escape hatches.
+ * ------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+@theme {
+  /* colors -> bg-*, text-*, border-* */
+  --color-nb-bg:        #FEF6E4;
+  --color-nb-surface:   #FFFFFF;
+  --color-nb-sunk:      #F2EAD8;
+  --color-nb-ink:       #0A0A0A;
+  --color-nb-muted:     #3D3D3D;
+  --color-nb-border:    #000000;
+  --color-nb-accent:    #FFDC58;
+  --color-nb-accent-2:  #FF6B9D;
+  --color-nb-accent-3:  #A3E635;
+  --color-nb-accent-4:  #67E8F9;
+  --color-nb-accent-5:  #FF7A1A;
+  --color-nb-danger:    #FF4D4D;
+
+  /* radius -> rounded-nb */
+  --radius-nb: 0px;
+
+  /* hard shadows -> shadow-nb, shadow-nb-lg, ... */
+  --shadow-nb-xs:  1px 1px 0 0 var(--color-nb-border);
+  --shadow-nb-sm:  2px 2px 0 0 var(--color-nb-border);
+  --shadow-nb:     4px 4px 0 0 var(--color-nb-border);
+  --shadow-nb-lg:  6px 6px 0 0 var(--color-nb-border);
+  --shadow-nb-xl:  10px 10px 0 1px var(--color-nb-border);
+  --shadow-nb-2xl: 16px 16px 0 1px var(--color-nb-border);
+
+  /* offsets as spacing -> translate-x-nbx, translate-y-nby */
+  --spacing-nbx:      4px;
+  --spacing-nby:      4px;
+  --spacing-nbx-rev: -4px;
+  --spacing-nby-rev: -4px;
+
+  /* type -> font-nb-display / font-nb-body / font-nb-mono */
+  --font-nb-display: "Archivo Black", "Lexend Mega", system-ui, sans-serif;
+  --font-nb-body:    "Space Grotesk", "Public Sans", Inter, system-ui, sans-serif;
+  --font-nb-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+  --ease-nb: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Dark mode via a class on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-nb-bg:      #22222E;
+  --color-nb-surface: #2E2E38;
+  --color-nb-sunk:    #1A1A24;
+  --color-nb-ink:     #F5F0E6;
+  --color-nb-muted:   #B9B4AC;
+  /* Never #000 here: black on #2E2E38 is 1.56:1 and fails SC 1.4.11. */
+  --color-nb-border:  #F5F0E6;
+}
+
+/* forced-colors + reduced-motion guards, applied globally to nb utilities */
+@layer utilities {
+  @media (forced-colors: active) {
+    .nb-guard { box-shadow: none !important; border-color: ButtonBorder !important; }
+  }
+}
