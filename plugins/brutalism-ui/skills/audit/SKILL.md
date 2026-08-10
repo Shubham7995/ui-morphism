@@ -3,8 +3,8 @@ name: audit
 description: >-
   Use to check a UI that is ALREADY neubrutalist against this style's own invariants, when
   the user names the style or its concrete moves — hard ink borders, zero-blur offset
-  shadows, flat saturated fills — and wants a review rather than a change. The invariants
-  it owns: the dark-mode border flip (a black border on a dark surface measures ~1.56:1
+  shadows — and wants a review rather than a change. The invariants
+  it owns: the dark-mode border flip (black on a dark surface is 1.56:1
   and fails 1.4.11), every shadowed element also carrying a real border because
   forced-colors nulls `box-shadow`, no non-zero shadow blur or `backdrop-filter` anywhere,
   a focus outline distinguishable from the resting offset shadow, tilt never wrapping a
@@ -15,11 +15,15 @@ description: >-
   good", "critique this UI", "find the AI tells", "review my animations" or "audit my
   site's accessibility". Dedicated design-quality, de-slopping, animation and a11y tools
   answer those better and should win them. Do not use on translucent or backdrop-blurred
-  surfaces (glassmorphism-ui:audit, liquid-glass-ui:audit), same-hue soft extrusion
-  (neumorphism-ui:audit), puffy pastel clay (claymorphism-ui:audit) or tile-span grid
-  layout (bento-grid-ui:audit).
+  surfaces (glassmorphism-ui:audit) or tile-span grid layout (bento-grid-ui:audit).
+  Same-hue soft extrusion, puffy pastel clay and Apple Liquid Glass are separate visual
+  languages, documented in docs/02, docs/04 and docs/08, with plugins planned but not yet
+  built.
 argument-hint: "[scope glob] [--theme=light|dark|both] [--format=markdown|json]"
-allowed-tools: Read Glob Grep
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
 license: MIT
 metadata:
   sourceDoc: docs/07-brutalism.md
@@ -82,11 +86,38 @@ not colour. Do not conclude the interface is fine because the contrast table is 
    bytes, not an estimate. If the numbers cannot be measured without a build, say so
    rather than reporting a guess.
 
-5. **Write the report** using the shared template from `ui-morphism-core`
-   (`assets/report-template.md`), in its section order: Summary, Contrast table,
-   Checklist, Budgets, Corrections, Refusals, Manual TODOs. This skill makes no
-   corrections and no refusals, so those two sections carry the finding list and the
-   recommended fixes instead, each pointing at the anti-pattern it matches.
+5. **Write the report** in the shape below.
+
+## The report shape
+
+Seven sections, in this order, in every ui-morphism audit from every style. Do not add,
+remove or reorder them: the order is what lets a user diff two styles' audits of the same
+codebase. Where a section does not apply, write "None." — an empty section is information,
+a missing section is a hole. The style supplies the rows; the sections are fixed.
+
+1. **Summary** — a two-column table: Style and plugin version; Scope; Framework / styling
+   system with detection confidence; Dark mode (media / class / both); Findings by
+   severity; Verdict (**PASS** / **PASS WITH FINDINGS** / **FAIL**). Then one paragraph
+   naming the single most important finding.
+2. **Contrast** — columns `Pair | Backdrop | Ratio | Required | Verdict | Auto-correction`.
+   Every ratio is `ui-morphism-core:a11y-validate`'s, three decimal places, unrounded. The
+   Auto-correction column reads "none — audit only". The dark border against the dark
+   surface is always one of the rows.
+3. **Checklist** — two tables, universal first, both `Check | Verdict | Failing selector /
+   note`. The universal table has exactly nine rows: text contrast (1.4.3), non-text
+   contrast (1.4.11), focus visible (2.4.7 / 2.4.13), target size (2.5.8), forced colors,
+   reduced motion, reduced transparency, colour-only encoding (1.4.1), DOM order (1.3.2).
+   The style table is `references/checklist.md`, row for row.
+4. **Budgets** — columns `Budget | Measured | Limit | Verdict`: shadow layers per element,
+   accent fills per view, emitted CSS bytes, font bytes, image bytes, added JS.
+5. **Corrections** — empty by construction; this skill changes nothing. Write "None." and
+   put the recommended fixes here as a `Finding | File and selector | Fix` table, ordered
+   by severity, each pointing at the anti-pattern it matches.
+6. **Refusals** — "None." An audit refuses nothing.
+7. **Manual TODOs** — a checkbox list naming the *method*, not the concern: measure the
+   axis-aligned bounding box of every rotated element after transform, test in Windows
+   High Contrast, measure real font subset sizes, and tab through every composed or
+   absolutely-positioned region.
 
 ## Output
 

@@ -41,8 +41,8 @@ backgrounds with `#0A0A0A` text; that is the whole palette rule.
 
 **6. `backdrop-filter`, `filter: blur()`, or any blur, in any generated rule.** The
 absence of blur is as diagnostic as the presence of the hard shadow. If the request
-genuinely wants blur, it is a different style — hand it to `glassmorphism-ui` or
-`liquid-glass-ui` and say so.
+genuinely wants blur, it is a different style — hand it to `glassmorphism-ui`, or to
+Liquid Glass (`docs/08-liquid-glass.md`, no plugin yet), and say so.
 *Offer:* an opaque fill, or the documented "opaque brutalist shell containing one
 glass modal as a deliberate register shift" from §12.
 
@@ -100,15 +100,17 @@ dozen elements. Narrow the scope, or apply `scope: product` (which caps intensit
 
 ## Adjacent-style handoffs
 
-Not refusals — redirections. When the request is really for a neighbour, say so and
-name the plugin.
+Not refusals — redirections. When the request is really for a neighbour, say so. Name a
+plugin only where one exists; for the rest, name the visual language and its doc, and say
+plainly that a plugin is planned but not yet built. Sending a user to install something
+that does not exist is worse than telling them nothing.
 
 | Request | Actually |
 |---|---|
-| Soft blurred shadows, same-hue extrusion, "pressed-in" | `neumorphism-ui` |
-| Puffy pastel surfaces, radii ≥ 24px, inset sheen | `claymorphism-ui` |
+| Soft blurred shadows, same-hue extrusion, "pressed-in" | neumorphism — `docs/02-neumorphism.md`; no plugin yet |
+| Puffy pastel surfaces, radii ≥ 24px, inset sheen | claymorphism — `docs/04-claymorphism.md`; no plugin yet |
 | Translucent panels, frosted chrome, `backdrop-filter` | `glassmorphism-ui` |
-| Refraction, specular rims, iOS 26/27 chrome | `liquid-glass-ui` |
-| Three loud layers, four typefaces, collage, blend modes | `maximalism-ui` |
-| Strip it down to one accent and no ornament | `minimalism-ui` — and note §12 calls minimalism this style's own low-intensity fallback, so `intensity: 0` here lands in the same place |
+| Refraction, specular rims, iOS 26/27 chrome | Liquid Glass — `docs/08-liquid-glass.md`; no plugin yet |
+| Three loud layers, four typefaces, collage, blend modes | maximalism — `docs/06-maximalism.md`; no plugin yet |
+| Strip it down to one accent and no ornament | minimalism — `docs/05-minimalism.md`; no plugin yet, and §12 calls minimalism this style's own low-intensity fallback, so `intensity: 0` here lands in the same place |
 | Asymmetric tile spans, feature grids | `bento-grid-ui` — and §12 calls brutalism + bento the best combination in the set |

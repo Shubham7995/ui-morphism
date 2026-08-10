@@ -29,7 +29,7 @@ truth for every value this plugin emits is
 The other style plugins in this marketplace restyle surfaces. This one **restructures markup and
 layout**. It reads existing content, classifies each item, assigns a span, rewrites DOM order,
 adds intrinsic media dimensions, and barely touches colour. If the shared architecture — core's
-framework detection, token grammar, contrast validator, intensity contract, report template —
+framework detection, token grammar, contrast validator, intensity contract, report shape —
 survives a skill that is mostly about `grid-column` and heading levels, it will survive the rest.
 
 It also surfaces the hardest accessibility problem in the set that is not about contrast.

@@ -86,7 +86,7 @@ fallback.
 | Token grammar, emitters, dark-mode emission shape, Tailwind mapping | `ui-morphism-core:token-emit` |
 | All nine universal accessibility checks, including every contrast computation | `ui-morphism-core:a11y-validate` |
 | Intensity contract, clamp mechanism, context caps | core contract |
-| Audit report template and section order | `ui-morphism-core/assets/report-template.md` |
+| Audit report section order | marketplace convention, reproduced in full in each skill |
 | Refusal protocol — refuse, explain, offer the alternative | core contract |
 
 This plugin owns the token *values*, the intensity curves and clamp values, component

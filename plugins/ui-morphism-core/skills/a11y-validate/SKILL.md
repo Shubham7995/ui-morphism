@@ -18,11 +18,13 @@ description: >-
   rendered tree answers those better and should win them. Read-only: it measures
   and reports, it never edits.
 argument-hint: "[css glob] [--fail-on=fail|warn]"
-allowed-tools: >-
-  Read Glob Grep
-  Bash(node ${CLAUDE_SKILL_DIR}/scripts/contrast.mjs *)
-  Bash(node ${CLAUDE_SKILL_DIR}/scripts/audit-css.mjs *)
-  Bash(node ${CLAUDE_SKILL_DIR}/scripts/budget.mjs *)
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash(node ${CLAUDE_SKILL_DIR}/scripts/contrast.mjs *)
+  - Bash(node ${CLAUDE_SKILL_DIR}/scripts/audit-css.mjs *)
+  - Bash(node ${CLAUDE_SKILL_DIR}/scripts/budget.mjs *)
 license: MIT
 metadata:
   sourceDoc: docs/MARKETPLACE.md
@@ -41,7 +43,7 @@ One implementation, ten callers. The contrast function is the single most-repeat
 
 **2. Alpha composites per channel in gamma-encoded sRGB.** `C = a*C_fill + (1-a)*C_backdrop` on each of R, G and B, and only then linearise and reduce to a luminance. Averaging the two luminances is a different and consistently optimistic model: doc 10 §7 records it claiming 4.52:1 for a pair that measures 1.50:1. Never write `L = a*L_fill + (1-a)*L_backdrop`.
 
-**3. A surface over a ground the style does not own is measured against the worst case,** not against the design mock's background. The same `rgba(255,255,255,0.12)` panel measures 14.6:1 over `#0B0B12` and 1.57:1 over `#7DD3FC`. Use `worst-case`, and say in the report that the number is a bound rather than a measurement of the user's page.
+**3. A surface over a ground the style does not own is measured against the worst case,** not against the design mock's background. White text on the same `rgba(255,255,255,0.12)` panel measures 14.596:1 when that panel composites over `#0B0B12` and 1.569:1 when it composites over `#7DD3FC`. Use `worst-case`, and say in the report that the number is a bound rather than a measurement of the user's page.
 
 ## The nine universal checks
 
@@ -76,13 +78,13 @@ Identical logic for all ten styles. Style-specific invariants stay in the style 
    node ${CLAUDE_SKILL_DIR}/scripts/contrast.mjs worst-case "rgba(20,22,28,0.72)" "#F5F6FA" --target=4.5
    node ${CLAUDE_SKILL_DIR}/scripts/contrast.mjs solve-alpha "#14161C" "#F5F6FA" --target=4.5
    ```
-   `solve-alpha` returns the exact crossing plus `ceil2`, the lowest two-decimal alpha that still clears it. Pass `--backdrop=#f5f5f7` when the ground genuinely is known — a hairline over a known tile, a scrim over a known page.
+   `solve-alpha` returns the exact crossing plus `ceil2`, the lowest two-decimal alpha that still clears it. Pass `--backdrop=#f5f5f7` when the ground genuinely is known — a hairline over a known tile, a scrim over a known page. Over a known backdrop whose luminance sits on the far side of the foreground from the fill's there is no single minimum: the composite passes through the text on its way from ground to fill, the ratio falls to 1:1 there and rises again. That answer comes back flagged `nonMonotone` with the interval of alphas that MISS the target, and it is reported as an interval — never quoted as a minimum.
 5. **Count the budgets.**
    ```bash
    node ${CLAUDE_SKILL_DIR}/scripts/budget.mjs tokens/*.css --budget=budget.json
    ```
    The limits file comes from the calling style's own doc §8. This skill has no numbers of its own, so a counter with no limit is reported and not judged.
-6. **Auto-correct where the caller asked for it, and record every correction.** Darken an `ink` or a `border-strong` until the threshold holds, then re-run. A correction that is not written into §5 of the report did not happen as far as the reader is concerned.
+6. **Solve the correction; hand the edit back to the caller.** This skill's `allowed-tools` are read-only, so it computes the fix rather than writing it — the darker `ink`, the `border-strong` that clears 3:1, the alpha that clears the target — names the file and the token, and returns it to the style skill that called it. That skill applies it and re-runs step 2. A correction that is not written into §5 of the report did not happen as far as the reader is concerned.
 7. **Write §2, §3, §4 and §7 of the audit report** using `${CLAUDE_PLUGIN_ROOT}/assets/report-template.md`.
 
 ## What this skill cannot know, and must say so

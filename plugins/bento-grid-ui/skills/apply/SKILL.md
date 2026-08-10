@@ -3,9 +3,9 @@ name: apply
 description: >-
   Use when the user NAMES the pattern — "bento", "bento box layout", "Apple-style feature
   grid" — or describes its concrete moves: an asymmetric or varied-span tile grid where size
-  encodes importance on a locked gutter, turning a list of features, stats or cards into
-  differently sized tiles, assigning spans by content weight, collapsing tiles to one column
-  below 768px, or fixing reading order against `grid-auto-flow: dense`. This skill
+  encodes importance on a locked gutter, turning a list of features or stats into
+  differently sized tiles, assigning spans by content weight, or fixing reading order
+  against `grid-auto-flow: dense`. This skill
   restructures markup and layout; it does not restyle surfaces. ui-morphism is descriptive
   and plural — one named language with measured tokens and a stated when-not-to-use — not a
   design-quality tool. Do NOT use for open-ended quality work: "make it look good", "make it
@@ -13,14 +13,20 @@ description: >-
   AI-generated", "fix my layout", general information-architecture or responsive-design
   review, taste or visual-craft critique, de-slopping, or animation and micro-interaction
   craft. A general design, taste or animation skill answers those better and should win
-  them. Do not use for the sibling languages either: frosted or
-  translucent panels (glassmorphism-ui, liquid-glass-ui), hard-bordered zero-blur restyling
-  (brutalism-ui), soft extruded or puffy surfaces (neumorphism-ui, claymorphism-ui), material
-  texture (skeuomorphism-ui), subtraction toward a quiet system (minimalism-ui), layered
-  collage (maximalism-ui), depth ladders and parallax (spatial-ui). To review an existing
-  bento without changing it, use bento-grid-ui:audit.
+  them. Do not use for the sibling languages either:
+  translucent panels (glassmorphism-ui), hard-bordered zero-blur restyling (brutalism-ui).
+  Nor for Liquid Glass, soft extruded or puffy surfaces, material texture, quiet
+  subtraction, layered collage, or depth ladders — separate visual
+  languages, documented in docs/01 through docs/10, with plugins planned but not yet built.
+  To review an existing bento without changing it, use bento-grid-ui:audit.
 argument-hint: "[scope glob] [--density=airy|standard|compact] [--intensity=0-100] [--interactive-tiles] [--dark=media|class|none]"
-allowed-tools: Read Glob Grep Edit Write Bash(node ${CLAUDE_SKILL_DIR}/scripts/assign-spans.mjs *)
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Edit
+  - Write
+  - Bash(node ${CLAUDE_SKILL_DIR}/scripts/assign-spans.mjs *)
 license: MIT
 metadata:
   sourceDoc: docs/09-bento-grid.md
@@ -164,9 +170,8 @@ Doc §13's input table, with the detection and validation source for each.
     `backdrop-filter` elements against ≤ 1. Downgrade assets rather than the layout, and record
     the downgrade.
 
-12. **Write `bento-audit.md`** using the `ui-morphism-core` report template, with the rows named
-    in "What goes in the report" below, plus the 320px and 200%-zoom check instructions as
-    manual TODOs.
+12. **Write `bento-audit.md`** in the seven-section shape set out in "What goes in the report"
+    below, with the 320px and 200%-zoom checks as manual TODOs.
 
 ## Outputs
 
@@ -255,26 +260,51 @@ rather than quietly emitting something smaller than asked for.
 
 ## What goes in the report
 
-Core owns the template and the section order. These are the rows this style supplies:
+Seven sections, in this order, in every ui-morphism audit from every style. Do not add, remove
+or reorder them: the order is what lets a user diff two styles' audits of the same codebase.
+Where a section does not apply, write "None." — an empty section is information, a missing
+section is a hole. The sections are fixed; this style supplies the rows.
 
-- **Per-tile table** — assigned span, content type, why that span, computed text/background
-  contrast ratio, image weight, alt-text status, link count. One row per tile; §13 asks for
-  exactly this and it is the most useful artefact the run produces.
-- **Contrast table** — `--bento-fg` and `--bento-fg-muted` on tile and raised tile, the accent
-  on tile, the interactive border against the tile, and white over the scrim composited on pure
-  white imagery. Three decimal places, unrounded.
-- **Budgets** — total image bytes against 600KB / 1.2MB, largest tile image against 200KB,
-  autoplaying video count and bytes, `backdrop-filter` element count, CLS contribution against
-  0.02, and the promoted-layer estimate if the reveal is enabled.
-- **Composition metrics** — tile count, distinct spans, dominant tile's share of the section
-  area against §3's 30–40%, measured largest:smallest area ratio against the requested
-  `spanVariance`, empty cell count, and grid rows.
-- **Corrections** — every token the skill changed on its own, with before, after and reason.
-  A `surfaceDelta` other than 8 always appears here, with the luminance-point derivation.
-- **Refusals** — every anti-pattern requested and declined, with the alternative offered.
-- **Manual TODOs** — always at least these three, because none is computable from source: the
-  320px-width collapse check, the 200% text-zoom check, and a tab-through confirming focus moves
-  left-to-right and top-to-bottom with no jumps.
+1. **Summary** — a two-column table: Style and plugin version; Intensity (effective, requested,
+   and the context cap that fired); Scope; Framework / styling system with detection confidence
+   and whether the user confirmed; Dark mode (media / class / none); Files changed (written /
+   modified / refused); Verdict (**PASS** / **PASS WITH CORRECTIONS** / **FAIL**). Then one
+   paragraph: what was restructured, and whether DOM order still equals reading order.
+
+2. **Contrast** — columns `Pair | Backdrop | Ratio | Required | Verdict | Auto-correction`.
+   `--bento-fg` and `--bento-fg-muted` on tile and raised tile, the accent on tile, the
+   interactive border against the tile, and white over the scrim composited on **pure white**
+   imagery. Three decimal places, unrounded.
+
+3. **Checklist** — two tables, universal first, both `Check | Verdict | Failing selector /
+   note`. The universal table has exactly nine rows: text contrast (1.4.3), non-text contrast
+   (1.4.11), focus visible (2.4.7 / 2.4.13), target size (2.5.8), forced colors, reduced
+   motion, reduced transparency, colour-only encoding (1.4.1), DOM order (1.3.2). The style
+   table carries `../audit/references/checklist.md` plus the two tables this pattern adds:
+   - **Per-tile table**: assigned span, content type, why that span, computed text/background
+     contrast, image weight, alt-text status, link count. One row per tile. §13 asks for
+     exactly this and it is the most useful artefact the run produces.
+   - **Composition metrics**: tile count, distinct spans, dominant tile's share of the section
+     area against §3's 30–40%, measured largest:smallest area ratio against the requested
+     `spanVariance`, empty cell count, grid rows.
+
+4. **Budgets** — columns `Budget | Measured | Limit | Verdict`: total image bytes against
+   600KB / 1.2MB, largest tile image against 200KB, autoplaying video count and bytes,
+   `backdrop-filter` element count, CLS contribution against 0.02, and the promoted-layer
+   estimate if the reveal is enabled.
+
+5. **Corrections** — columns `Token | Before | After | Reason`, one row per token this skill
+   changed on its own. A `surfaceDelta` other than 8 always appears here, with the
+   luminance-point derivation. Then a bullet per context cap and clamp the planner reported,
+   **including the ones that changed nothing**.
+
+6. **Refusals** — columns `Requested | Refused because | Offered instead`, one row per
+   `references/anti-patterns.md` entry that fired.
+
+7. **Manual TODOs** — a checkbox list naming the *method*, not the concern. Always at least
+   these three, because none is computable from source: the 320px-width collapse check, the
+   200% text-zoom check, and a tab-through confirming focus moves left-to-right and
+   top-to-bottom with no jumps.
 
 ## Validation — all must pass before reporting done
 

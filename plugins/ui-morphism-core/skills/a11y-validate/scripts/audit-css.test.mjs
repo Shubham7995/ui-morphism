@@ -148,6 +148,25 @@ test('check 2 — non-text contrast catches the dark-mode black-border trap', ()
   assert.ok(Math.abs(fixedDark.ratio - 11.82) <= 0.005);
 });
 
+test('check 2 — a theme-independent pair is reported once, with no theme prefix', () => {
+  // The rule's colours are literal, so both themes resolve to the SAME pair and
+  // measure the same ratio. Two rows differing only by a "light:"/"dark:"
+  // prefix is one finding printed twice in §3 of the report.
+  const css = `
+:root { --um-x-surface-1: #ffffff; }
+:root[data-theme="dark"] { --um-x-surface-1: #101014; }
+.chip { background: #ffffff; border: 2px solid #cccccc; }
+`;
+  const findings = of(auditor.audit(css, { file: 'x.css' }), 'non-text-contrast').filter(
+    (f) => f.selector === '.chip',
+  );
+
+  assert.equal(findings.length, 1, 'one pair, one row');
+  assert.doesNotMatch(findings[0].message, /^(light|dark):/, 'no theme prefix on a shared pair');
+  assert.equal(findings[0].theme, 'both');
+  assert.equal(findings[0].level, 'fail', '#cccccc on #ffffff is 1.606:1');
+});
+
 test('check 3 — focus must be an outline, wide enough, offset, and never removed', () => {
   const css = `
 .a:focus-visible { outline: 3px solid #0a0a0a; outline-offset: 2px; }

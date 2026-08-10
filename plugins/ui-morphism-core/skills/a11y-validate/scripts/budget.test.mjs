@@ -130,6 +130,45 @@ test('compare() judges measurements against a style-supplied limit table', () =>
   assert.match(unknown[0].note, /rendered/);
 });
 
+test('a measurement is joined to its unit with a separator when the unit is a word', () => {
+  // §4 of the audit report is read by a human. "8192bytes" and "0layers" are
+  // what concatenation produces, and both shipped verbatim into the report.
+  assert.equal(budget.withUnit(8192, 'bytes'), '8192 bytes');
+  assert.equal(budget.withUnit(0, 'layers'), '0 layers');
+  assert.equal(budget.withUnit(3, 'surfaces'), '3 surfaces');
+
+  // The units CSS itself writes closed up stay closed up.
+  assert.equal(budget.withUnit(28, 'px'), '28px');
+  assert.equal(budget.withUnit(25, '%'), '25%');
+  assert.equal(budget.withUnit(200, 'ms'), '200ms');
+
+  // No unit is still just the number, with no stray space.
+  assert.equal(budget.withUnit(4, ''), '4');
+  assert.equal(budget.withUnit(4, undefined), '4');
+});
+
+test('the markdown table renders a word unit with its separator, in both columns', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'um-budget-unit-'));
+  const css = path.join(dir, 'g.css');
+  writeFileSync(css, '.b { box-shadow: 0 1px 2px #0002; }');
+  const limits = path.join(dir, 'budget.json');
+  writeFileSync(
+    limits,
+    JSON.stringify({
+      'bytes.gzip': { limit: 8192, label: 'CSS bytes (gzip)', unit: 'bytes' },
+      'shadowLayers.max': { limit: 4, label: 'Shadow layers', unit: 'layers' },
+    }),
+  );
+
+  // This table is §4 of a user-facing audit report, verbatim.
+  const out = cli(css, `--budget=${limits}`).stdout;
+  assert.doesNotMatch(out, /\d(bytes|layers)/, 'no "8192bytes" or "1layers" in a report row');
+  assert.match(out, /\| 8192 bytes \|/, 'the limit column carries the separator too');
+  assert.match(out, /\| 1 layers \|/);
+
+  rmSync(dir, { recursive: true, force: true });
+});
+
 test('the CLI measures files, applies a --budget file, and exits on an exceeded limit', () => {
   const dir = mkdtempSync(path.join(tmpdir(), 'um-budget-'));
   const css = path.join(dir, 'g.css');

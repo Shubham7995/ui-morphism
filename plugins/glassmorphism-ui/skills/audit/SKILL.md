@@ -2,24 +2,29 @@
 name: audit
 description: >-
   Use to check a UI that ALREADY uses frosted glass, backdrop-blur or acrylic against this
-  style's own invariants, when the user names the style or its concrete moves and wants a
+  style's invariants, when the user names the style or its moves and wants a
   review rather than a change. The invariants it owns: worst-case composited contrast at
-  both the darkest and brightest ground pixel, which axe, Lighthouse and Figma cannot see
+  both the darkest and brightest ground pixel, which axe, Lighthouse and Figma miss
   because they measure the declared `background-color`; the ancestor backdrop-root scan
-  (`opacity` below 1, `filter`, `mask`, `clip-path`, `mix-blend-mode`, `will-change`) that
-  silently kills the effect; the `@supports` wrapper and the `-webkit-backdrop-filter`
-  twin; stacked translucent depth; the glass-surface census and blurred-viewport budget;
-  and the four escape hatches plus print and the in-app transparency toggle Safari's
-  missing media query makes mandatory. Writes a report only; never edits — use
-  glassmorphism-ui:apply to add, restyle or tone glass down. This is NOT a general design,
+  (`opacity` below 1, `filter`, `mask`, `clip-path`) that silently kills the effect; the
+  `@supports` wrapper and the `-webkit-` twin; stacked depth; the
+  glass-surface and blurred-viewport budgets; and the four escape hatches plus print and
+  the transparency toggle Safari makes mandatory. Writes a report
+  only; never edits — use glassmorphism-ui:apply to change anything. This is NOT a general design,
   taste, visual-craft or AI-slop audit, and not a general accessibility sweep: it will not
   answer "is my design good", "critique this UI", "find the AI tells", "review my
   animations" or "audit my site's accessibility". Dedicated design-quality, de-slopping,
-  animation and a11y tools answer those better and should win them. Do not use for Liquid
-  Glass refraction (liquid-glass-ui:audit), neumorphic extrusion (neumorphism-ui:audit),
-  spatial depth ladders (spatial-ui:audit) or bento tile layout (bento-grid-ui:audit).
+  animation and a11y tools answer those better and should win them. Do not use for bento
+  tile layout (bento-grid-ui:audit) or hard-bordered zero-blur surfaces
+  (brutalism-ui:audit). Liquid Glass refraction, neumorphic extrusion and spatial depth
+  ladders are separate visual languages, documented in docs/08, docs/02 and docs/10, with
+  plugins planned but not yet built.
 argument-hint: "[scope glob] [--a11y-floor=AA|AA-strict|AAA] [--perf-target=desktop|mobile|low-end]"
-allowed-tools: Read Glob Grep Bash(node ${CLAUDE_SKILL_DIR}/../apply/scripts/glass-scan.mjs *)
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash(node ${CLAUDE_SKILL_DIR}/../apply/scripts/glass-scan.mjs *)
 license: MIT
 metadata:
   sourceDoc: docs/03-glassmorphism.md
@@ -89,30 +94,51 @@ number. Every contrast row in this report carries two.
    `aria-modal="true"` with a focus trap and an inert background, target sizes, and whether
    any state is carried by transparency, blur or shadow alone.
 
-7. **Write the report** using the `ui-morphism-core` report template. Name it
-   `GLASS-AUDIT.md` unless the user asks otherwise.
+7. **Write the report** in the shape below. Name it `GLASS-AUDIT.md` unless the user asks
+   otherwise.
 
 ## What the report contains
 
-Core owns the template and the section order — Summary, Contrast table, Checklist, Budgets,
-Corrections, Refusals, Manual TODOs. This style supplies:
+Seven sections, in this order, in every ui-morphism audit from every style. Do not add,
+remove or reorder them: the order is what lets a user diff two styles' audits of the same
+codebase. Where a section does not apply, write "None." — an empty section is information, a
+missing section is a hole. The sections are fixed; this style supplies the rows.
 
-- **Contrast table**: one row per text token, **two ratios each** — composited over the
-  darkest ground pixel and over the brightest — at three decimal places, unrounded, with the
-  required threshold and the verdict. Where the ground is uncontrolled, the row says
-  "unmeasurable" and explains why rather than guessing.
-- **Fallback coverage matrix**: per surface, whether it has the `@supports` fallback, the
-  `-webkit-` twin, and each of `prefers-reduced-transparency`, `prefers-contrast`,
-  `forced-colors`, `prefers-reduced-motion`, `@media print` and the `[data-transparency]`
-  hook.
-- **Backdrop-root hazard list**: selector, property, file, line, and your verdict on whether
-  it can be an ancestor.
-- **Budget table**: the five numbers from step 5, each against its limit.
-- **Corrections**: empty by construction — this skill changes nothing. Any correction the
-  user should make goes in the recommendations instead, ordered by severity.
-- **Manual TODOs**: for this style, always at least these two, because neither is computable
-  from CSS text. Screenshot the composited pixels at three scroll positions and sample them.
-  Verify the focus ring against both the lightest and darkest possible backdrop.
+1. **Summary** — a two-column table: Style and plugin version; Scope; Framework / styling
+   system with detection confidence; Tone and dark-mode strategy; whether the ground is
+   project-controlled; Findings by severity; Verdict (**PASS** / **PASS WITH FINDINGS** /
+   **FAIL**). Then one paragraph naming the single most important finding.
+
+2. **Contrast** — columns `Pair | Backdrop | Ratio | Required | Verdict | Auto-correction`.
+   One row per text token per extreme: **two ratios each**, composited over the darkest
+   ground pixel and over the brightest, three decimal places, unrounded. Auto-correction
+   reads "none — audit only". Where the ground is uncontrolled, the row says "unmeasurable"
+   and explains why rather than guessing.
+
+3. **Checklist** — two tables, universal first, both `Check | Verdict | Failing selector /
+   note`. The universal table has exactly nine rows: text contrast (1.4.3), non-text contrast
+   (1.4.11), focus visible (2.4.7 / 2.4.13), target size (2.5.8), forced colors, reduced
+   motion, reduced transparency, colour-only encoding (1.4.1), DOM order (1.3.2). The style
+   table is `references/checklist.md` row for row, plus two matrices this style adds:
+   - **Fallback coverage**: per surface, the `@supports` fallback, the `-webkit-` twin, and
+     each of `prefers-reduced-transparency`, `prefers-contrast`, `forced-colors`,
+     `prefers-reduced-motion`, `@media print` and the `[data-transparency]` hook.
+   - **Backdrop-root hazards**: selector, property, file, line, and your verdict on whether
+     it can be an ancestor.
+
+4. **Budgets** — columns `Budget | Measured | Limit | Verdict`: the five numbers from step 5,
+   each against its limit.
+
+5. **Corrections** — empty by construction; this skill changes nothing. Write "None." and put
+   what the user should change here as a `Finding | File and selector | Fix` table, ordered
+   by severity.
+
+6. **Refusals** — "None." An audit refuses nothing.
+
+7. **Manual TODOs** — a checkbox list naming the *method*, not the concern. For this style,
+   always at least these two, because neither is computable from CSS text: screenshot the
+   composited pixels at three scroll positions and sample them, and verify the focus ring
+   against both the lightest and darkest possible backdrop.
 
 ## Severity, so the report is actionable rather than a list
 

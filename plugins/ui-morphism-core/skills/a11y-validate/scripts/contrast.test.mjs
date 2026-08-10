@@ -364,6 +364,158 @@ test('solveMinAlpha over a KNOWN backdrop — the bento and spatial hairline cro
   assert.ok(passes(scrim(black.ceil2), 4.5) && !passes(scrim(0.53), 4.5));
 });
 
+test('solveMinAlpha refuses to bisect when the foreground straddles fill and backdrop', () => {
+  // The precondition bisection needs is that the ratio be monotone in alpha.
+  // It is not, when the foreground luminance sits STRICTLY BETWEEN the fill's
+  // and the backdrop's: the composite walks from the backdrop to the fill, so
+  // it passes through the foreground, the ratio falls to 1:1 there and rises
+  // again. #808080 text over a white fill on a black ground is that case —
+  // alpha 0.10 clears 3:1, alpha 0.50 measures 1:1, alpha 0.95 clears 3:1
+  // again, and a bisection reports the LAST crossing as if it were the first.
+  const result = solveMinAlpha('#ffffff', '#808080', { target: 3, backdrop: '#000000' });
+  const ratioAt = (a) => contrastRatio('#808080', composite(`rgba(255,255,255,${a})`, '#000000'));
+
+  assert.equal(result.nonMonotone, true, 'the straddle must be declared, not bisected through');
+  assert.ok(
+    Math.abs(result.crossoverAlpha - 0.502) <= 0.002,
+    `#808080 is reached at alpha 128/255; got ${result.crossoverAlpha}`,
+  );
+  assert.ok(Math.abs(ratioAt(result.crossoverAlpha) - 1) <= 1e-6, 'and there the ratio is 1:1');
+
+  // The honest answer is the interval that FAILS, not a single "minimum".
+  const [low, high] = result.failsBetween;
+  assert.ok(low > 0 && low < result.crossoverAlpha && high > result.crossoverAlpha && high < 1);
+  assert.ok(passes(ratioAt(low - 1e-6), 3), 'everything below the interval clears the target');
+  assert.ok(!passes(ratioAt(low + 1e-6), 3), 'and the interval itself does not');
+  assert.ok(!passes(ratioAt(high - 1e-6), 3));
+  assert.ok(passes(ratioAt(high + 1e-6), 3), 'the far branch clears it again');
+
+  // A caller that only reads `alpha` still gets a value that clears the target,
+  // and it is the first alpha on the upper branch that does.
+  assert.equal(result.feasible, true);
+  assert.equal(result.alpha, high);
+  assert.ok(passes(ratioAt(result.ceil2), 3));
+});
+
+test('a straddle with TWO clearing branches reports both intervals', () => {
+  // The both-sides case the straddle handling was written for. Its answer is a
+  // SET of intervals: alpha up to the tint crossing clears 3:1, alpha from the
+  // opaque crossing clears it again, and the gap between them does not.
+  const result = solveMinAlpha('#ffffff', '#808080', { target: 3, backdrop: '#000000' });
+  const [low, high] = result.failsBetween;
+  assert.equal(result.feasible, true);
+  assert.equal(result.clearingIntervals.length, 2);
+  assert.deepEqual(result.clearingIntervals[0], [0, low]);
+  assert.deepEqual(result.clearingIntervals[1], [high, 1]);
+  assert.equal(result.tintAlpha, low);
+  assert.equal(result.alpha, high);
+});
+
+test('every alpha the straddle branch recommends rounds away from 1:1 and clears', () => {
+  // Each branch's shippable two-decimal alpha rounds AWAY from the crossover —
+  // up on the opaque side, down on the tint side — so no recommendation can
+  // land in the gap it was solved to avoid. Rounding a tint ceiling up, or a
+  // whole branch to a floor of 0, is how the CLI came to advise alpha 0.
+  const result = solveMinAlpha('#ffffff', '#808080', { target: 3, backdrop: '#000000' });
+  const ratioAt = (a) => contrastRatio('#808080', composite(`rgba(255,255,255,${a})`, '#000000'));
+  const [low, high] = result.failsBetween;
+
+  assert.ok(result.tintFloor2 <= low, 'the tint value rounds down, onto the clearing side');
+  assert.ok(passes(ratioAt(result.tintFloor2), 3), 'and clears the target');
+  assert.ok(result.ceil2 >= high, 'the opaque value rounds up, onto the clearing side');
+  assert.ok(passes(ratioAt(result.ceil2), 3), 'and clears the target');
+
+  const out = cli('solve-alpha', '#ffffff', '#808080', '--target=3', '--backdrop=#000000');
+  assert.equal(out.status, 0);
+  assert.match(out.stdout, /clears 3:1/);
+  assert.match(out.stdout, /misses it/);
+  assert.match(out.stdout, /as a tint/, 'both branches are offered when both exist');
+  const recommended = [...out.stdout.matchAll(/(\d+\.\d+) if/g)].map((m) => Number(m[1]));
+  assert.equal(recommended.length, 2, 'one number per clearing branch');
+  for (const value of recommended) {
+    assert.ok(passes(ratioAt(value), 3), `alpha ${value} measures ${ratioAt(value)} — recommended`);
+  }
+});
+
+test('a straddle with a reachable LOW solution is feasible, not "unreachable"', () => {
+  // BUG 1. #808080 over a white fill on a black ground at 4:1: alpha 0 measures
+  // 5.3172:1 and clears the target, alpha 1 measures 3.9494:1 and does not.
+  // Every alpha up to the crossing at 0.135614 clears, so the pair is
+  // REACHABLE. Judging feasibility on alpha 1 alone called it unreachable and
+  // the CLI printed that verdict over a perfectly good low-alpha answer.
+  const result = solveMinAlpha('#ffffff', '#808080', { target: 4, backdrop: '#000000' });
+  const ratioAt = (a) => contrastRatio('#808080', composite(`rgba(255,255,255,${a})`, '#000000'));
+
+  assert.equal(result.nonMonotone, true);
+  assert.equal(result.feasible, true, 'a solved low branch means feasible');
+  assert.ok(Math.abs(result.ratioAtZero - 5.3172) <= 5e-4, `alpha 0: ${result.ratioAtZero}`);
+  assert.ok(Math.abs(result.ratioAtOne - 3.9494) <= 5e-4, `alpha 1: ${result.ratioAtOne}`);
+
+  // Exactly one clearing interval, and it is the tint branch running up from 0.
+  assert.equal(result.clearingIntervals.length, 1);
+  const [lo, hi] = result.clearingIntervals[0];
+  assert.equal(lo, 0);
+  assert.ok(Math.abs(hi - 0.1356139) <= 1e-6, `the tint crossing: ${hi}`);
+  assert.equal(result.tintAlpha, hi);
+  assert.ok(passes(ratioAt(hi - 1e-6), 4), 'everything below the crossing clears');
+  assert.ok(!passes(ratioAt(hi + 1e-6), 4), 'and nothing above it does');
+
+  // The opaque branch genuinely has no solution, and that is said with a null
+  // rather than with a number that fails.
+  assert.equal(result.alpha, null);
+  assert.equal(result.ceil2, null);
+  assert.equal(result.ratio, null);
+  // The tint recommendation rounds DOWN, away from the crossing, and clears.
+  assert.equal(result.tintFloor2, 0.13);
+  assert.ok(passes(ratioAt(result.tintFloor2), 4), 'the shipped tint alpha clears 4:1');
+
+  // And the CLI must not call a reachable pair unreachable.
+  const out = cli('solve-alpha', '#ffffff', '#808080', '--target=4', '--backdrop=#000000');
+  assert.equal(out.status, 0, 'a reachable pair exits 0');
+  assert.doesNotMatch(out.stdout, /unreachable/i);
+  assert.match(out.stdout, /not monotone/i);
+  assert.match(out.stdout, /0\.1356/, 'the tint crossing is printed');
+  assert.match(out.stdout, /ship 0\.13\b/, 'and a shippable two-decimal tint alpha');
+});
+
+test('a straddle with NO low solution never recommends the failing alpha 0', () => {
+  // BUG 2. #808080 over a white fill on a #3a3a3a ground at 3.8:1: alpha 0
+  // measures only 2.8800:1, so nothing below the crossing clears and the tint
+  // branch is empty. Leaving the bisection's `low` at its initial 0 made the
+  // failing interval open at 0 and produced "ship 0 if it is meant to read as
+  // a tint" — a recommendation a full point short of its own target.
+  const result = solveMinAlpha('#ffffff', '#808080', { target: 3.8, backdrop: '#3a3a3a' });
+  const ratioAt = (a) => contrastRatio('#808080', composite(`rgba(255,255,255,${a})`, '#3a3a3a'));
+
+  assert.equal(result.nonMonotone, true);
+  assert.equal(result.feasible, true, 'the opaque branch still clears');
+  assert.ok(Math.abs(result.ratioAtZero - 2.88) <= 5e-4, `alpha 0: ${result.ratioAtZero}`);
+  assert.ok(!passes(result.ratioAtZero, 3.8), 'alpha 0 does not clear the target');
+
+  assert.equal(result.tintAlpha, null, 'no tint solution exists');
+  assert.equal(result.tintFloor2, null, 'so there is nothing to ship as a tint');
+  assert.equal(result.clearingIntervals.length, 1);
+  assert.ok(Math.abs(result.clearingIntervals[0][0] - 0.9771258) <= 1e-6);
+  assert.equal(result.clearingIntervals[0][1], 1);
+  assert.ok(Math.abs(result.alpha - 0.9771258) <= 1e-6, `the opaque crossing: ${result.alpha}`);
+  assert.equal(result.ceil2, 0.98);
+  assert.ok(passes(ratioAt(result.ceil2), 3.8), 'and 0.98 really clears 3.8:1');
+
+  // No number the CLI prints as a recommendation may fail the target.
+  const out = cli('solve-alpha', '#ffffff', '#808080', '--target=3.8', '--backdrop=#3a3a3a');
+  assert.equal(out.status, 0);
+  assert.doesNotMatch(out.stdout, /as a tint/, 'there is no tint branch to describe');
+  assert.match(out.stdout, /not monotone/i);
+  assert.match(out.stdout, /nothing below the crossover clears it/);
+  assert.match(out.stdout, /0\.9771/, 'the interval that does clear');
+  assert.match(out.stdout, /ship 0\.98/);
+  const recommended = [...out.stdout.matchAll(/ship (\d+(?:\.\d+)?)/g)].map((m) => Number(m[1]));
+  assert.ok(recommended.length > 0, 'something was recommended');
+  for (const value of recommended) {
+    assert.ok(passes(ratioAt(value), 3.8), `alpha ${value} measures ${ratioAt(value)} — recommended`);
+  }
+});
+
 test('solveMinAlpha says so when no alpha can rescue the pair', () => {
   // A mid-grey fill under near-identical grey text is unreachable at any alpha,
   // and the honest answer is a refusal rather than a clamped number.
@@ -381,6 +533,68 @@ test('solveMinAlpha says so when no alpha can rescue the pair', () => {
   assert.ok(solveMinAlpha('#767676', '#ffffff', { target: 4.5422, backdrop: '#ffffff' }).feasible);
 });
 
+test('a straddle where NEITHER branch clears is the genuinely unreachable case', () => {
+  // Same geometry as the tint-less case, target raised to 4:1. Alpha 0 measures
+  // 2.8800:1, alpha 1 measures 3.9494:1, and the ratio only falls between them,
+  // so the maximum over [0, 1] is max(alpha 0, alpha 1) and no alpha clears.
+  // This is the ONLY straddle for which "unreachable" is the honest verdict.
+  const result = solveMinAlpha('#ffffff', '#808080', { target: 4, backdrop: '#3a3a3a' });
+  assert.equal(result.nonMonotone, true);
+  assert.equal(result.feasible, false);
+  assert.deepEqual(result.clearingIntervals, []);
+  assert.equal(result.alpha, null);
+  assert.equal(result.ratio, null);
+  assert.equal(result.ceil2, null);
+  assert.equal(result.ceil4, null);
+  assert.equal(result.tintAlpha, null);
+  assert.equal(result.tintFloor2, null);
+  assert.ok(result.ratioAtZero < 4 && result.ratioAtOne < 4, 'both ends fall short');
+
+  const out = cli('solve-alpha', '#ffffff', '#808080', '--target=4', '--backdrop=#3a3a3a');
+  assert.equal(out.status, 1, 'an unreachable pair exits 1');
+  assert.doesNotMatch(out.stdout, /ship /, 'nothing may be recommended');
+  assert.match(out.stdout, /no alpha clears 4:1/);
+  assert.match(out.stdout, /2\.8800/);
+  assert.match(out.stdout, /3\.9494/);
+  // The shape is still described first — it is why alpha 1 is not the best case
+  // and why a bisection would have answered confidently and wrongly.
+  assert.match(out.stdout, /not monotone/i);
+});
+
+test('the ordinary monotone solve is untouched by the straddle handling', () => {
+  // The regression guard for both fixes. A monotone solve has one answer, and
+  // it keeps its single alpha, its wording, and its silence about branches —
+  // none of the non-monotone fields appear on it at all.
+  const known = solveMinAlpha('#000000', '#f5f5f7', { target: 3, backdrop: '#f5f5f7' });
+  assert.equal(known.feasible, true);
+  assert.equal(known.nonMonotone, false);
+  assert.equal(ceilTo(known.alpha, 4), 0.4199);
+  assert.equal(known.ceil2, 0.42);
+  assert.equal(known.crossoverAlpha, undefined, 'no crossover on a monotone solve');
+  assert.equal(known.clearingIntervals, undefined);
+  assert.equal(known.tintAlpha, undefined);
+  assert.equal(known.tintFloor2, undefined);
+  assert.ok(passes(contrastRatio(composite('rgba(0,0,0,0.42)', '#f5f5f7'), '#f5f5f7'), 3));
+
+  // The worst-case path is monotone by construction and must stay that way.
+  const worst = solveMinAlpha('#14161C', '#F5F6FA', { target: 4.5 });
+  assert.equal(worst.nonMonotone, false);
+  assert.equal(worst.feasible, true);
+  assert.equal(ceilTo(worst.alpha, 4), 0.6083);
+
+  // The monotone unreachable case keeps its own wording and its exit 1.
+  const hopeless = cli('solve-alpha', '#808080', '#7f7f7f', '--target=4.5');
+  assert.equal(hopeless.status, 1);
+  assert.match(hopeless.stdout, /unreachable — even at alpha 1/);
+  assert.doesNotMatch(hopeless.stdout, /monotone/i);
+
+  const out = cli('solve-alpha', '#000000', '#f5f5f7', '--target=3', '--backdrop=#f5f5f7');
+  assert.equal(out.status, 0);
+  assert.match(out.stdout, /needs alpha >= 0\.419826/);
+  assert.match(out.stdout, /ship 0\.42 — the lowest two-decimal alpha that still clears it/);
+  assert.doesNotMatch(out.stdout, /monotone|tint|interval|clears 3:1/i);
+});
+
 test('requiredTextRatio implements the 1.4.3 large-text rule the checks table states', () => {
   // >= 4.5:1 normal, >= 3:1 for >= 24px or >= 18.66px bold (14pt in CSS px).
   assert.equal(requiredTextRatio(), 4.5);
@@ -393,6 +607,29 @@ test('requiredTextRatio implements the 1.4.3 large-text rule the checks table st
   // 1.4.6 AAA, which docs 03 and 09 both quote: 7:1 body, 4.5:1 large.
   assert.equal(requiredTextRatio({ enhanced: true }), 7);
   assert.equal(requiredTextRatio({ fontSizePx: 24, enhanced: true }), 4.5);
+});
+
+test('the CLI reports a non-monotone solve-alpha as an interval, not as a minimum', () => {
+  // "needs alpha >= 0.879566" is true of the upper branch and false of the
+  // question the caller asked, because alpha 0.10 clears the target too. A
+  // number a skill will paste into a token file must not be silently the wrong
+  // root, so the CLI says the word and prints the interval that fails.
+  const out = cli('solve-alpha', '#ffffff', '#808080', '--target=3', '--backdrop=#000000').stdout;
+  assert.doesNotMatch(out, /needs alpha >=/, 'not a minimum — there are two clearing branches');
+  assert.match(out, /not monotone/i);
+  assert.match(out, /0\.50/, 'the 1:1 crossover');
+  assert.match(out, /0\.2\d\d\d.*0\.8\d\d\d|0\.8\d\d\d/s, 'the failing interval');
+
+  const json = JSON.parse(
+    cli('solve-alpha', '#ffffff', '#808080', '--target=3', '--backdrop=#000000', '--json').stdout,
+  );
+  assert.equal(json.nonMonotone, true);
+  assert.equal(json.failsBetween.length, 2);
+
+  // The ordinary monotone case keeps its wording and its silence about branches.
+  const plain = cli('solve-alpha', '#000000', '#f5f5f7', '--target=3', '--backdrop=#f5f5f7').stdout;
+  assert.match(plain, /needs alpha >=/);
+  assert.doesNotMatch(plain, /monotone/i);
 });
 
 test('the CLI answers the four questions a skill asks it, and exits non-zero on a miss', () => {

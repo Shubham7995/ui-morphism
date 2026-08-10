@@ -139,6 +139,22 @@ function countBytes(source) {
   return { raw, gzip };
 }
 
+/** The units CSS itself writes closed up against their number. */
+const TIGHT_UNITS = new Set(['%', 'px', 'em', 'rem', 'ch', 'vh', 'vw', 'pt', 'fr', 'deg', 'ms', 's', 'x']);
+
+/**
+ * Join a measurement to its unit for §4 of the audit report.
+ *
+ * The unit string comes from the calling style's own §8 limit table, so a
+ * symbol unit and a word unit land in the same table — `{ unit: "px" }` for a
+ * blur radius beside `{ unit: "bytes" }` for a payload. Concatenating both the
+ * same way is what put "8192bytes" and "0layers" in a report a human reads.
+ */
+export function withUnit(value, unit) {
+  if (!unit) return `${value}`;
+  return TIGHT_UNITS.has(unit) ? `${value}${unit}` : `${value} ${unit}`;
+}
+
 /** Read a dotted path out of a measurement object. */
 function at(object, path) {
   return path.split('.').reduce((value, key) => (value == null ? undefined : value[key]), object);
@@ -231,8 +247,8 @@ function renderMarkdown(measurements, rows) {
   if (rows.length) {
     lines.push('| Budget | Measured | Limit | Verdict |', '|---|---|---|---|');
     for (const r of rows) {
-      const measured = r.measured === null ? `unknown — ${r.note}` : `${r.measured}${r.unit}`;
-      lines.push(`| ${r.label} | ${measured} | ${r.limit}${r.unit} | ${r.verdict} |`);
+      const measured = r.measured === null ? `unknown — ${r.note}` : withUnit(r.measured, r.unit);
+      lines.push(`| ${r.label} | ${measured} | ${withUnit(r.limit, r.unit)} | ${r.verdict} |`);
     }
     lines.push('');
   }

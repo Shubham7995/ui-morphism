@@ -16,7 +16,10 @@ description: >-
   the skill or tool that owns the work, and it should win them. With no ui-morphism
   style named, this skill has nothing to contribute.
 argument-hint: "[project root, default .]"
-allowed-tools: Read Glob Grep
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
 license: MIT
 metadata:
   sourceDoc: docs/MARKETPLACE.md

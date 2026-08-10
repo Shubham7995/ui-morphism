@@ -337,12 +337,31 @@ function checkNonTextContrast(rules, properties, file) {
       declarationOf(rule.declarations, 'background-color');
     if (!fillDecl) continue;
 
-    for (const theme of ['light', 'dark']) {
+    const themes = properties.dark.size === 0 ? ['light'] : ['light', 'dark'];
+
+    // Resolve the pair per theme first. A rule whose colours are literal — or
+    // whose custom properties the dark block does not override — resolves to
+    // the SAME pair in both themes and therefore to the same ratio, and
+    // reporting that twice puts one finding in §3 of the report as two rows
+    // differing only by a "light:"/"dark:" prefix. The resolved pair is part of
+    // the key rather than the ratio alone, so two genuinely different pairs
+    // that happen to measure the same ratio are still reported separately.
+    const byPair = new Map();
+    for (const theme of themes) {
       const map = theme === 'dark' ? new Map([...properties.light, ...properties.dark]) : properties.light;
       const borderValue = boundaryColorOf(rule.declarations, map, 'border')?.value;
       const fill = backgroundColorOf(rule.declarations, map)?.value;
       if (!borderValue || !fill) continue;
-      if (theme === 'dark' && properties.dark.size === 0) continue;
+      const key = `${borderValue}|${fill}`;
+      if (byPair.has(key)) byPair.get(key).themes.push(theme);
+      else byPair.set(key, { borderValue, fill, themes: [theme] });
+    }
+
+    for (const { borderValue, fill, themes: covered } of byPair.values()) {
+      // Theme-independent when the one pair covers every theme this sheet has.
+      const shared = covered.length === themes.length && themes.length > 1;
+      const theme = shared ? 'both' : covered[0];
+      const prefix = shared ? '' : `${theme}: `;
       try {
         const ratio = contrastRatio(borderValue, fill);
         const ok = passes(ratio, 3);
@@ -356,7 +375,7 @@ function checkNonTextContrast(rules, properties, file) {
           ratio,
           required: 3,
           message:
-            `${theme}: the boundary from ${border.raw} resolves to ${borderValue} against ` +
+            `${prefix}the boundary from ${border.raw} resolves to ${borderValue} against ` +
             `${fill} and measures ${ratio.toFixed(3)}:1, ${ok ? 'clearing' : 'short of'} 3:1.`,
         });
       } catch (error) {
@@ -368,7 +387,7 @@ function checkNonTextContrast(rules, properties, file) {
           file,
           line: border.line,
           selector: rule.selector,
-          message: `${theme}: ${error.message}`,
+          message: `${prefix}${error.message}`,
         });
       }
     }

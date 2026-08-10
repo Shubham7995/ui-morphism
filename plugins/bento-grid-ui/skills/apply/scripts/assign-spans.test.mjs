@@ -1,7 +1,84 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 import { plan } from "./assign-spans.mjs";
+
+/* ---------------------------------------------------------------------------
+ * The intensity contract, read from disk.
+ *
+ * assets/intensity.contract.json claims to be the authority for this style's
+ * intensity resolution, and says assign-spans.test.mjs pins the planner against
+ * it. The tests at the bottom of this file are what make that claim true: they
+ * parse the contract, resolve intensity FROM IT, and assert the planner agrees.
+ * An anchor, a clamp or a context cap edited in the JSON and not in the planner
+ * fails here rather than shipping as a silent divergence.
+ * ------------------------------------------------------------------------- */
+const CONTRACT_PATH = fileURLToPath(new URL("../../../assets/intensity.contract.json", import.meta.url));
+const CONTRACT = JSON.parse(readFileSync(CONTRACT_PATH, "utf8"));
+
+/** The emission rounding the planner applies after the curve, in decimal places. */
+const EMITTED_DECIMALS = { spanVariance: 2, radius: 0, surfaceDelta: 2, mediaBleed: 0, motion: 0 };
+
+const roundTo = (n, dp) => Math.round(n * 10 ** dp) / 10 ** dp;
+
+/** Piecewise-linear through the contract's three anchors: [0, x], [default, y], [100, z]. */
+function curveFromAnchors(anchors, i) {
+  assert.equal(anchors.length, 3, "a knob curve is three anchors: 0, the default, and 100");
+  const [[x0, y0], [x1, y1], [x2, y2]] = anchors;
+  assert.equal(x0, 0);
+  assert.equal(x1, CONTRACT.default);
+  assert.equal(x2, 100);
+  return i <= x1 ? y0 + ((y1 - y0) * (i - x0)) / (x1 - x0) : y1 + ((y2 - y1) * (i - x1)) / (x2 - x1);
+}
+
+/** The facts the contract's `when` predicates are written against. */
+function factsOf(input) {
+  const n = input.items.length;
+  return {
+    contentShape: input.contentShape,
+    tileSource: input.tileSource,
+    tileCountBand: n < 4 ? "under-4" : n > 9 ? "over-9" : "4-to-9",
+  };
+}
+
+/** Resolve intensity using only the contract. This is the reference the planner is pinned to. */
+function resolveFromContract(input) {
+  const facts = factsOf(input);
+  const requested = Math.min(100, Math.max(0, input.intensity ?? CONTRACT.default));
+  const fired = [];
+  let effective = requested;
+  for (const cap of CONTRACT.contextCaps) {
+    const entries = Object.entries(cap.when);
+    assert.equal(entries.length, 1, "each contextCap.when declares exactly one fact");
+    const [key, value] = entries[0];
+    assert.ok(key in facts, `contextCap tests unknown fact "${key}"; teach factsOf() about it`);
+    if (facts[key] === value) {
+      fired.push(cap);
+      effective = Math.min(effective, cap.cap);
+    }
+  }
+  const knobs = {};
+  for (const [name, knob] of Object.entries(CONTRACT.knobs)) {
+    const raw = curveFromAnchors(knob.anchors, effective);
+    const clamp = CONTRACT.clamps[name];
+    assert.ok(clamp, `knob "${name}" has no clamp entry in the contract`);
+    const bounded = Math.min(clamp.max, Math.max(clamp.min, raw));
+    knobs[name] = roundTo(bounded, EMITTED_DECIMALS[name]);
+  }
+  return { requested, effective, fired, knobs };
+}
+
+/** One input per context cap, keyed by the predicate the contract declares. */
+const CAP_FIXTURES = {
+  "contentShape:comparable": () => ({ contentShape: "comparable" }),
+  "tileCountBand:under-4": () => ({ items: CANONICAL.items.slice(0, 3) }),
+  "tileSource:cms": () => ({ tileSource: "cms" }),
+  "tileCountBand:over-9": () => ({
+    items: Array.from({ length: 11 }, (_, i) => ({ id: `t${i}`, type: "stat", words: 1, links: 0 })),
+  }),
+};
 
 /** The canonical six-tile composition from docs/09-bento-grid.md §5. */
 const CANONICAL = {
@@ -209,4 +286,94 @@ test("the canonical section passes every composition check the planner can decid
   assert.equal(byId["uniform-is-not-bento"], "pass");
   assert.equal(byId.holes, "warn", "three empty cells are reported, not silently packed away");
   assert.equal(result.ok, true);
+});
+
+/* ---------------------------------------------------------------------------
+ * assets/intensity.contract.json is the authority. The tests below are the
+ * pinning its implementationNote claims.
+ * ------------------------------------------------------------------------- */
+
+test("the contract declares the default the planner uses, and its own anchors sit on it", () => {
+  const { knobs } = plan({ items: CANONICAL.items });
+  for (const [name, knob] of Object.entries(CONTRACT.knobs)) {
+    const [, [atDefault, value]] = knob.anchors;
+    assert.equal(atDefault, CONTRACT.default, `knob "${name}" anchors its middle point off the contract default`);
+    assert.equal(
+      knobs[name],
+      roundTo(value, EMITTED_DECIMALS[name]),
+      `knob "${name}" at the contract default resolves to ${knobs[name]}, contract says ${value}`
+    );
+  }
+  assert.deepEqual(knobs, resolveFromContract({ items: CANONICAL.items }).knobs);
+});
+
+test("every knob the planner emits is the contract's anchored curve, across the whole sweep", () => {
+  const cases = [
+    ...Array.from({ length: 101 }, (_, i) => ({ ...CANONICAL, intensity: i })),
+    { ...CANONICAL, intensity: -40 },
+    { ...CANONICAL, intensity: 140 },
+    { ...CANONICAL, intensity: 90, tileSource: "cms" },
+    { ...CANONICAL, intensity: 100, contentShape: "comparable" },
+  ];
+  for (const input of cases) {
+    const expected = resolveFromContract(input);
+    const actual = plan(input);
+    assert.equal(actual.intensity.requested, expected.requested, `requested intensity diverged at ${input.intensity}`);
+    assert.equal(actual.intensity.effective, expected.effective, `effective intensity diverged at ${input.intensity}`);
+    assert.deepEqual(actual.knobs, expected.knobs, `knobs diverged from the contract at intensity ${input.intensity}`);
+  }
+});
+
+test("the contract's clamps bound every knob value the planner emits", () => {
+  assert.deepEqual(
+    Object.keys(CONTRACT.clamps).sort(),
+    Object.keys(CONTRACT.knobs).sort(),
+    "the contract clamps a knob it does not declare, or declares a knob it does not clamp"
+  );
+  for (let i = 0; i <= 100; i += 1) {
+    const { knobs } = plan({ ...CANONICAL, intensity: i });
+    assert.deepEqual(
+      Object.keys(knobs).sort(),
+      Object.keys(CONTRACT.knobs).sort(),
+      "the planner emits a different knob set from the one the contract declares"
+    );
+    for (const [name, clamp] of Object.entries(CONTRACT.clamps)) {
+      assert.ok(knobs[name] >= clamp.min, `${name} = ${knobs[name]} is below the contract floor ${clamp.min} at ${i}`);
+      assert.ok(knobs[name] <= clamp.max, `${name} = ${knobs[name]} is above the contract ceiling ${clamp.max} at ${i}`);
+    }
+  }
+});
+
+test("the planner applies exactly the context caps the contract declares", () => {
+  assert.ok(CONTRACT.contextCaps.length > 0, "the contract declares no context caps");
+  const seen = new Set();
+
+  for (const cap of CONTRACT.contextCaps) {
+    const [key, value] = Object.entries(cap.when)[0];
+    const fixtureKey = `${key}:${value}`;
+    seen.add(fixtureKey);
+    const fixture = CAP_FIXTURES[fixtureKey];
+    assert.ok(fixture, `no test fixture trips the contract's "${fixtureKey}" cap; add one to CAP_FIXTURES`);
+
+    const input = { ...CANONICAL, intensity: 100, ...fixture() };
+    assert.equal(factsOf(input)[key], value, `the fixture for "${fixtureKey}" does not trip the predicate`);
+
+    const expected = resolveFromContract(input);
+    const actual = plan(input);
+    assert.equal(expected.effective, cap.cap, `the contract's own resolution disagrees with cap ${cap.cap}`);
+    assert.equal(
+      actual.intensity.effective,
+      cap.cap,
+      `the planner resolved ${actual.intensity.effective} where the contract caps "${fixtureKey}" at ${cap.cap}`
+    );
+    assert.ok(actual.intensity.caps.length > 0, `the planner capped "${fixtureKey}" silently, without reporting it`);
+    assert.deepEqual(actual.knobs, expected.knobs);
+  }
+
+  assert.equal(seen.size, CONTRACT.contextCaps.length, "two context caps share one predicate");
+  assert.equal(
+    plan({ ...CANONICAL, intensity: 100 }).intensity.caps.length,
+    resolveFromContract({ ...CANONICAL, intensity: 100 }).fired.length,
+    "the planner fires a cap the contract does not declare, or misses one it does"
+  );
 });

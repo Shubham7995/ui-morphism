@@ -58,7 +58,7 @@
       "reason": "Doc §13: size encodes importance only while the eye holds the whole composition. Past nine tiles the section needs a hierarchy break before variance helps."
     }
   ],
-  "implementationNote": "scripts/assign-spans.mjs resolves intensity inline rather than shelling out to ui-morphism-core:token-emit, because the planner needs the effective value to make span decisions in the same pass and a plan must be computable offline. Its capsFor() and segment() are the same four caps and the same anchored curves declared here, and assign-spans.test.mjs pins both against this file. This contract remains the authority: when the two disagree, the planner is wrong.",
+  "implementationNote": "scripts/assign-spans.mjs resolves intensity inline rather than shelling out to ui-morphism-core:token-emit, because the planner needs the effective value to make span decisions in the same pass and a plan must be computable offline. Its capsFor() and segment() are the same four caps and the same anchored curves declared here, and assign-spans.test.mjs pins both against this file: it reads this JSON, resolves intensity from the anchors, clamps and contextCaps declared in it, and asserts the planner returns the same effective intensity and the same five knob values across the whole 0-100 sweep and for every cap. This contract remains the authority: when the two disagree, the planner is wrong.",
   "clampsNotExpressibleHere": {
     "distinctSpansPerGrid": "<= 5",
     "dominantTilesPerGrid": "exactly 1, or 0 in the uniform and mild bands",

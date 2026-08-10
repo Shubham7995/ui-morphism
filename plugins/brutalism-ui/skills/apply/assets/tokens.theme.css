@@ -5,10 +5,15 @@
  * assets/tokens.css (docs §4) exactly; only the custom-property names change,
  * because Tailwind v4 derives utilities from namespaced theme variables.
  *
- * Two invariants, both enforced by ui-morphism-core:token-emit:
+ * Three invariants, all enforced by ui-morphism-core:token-emit:
  *   1. @theme is never nested inside @media, @layer, or any other at-rule.
  *   2. Theme switching happens outside @theme, on ordinary selectors — which is
- *      why the .dark block below sits on its own.
+ *      why the dark blocks below sit on their own.
+ *   3. The dark values are declared TWICE, under the guarded media query and
+ *      under :root[data-theme="dark"], so a system preference and an explicit
+ *      toggle both win. That is the same shape emit.mjs produces for
+ *      --format=css and --format=theme alike; a class-only .dark block would
+ *      leave the two output paths disagreeing.
  *
  * No plugin is required. The shadow, border, and radius are all one-value
  * tokens, which is why this style maps onto @theme with no escape hatches.
@@ -51,12 +56,39 @@
   /* type -> font-nb-display / font-nb-body / font-nb-mono */
   --font-nb-display: "Archivo Black", "Lexend Mega", system-ui, sans-serif;
   --font-nb-body:    "Space Grotesk", "Public Sans", Inter, system-ui, sans-serif;
-  --font-nb-mono:    "JetBrains Mono", ui-monospace, monospace;
+  --font-nb-mono:    "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
 
   --ease-nb: cubic-bezier(0.2, 0, 0, 1);
 }
 
-/* Dark mode via a class on <html>. */
+/* Dark mode, in ui-morphism-core's emission shape. The media-query branch is
+   written so an explicit light choice still wins, and the attribute branch is
+   duplicated so a toggle wins in both directions. The .dark class branch is
+   Tailwind's own variant hook and rides alongside them; it is not a substitute
+   for either, because a class-only theme never responds to the OS setting.
+   Never #000 for the border here: black on #2E2E38 is 1.56:1 and fails
+   SC 1.4.11. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-nb-bg:      #22222E;
+    --color-nb-surface: #2E2E38;
+    --color-nb-sunk:    #1A1A24;
+    --color-nb-ink:     #F5F0E6;
+    --color-nb-muted:   #B9B4AC;
+    --color-nb-border:  #F5F0E6;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-nb-bg:      #22222E;
+  --color-nb-surface: #2E2E38;
+  --color-nb-sunk:    #1A1A24;
+  --color-nb-ink:     #F5F0E6;
+  --color-nb-muted:   #B9B4AC;
+  --color-nb-border:  #F5F0E6;
+}
+
+/* Tailwind's class variant, for projects that toggle dark mode with a class. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 .dark {
@@ -65,7 +97,6 @@
   --color-nb-sunk:    #1A1A24;
   --color-nb-ink:     #F5F0E6;
   --color-nb-muted:   #B9B4AC;
-  /* Never #000 here: black on #2E2E38 is 1.56:1 and fails SC 1.4.11. */
   --color-nb-border:  #F5F0E6;
 }
 

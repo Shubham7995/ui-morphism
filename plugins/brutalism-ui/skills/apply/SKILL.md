@@ -5,8 +5,8 @@ description: >-
   describes its concrete moves: hard 2-5px ink borders, zero-blur offset shadows such as
   "4px 4px 0 #000", flat saturated fills on a cream ground, sticker tilt, or hover that
   translates an element into its own shadow. Also for a named reference (Gumroad,
-  neobrutalism.com, ekmas/neobrutalism-components), or for deriving a neubrutalist token
-  layer from a brand palette and retuning it by intensity 0-100. ui-morphism is
+  neobrutalism.com, ekmas), or for deriving a neubrutalist token layer from a brand
+  palette and retuning it by intensity 0-100. ui-morphism is
   descriptive and plural — one named language with
   measured tokens and a stated when-not-to-use — not a design-quality tool. Do NOT use for
   open-ended quality work: "make it look good", "make it modern", "polish this", "clean
@@ -14,14 +14,18 @@ description: >-
   critique, de-slopping, or animation and micro-interaction craft. A general design, taste
   or animation skill answers those better and should win them. Do not use for the sibling
   languages either: translucent or backdrop-blurred panels (glassmorphism-ui), tile-span
-  layout (bento-grid-ui). Nor for the neighbouring languages this marketplace documents
-  but has not yet shipped a plugin for: same-hue soft extrusion (docs/02), puffy pastel
-  clay (docs/04), material texture (docs/01), layered collage (docs/06), quiet subtraction
-  (docs/05), Apple Liquid Glass (docs/08), depth and parallax (docs/10). This style is
+  layout (bento-grid-ui). Nor for soft extrusion, clay, material texture, collage, quiet
+  subtraction, Liquid Glass or spatial depth — separate visual languages, documented in
+  docs/01 through docs/10, with plugins planned but not yet built. This style is
   defined by the absence of blur: if the request wants blur it is not this skill. To
   review without editing, use brutalism-ui:audit.
 argument-hint: "[scope glob] [--intensity=0-100] [--scope=marketing|product|both] [--theme=light|dark|both] [--density=compact|default|roomy] [--motion=on|minimal]"
-allowed-tools: Read Glob Grep Edit Write
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Edit
+  - Write
 license: MIT
 metadata:
   sourceDoc: docs/07-brutalism.md
@@ -140,10 +144,50 @@ accent is re-checked against `--nb-on-accent` (`#0A0A0A`) and rejected below 4.5
    `../audit/references/checklist.md` as well. Where a value fails, clamp it and record
    the clamp; never ship a failing pair to satisfy an intensity number.
 
-9. **Write the audit report** to `reports/brutalism-audit.md` using the shared report
-   template from `ui-morphism-core` (`assets/report-template.md`), with this style's
-   budget rows from `references/tokens.md` §8 and every refusal from
-   `references/anti-patterns.md` that fired.
+9. **Write the audit report** to `reports/brutalism-audit.md` in the shape below.
+
+## The report shape
+
+Seven sections, in this order, in every ui-morphism audit from every style. Do not add,
+remove or reorder them: the order is what lets a user diff two styles' audits of the same
+codebase. Where a section does not apply, write "None." — an empty section is information,
+a missing section is a hole. The style supplies the rows; the sections are fixed.
+
+1. **Summary** — a two-column table with these rows: Style and plugin version; Intensity
+   (effective, requested, and the context that capped it); Scope; Framework / styling
+   system, with detection confidence and whether the user confirmed it; Dark mode
+   (media / class / both); Files changed (written / modified / refused); Verdict
+   (**PASS** / **PASS WITH CORRECTIONS** / **FAIL**). Then one paragraph: what was applied
+   to what, and the single thing the reader needs before looking at the numbers.
+
+2. **Contrast** — columns `Pair | Backdrop | Ratio | Required | Verdict | Auto-correction`.
+   Every ratio is `ui-morphism-core:a11y-validate`'s, at **three decimal places,
+   unrounded**: 2.999 fails 3, 4.497 fails 4.5. One row per emitted pair, and the dark
+   border against the dark surface is always one of them.
+
+3. **Checklist** — two tables, universal first, both with columns
+   `Check | Verdict | Failing selector / note`. The universal table has exactly nine rows:
+   text contrast (1.4.3), non-text contrast (1.4.11), focus visible (2.4.7 / 2.4.13),
+   target size (2.5.8), forced colors, reduced motion, reduced transparency, colour-only
+   encoding (1.4.1), DOM order (1.3.2). The style table carries the rows from
+   `../audit/references/checklist.md`.
+
+4. **Budgets** — columns `Budget | Measured | Limit | Verdict`, one row per number
+   `references/tokens.md` §8 sets: shadow layers per element, accent fills per view,
+   emitted CSS bytes (raw and minified+brotli), font bytes, image bytes, added JS.
+
+5. **Corrections** — columns `Token | Before | After | Reason`, one row per token this
+   skill changed on its own initiative. Then a bullet per intensity cap, clamp and
+   rounding, **including the ones that changed nothing** — the `scope: product` cap, the
+   three product clamps, and the `shadowOffset` integer rounding all appear here.
+
+6. **Refusals** — columns `Requested | Refused because | Offered instead`, one row per
+   `references/anti-patterns.md` entry that fired.
+
+7. **Manual TODOs** — a checkbox list of what could not be verified statically, each
+   naming the *method* rather than the concern: the axis-aligned bounding box of every
+   rotated sticker measured after transform, real Windows High Contrast behaviour, actual
+   font subset sizes, and a tab-through of every composed or absolutely-positioned region.
 
 ## Outputs
 

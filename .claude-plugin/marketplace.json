@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "ui-morphism",
-  "description": "Ten researched UI surface styles as executable skills — tokens, components, and an accessibility validator for each.",
+  "description": "Named UI style languages as executable skills — each with measured token values, a performance budget and an explicit when-not-to-use. Descriptive and plural, not a design-quality tool: every skill fires on a named style or a concretely described one, never on \"make it look good\". Four plugins today — ui-morphism-core plus brutalism-ui, glassmorphism-ui and bento-grid-ui; seven further styles are researched in docs/ and not yet built.",
   "version": "0.1.0",
   "owner": {
     "name": "UI Morphism",
@@ -18,7 +18,7 @@
         "name": "UI Morphism",
         "url": "https://github.com/Shubham7995/ui-morphism"
       },
-      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/00-comparison-matrix.md",
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/MARKETPLACE.md",
       "license": "MIT",
       "keywords": [
         "design-tokens",

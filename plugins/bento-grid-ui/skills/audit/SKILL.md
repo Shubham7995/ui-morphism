@@ -4,23 +4,27 @@ description: >-
   Use to check a UI that ALREADY uses a bento or varied-span tile grid against this
   pattern's own invariants, when the user names it or describes its concrete moves and
   wants a review rather than a change. The invariants it owns: the reading-flow guard — DOM
-  order versus visual order, `grid-auto-flow: dense` or `order` over focusable tiles
-  without a `reading-flow` guard, which is an SC 1.3.2 conformance failure; one heading and
-  zero-or-one links per tile, and the two-links-under-a-full-tile-overlay trap; the
-  dominant tile's share of the section and the distinct-span count; interactive-border
-  alpha against the 3:1 crossing; scrim strength over cover imagery; fixed `grid-auto-rows`
+  order versus visual order, `grid-auto-flow: dense` or `order` over focusable tiles, an
+  SC 1.3.2 conformance failure; one heading and
+  zero-or-one links per tile, and the two-links-under-an-overlay trap; the
+  dominant tile's share and the distinct-span count; interactive-border
+  alpha against the 3:1 crossing; scrim strength over imagery; fixed `grid-auto-rows`
   clipping text at 200% zoom; single-column collapse at 320px; and the tile-image byte
-  budget. Writes a report only; never edits — use bento-grid-ui:apply to build, convert or
-  restructure a grid. This is NOT a general design, taste, visual-craft or AI-slop audit,
+  budget. Writes a report only; never edits — use bento-grid-ui:apply to change anything.
+  This is NOT a general design, taste, visual-craft or AI-slop audit,
   and not a general accessibility, layout or responsive-design sweep: it will not answer
   "is my design good", "critique this UI", "find the AI tells", "review my animations" or
   "audit my site's accessibility". Dedicated design-quality, de-slopping, animation and
   a11y tools answer those better and should win them. Do not use for frosted panels
-  (glassmorphism-ui:audit), Liquid Glass refraction (liquid-glass-ui:audit), hard-bordered
-  restyling (brutalism-ui:audit), soft extrusion (neumorphism-ui:audit) or depth ladders
-  (spatial-ui:audit).
+  (glassmorphism-ui:audit) or hard-bordered restyling (brutalism-ui:audit). Liquid Glass
+  refraction, soft extrusion and depth ladders are separate visual languages, documented
+  in docs/08, docs/02 and docs/10, with plugins planned but not yet built.
 argument-hint: "[scope glob] [--budget-images=600KB] [--sticky-header=88px]"
-allowed-tools: Read Glob Grep Bash(node ${CLAUDE_SKILL_DIR}/../apply/scripts/assign-spans.mjs *)
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Bash(node ${CLAUDE_SKILL_DIR}/../apply/scripts/assign-spans.mjs *)
 license: MIT
 metadata:
   sourceDoc: docs/09-bento-grid.md
@@ -96,30 +100,52 @@ content at 200% zoom, or that the section ships 2.4MB of screenshots because no 
    animation and tile video; `forced-colors: active` giving every tile a `CanvasText` border,
    dropping shadows, hiding the scrim and using `Highlight` for focus.
 
-8. **Write the report** using the `ui-morphism-core` report template. Name it `bento-audit.md`
-   unless the user asks otherwise.
+8. **Write the report** in the shape below. Name it `bento-audit.md` unless the user asks
+   otherwise.
 
 ## What the report contains
 
-Core owns the template and the section order — Summary, Contrast table, Checklist, Budgets,
-Corrections, Refusals, Manual TODOs. This style supplies:
+Seven sections, in this order, in every ui-morphism audit from every style. Do not add, remove
+or reorder them: the order is what lets a user diff two styles' audits of the same codebase.
+Where a section does not apply, write "None." — an empty section is information, a missing
+section is a hole. The sections are fixed; this style supplies the rows.
 
-- **Per-tile table**: shipped span, span the content weight implies, content type, computed
-  text/background contrast, image weight, alt-text status, link count, heading level. One row per
-  tile. Where the shipped and implied spans differ, say which is right and why.
-- **Composition metrics**: tile count, distinct spans, dominant tile's share of the section area
-  against §3's 30–40%, measured largest:smallest area ratio, empty cells, grid rows.
-- **Reading-order verdict**: DOM order versus visual order, stated as same or different, with the
-  offending declaration when different. This is the headline finding of a bento audit.
-- **Contrast table**: three decimal places, unrounded, including the scrim composite against pure
-  white imagery.
-- **Budget table**: the six numbers from step 6, each against its limit.
-- **Corrections**: empty by construction — this skill changes nothing. What the user should
-  change goes in recommendations, ordered by severity.
-- **Manual TODOs**: always at least these three, because none is computable from source. Tab
-  through the whole section and confirm focus moves left-to-right and top-to-bottom with no
-  jumps. Render at 320px and confirm one column with no horizontal scroll. Render at 200% text
-  zoom and confirm no tile clips its content.
+1. **Summary** — a two-column table: Style and plugin version; Scope; Framework / styling system
+   with detection confidence; Dark mode (media / class / none); the **reading-order verdict**,
+   DOM order versus visual order stated as same or different with the offending declaration when
+   different; Findings by severity; Verdict (**PASS** / **PASS WITH FINDINGS** / **FAIL**). Then
+   one paragraph. The reading-order line is the headline finding of a bento audit and belongs at
+   the top, not buried in the checklist.
+
+2. **Contrast** — columns `Pair | Backdrop | Ratio | Required | Verdict | Auto-correction`.
+   Three decimal places, unrounded, including the scrim composite against **pure white**
+   imagery. Auto-correction reads "none — audit only".
+
+3. **Checklist** — two tables, universal first, both `Check | Verdict | Failing selector /
+   note`. The universal table has exactly nine rows: text contrast (1.4.3), non-text contrast
+   (1.4.11), focus visible (2.4.7 / 2.4.13), target size (2.5.8), forced colors, reduced motion,
+   reduced transparency, colour-only encoding (1.4.1), DOM order (1.3.2). The style table is
+   `references/checklist.md` row for row, plus the two tables this pattern adds:
+   - **Per-tile table**: shipped span, the span the content weight implies, content type,
+     computed text/background contrast, image weight, alt-text status, link count, heading
+     level. One row per tile. Where shipped and implied spans differ, say which is right and why.
+   - **Composition metrics**: tile count, distinct spans, dominant tile's share of the section
+     area against §3's 30–40%, measured largest:smallest area ratio, empty cells, grid rows.
+
+4. **Budgets** — columns `Budget | Measured | Limit | Verdict`: the six numbers from step 6,
+   each against its limit.
+
+5. **Corrections** — empty by construction; this skill changes nothing. Write "None." and put
+   what the user should change here as a `Finding | File and selector | Fix` table, ordered by
+   severity.
+
+6. **Refusals** — "None." An audit refuses nothing.
+
+7. **Manual TODOs** — a checkbox list naming the *method*, not the concern. Always at least
+   these three, because none is computable from source: tab through the whole section and
+   confirm focus moves left-to-right and top-to-bottom with no jumps; render at 320px and
+   confirm one column with no horizontal scroll; render at 200% text zoom and confirm no tile
+   clips its content.
 
 ## Severity, so the report is actionable rather than a list
 

@@ -308,13 +308,34 @@ export function ceilTo(value, dp) {
  * backdrop when the ground IS known — a hairline over a known tile, a scrim
  * over a known page — and the answer narrows accordingly.
  *
- * The ratio is monotone non-decreasing in alpha for any fill on the far side of
- * the foreground, so bisection is exact rather than a search. When alpha = 1
- * still misses the target the fill itself is the problem, and the result says
- * so instead of returning a number.
+ * Bisection needs the ratio to be monotone in alpha, and it is — EXCEPT over a
+ * known backdrop whose luminance sits on the opposite side of the foreground
+ * from the fill's. Then the composite passes through the foreground on its way
+ * from one to the other, the ratio falls to 1:1 at that alpha and rises again,
+ * and a first-crossing bisection silently returns the last crossing instead.
+ * That case is detected up front and reported as `nonMonotone: true` with the
+ * failing interval, never bisected through. (The worst-case path cannot hit it:
+ * its envelope always contains the fill's own luminance and shrinks towards it
+ * monotonically, so its ratio is monotone non-decreasing by construction.)
+ *
+ * When alpha = 1 still misses the target the fill itself is the problem, and
+ * the result says so instead of returning a number.
+ *
+ * `feasible` means literally that some alpha in [0, 1] clears the target. On a
+ * non-monotone solve the two branches are independent — one can clear while the
+ * other does not — so it is decided from the clearing set and not from alpha 1,
+ * which called reachable low-alpha answers unreachable.
  *
  * Returns `{ feasible, alpha, ratio, ceil2, ceil4, target, backdrop,
- * ratioAtOne }`.
+ * ratioAtOne, nonMonotone }`. When `nonMonotone` is true it also returns
+ * `{ clearingIntervals, tintAlpha, tintFloor2, crossoverAlpha, failsBetween,
+ * ratioAtZero }`, and `clearingIntervals` — the ascending, disjoint set of
+ * alpha ranges that clear the target, possibly empty — is the honest answer.
+ * `alpha`/`ceil2` describe the opaque branch and `tintAlpha`/`tintFloor2` the
+ * tint branch; each is `null` when its branch has no solution, because a
+ * branch with no solution has no number, and inventing one (a floor of 0) is
+ * how the solver came to recommend an alpha that failed its own target. Every
+ * non-null `ceil2`/`tintFloor2` has been re-measured and clears the target.
  */
 export function solveMinAlpha(fill, foreground, { target = 4.5, backdrop = null } = {}) {
   const base = parseColor(fill);
@@ -324,38 +345,154 @@ export function solveMinAlpha(fill, foreground, { target = 4.5, backdrop = null 
     return contrastRatio(foreground, composite(tinted, backdrop));
   };
 
+  // Evaluated first, so a translucent or unparseable foreground throws exactly
+  // the ColorError it always did, before any of the new branching.
   const ratioAtOne = at(1);
+  const ground = backdrop === null ? 'worst-case' : parseColor(backdrop);
+  const crossoverAlpha = backdrop === null ? null : luminanceCrossoverAlpha(base, foreground, backdrop);
+
+  // Bisect for the first alpha in [lo, hi] that clears the target, on an
+  // interval the caller has established the predicate is monotone over.
+  const firstClearing = (lo, hi) => {
+    for (let i = 0; i < 200; i += 1) {
+      const mid = (lo + hi) / 2;
+      if (at(mid) >= target) hi = mid;
+      else lo = mid;
+    }
+    return hi;
+  };
+
+  if (crossoverAlpha !== null) {
+    const ratioAtZero = at(0);
+    // Below the crossover the ratio falls monotonically to 1:1; above it, it
+    // rises monotonically again. So each side contributes AT MOST ONE clearing
+    // interval, and whether a side contributes one at all is decided by its own
+    // endpoint — alpha 0 for the tint branch, alpha 1 for the opaque branch.
+    // Neither endpoint says anything about the other, and judging the whole
+    // solve on alpha 1 declared reachable low-alpha answers unreachable.
+
+    // The tint branch: the LAST alpha below the crossover that still clears, so
+    // the bisection keeps the clearing side. `null` when alpha 0 already misses
+    // — a branch with no solution is reported as absent, never as a floor of 0.
+    let tintAlpha = null;
+    if (ratioAtZero >= target) {
+      let low = 0;
+      let ceiling = crossoverAlpha;
+      for (let i = 0; i < 200; i += 1) {
+        const mid = (low + ceiling) / 2;
+        if (at(mid) >= target) low = mid;
+        else ceiling = mid;
+      }
+      tintAlpha = low;
+    }
+
+    // The opaque branch: the FIRST alpha above the crossover that clears.
+    const opaqueAlpha = ratioAtOne >= target ? firstClearing(crossoverAlpha, 1) : null;
+
+    // A two-decimal alpha is only shippable if it clears the target ITSELF.
+    // Rounding therefore runs away from the crossover — up on the opaque
+    // branch, down on the tint branch — and the rounded value is re-measured
+    // rather than assumed, because a recommendation that fails the target it
+    // was solved for is exactly the defect this branch exists to avoid.
+    // The tint branch rounds with the mirror of ceilTo's nudge: its answer is a
+    // MAXIMUM, so a value already exact at two decimals must not be pulled down
+    // a whole step, and a value between steps must not be pushed up past its
+    // own crossing.
+    const floor2 = (value) => Math.floor(value * 100 + 1e-9) / 100;
+    const shippable = (value, direction) => {
+      if (value === null) return null;
+      const first = clamp(direction > 0 ? ceilTo(value, 2) : floor2(value), 0, 1);
+      if (at(first) >= target) return first;
+      const stepped = clamp(Math.round(first * 100 + direction) / 100, 0, 1);
+      return at(stepped) >= target ? stepped : null;
+    };
+
+    const clearingIntervals = [];
+    if (tintAlpha !== null) clearingIntervals.push([0, tintAlpha]);
+    if (opaqueAlpha !== null) clearingIntervals.push([opaqueAlpha, 1]);
+
+    return {
+      // `feasible` means what it says: some alpha in [0, 1] clears the target.
+      feasible: clearingIntervals.length > 0,
+      nonMonotone: true,
+      // The set of alphas that clear is the honest answer here. `alpha` remains
+      // the opaque-branch minimum for callers that read only one number, and is
+      // null when that branch has no solution rather than a value that fails.
+      clearingIntervals,
+      alpha: opaqueAlpha,
+      ratio: opaqueAlpha === null ? null : at(opaqueAlpha),
+      ceil2: shippable(opaqueAlpha, +1),
+      ceil4: opaqueAlpha === null ? null : ceilTo(opaqueAlpha, 4),
+      tintAlpha,
+      tintFloor2: shippable(tintAlpha, -1),
+      target,
+      backdrop: ground,
+      ratioAtOne,
+      ratioAtZero,
+      crossoverAlpha,
+      // The gap between the clearing intervals. Closed at an end that has no
+      // clearing branch, so read `clearingIntervals` for the exact boundaries.
+      failsBetween: [tintAlpha ?? 0, opaqueAlpha ?? 1],
+    };
+  }
+
   if (!(ratioAtOne >= target)) {
     return {
       feasible: false,
+      nonMonotone: false,
       alpha: null,
       ratio: null,
       ceil2: null,
       ceil4: null,
       target,
-      backdrop: backdrop === null ? 'worst-case' : parseColor(backdrop),
+      backdrop: ground,
       ratioAtOne,
     };
   }
 
-  let lo = 0;
-  let hi = 1;
-  for (let i = 0; i < 200; i += 1) {
-    const mid = (lo + hi) / 2;
-    if (at(mid) >= target) hi = mid;
-    else lo = mid;
-  }
-  const alpha = hi;
+  const alpha = firstClearing(0, 1);
   return {
     feasible: true,
+    nonMonotone: false,
     alpha,
     ratio: at(alpha),
     ceil2: ceilTo(alpha, 2),
     ceil4: ceilTo(alpha, 4),
     target,
-    backdrop: backdrop === null ? 'worst-case' : parseColor(backdrop),
+    backdrop: ground,
     ratioAtOne,
   };
+}
+
+/**
+ * The alpha at which a fill composited over a KNOWN backdrop matches the
+ * foreground's luminance exactly — or `null` when that never happens.
+ *
+ * Each channel of the composite runs linearly from the backdrop's to the
+ * fill's as alpha runs 0 to 1, and luminance is increasing in every channel, so
+ * the composite luminance is monotone in alpha between `L(backdrop)` and
+ * `L(fill)`. It therefore crosses the foreground's luminance exactly once, and
+ * only when that luminance lies strictly between the two — which is precisely
+ * the condition under which the CONTRAST ratio stops being monotone, since it
+ * is 1:1 at the crossing and larger on both sides.
+ */
+function luminanceCrossoverAlpha(base, foreground, backdrop) {
+  const lFg = relativeLuminance(foreground);
+  const lFill = relativeLuminance({ r: base.r, g: base.g, b: base.b, a: 1 });
+  const lBack = relativeLuminance(backdrop);
+  if (!(lFg > Math.min(lFill, lBack) && lFg < Math.max(lFill, lBack))) return null;
+
+  const luminanceAt = (alpha) =>
+    relativeLuminance(composite({ r: base.r, g: base.g, b: base.b, a: alpha }, backdrop));
+  const rising = lFill > lBack;
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 200; i += 1) {
+    const mid = (lo + hi) / 2;
+    if (rising ? luminanceAt(mid) < lFg : luminanceAt(mid) > lFg) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
 }
 
 /**
@@ -460,7 +597,16 @@ Colours: #rgb, #rrggbb, #rgba, #rrggbbaa, rgb()/rgba(), hsl()/hsla() and the
 16 CSS2 keywords. oklch()/lab()/color-mix() are refused rather than guessed at.
 
 --target defaults to 4.5. --json prints the whole result object. Exit status is
-1 when a --target is given and the measured value misses it, and 2 on bad input.`;
+1 when a --target is given and the measured value misses it, and 2 on bad input.
+
+solve-alpha over a --backdrop whose luminance sits on the far side of the
+foreground from the fill's has no single minimum: the ratio falls to 1:1 where
+the composite matches the text and rises again. That case is reported as the
+SET of alpha intervals that clear the target — a tint branch below the
+crossover, an opaque branch above it, either or both of which may be empty —
+flagged nonMonotone with clearingIntervals in --json. A branch with no solution
+is said outright rather than rounded to a number that misses, and exit is 1
+only when no alpha at all clears.`;
 
 function formatRatio(value) {
   return `${value.toFixed(4)}:1`;
@@ -538,6 +684,69 @@ function runCli(argv) {
       target: target ?? 4.5,
       backdrop: flags.has('backdrop') ? flags.get('backdrop') : null,
     });
+    const ground =
+      result.backdrop === 'worst-case'
+        ? 'a worst-case backdrop'
+        : `a ${formatColor(result.backdrop)} backdrop`;
+
+    // The straddle case is DESCRIBED BEFORE it is judged. Its shape — a ratio
+    // that falls to 1:1 and rises again — is why one branch clearing tells you
+    // nothing about the other, so testing feasibility first printed the wrong
+    // verdict for every case whose only solution was on the low branch.
+    if (result.nonMonotone) {
+      const { clearingIntervals: clearing, tintAlpha, alpha, target: required } = result;
+      const span = ([lo, hi]) => `[${lo.toFixed(4)}, ${hi.toFixed(4)}]`;
+      const lines = [
+        `${args[1]} on ${args[0]} over ${ground} is not monotone in alpha: the foreground sits ` +
+          `between the fill and the backdrop, so the composite matches it at alpha ` +
+          `${result.crossoverAlpha.toFixed(6)} and the ratio falls to 1:1 there.`,
+      ];
+
+      if (clearing.length === 0) {
+        // Both ends fall short and everything between them is worse than both,
+        // so there is nothing to recommend and nothing to round.
+        lines.push(
+          `  no alpha clears ${required}:1 — alpha 0 measures ` +
+            `${formatRatio(result.ratioAtZero)}, alpha 1 measures ` +
+            `${formatRatio(result.ratioAtOne)}, and every alpha between is worse than both`,
+        );
+        emit(result, lines);
+        return 1;
+      }
+
+      lines.push(
+        `  alpha in ${clearing.map(span).join(' and ')} clears ${required}:1; ` +
+          `alpha in (${result.failsBetween[0].toFixed(4)}, ` +
+          `${result.failsBetween[1].toFixed(4)}) misses it`,
+      );
+      if (tintAlpha === null) {
+        lines.push(
+          `  nothing below the crossover clears it: alpha 0 measures ` +
+            `${formatRatio(result.ratioAtZero)}, short of ${required}:1`,
+        );
+      }
+      if (alpha === null) {
+        lines.push(
+          `  nothing above the crossover clears it: alpha 1 measures ` +
+            `${formatRatio(result.ratioAtOne)}, short of ${required}:1`,
+        );
+      }
+
+      // Only measured values are ever recommended. A branch with no solution,
+      // or one whose two-decimal rounding lands on the failing side, is left
+      // out rather than rounded into a number that misses the target.
+      const advice = [];
+      if (result.ceil2 !== null) {
+        advice.push(`${result.ceil2} if the surface is meant to read as opaque`);
+      }
+      if (result.tintFloor2 !== null && result.tintFloor2 > 0) {
+        advice.push(`${result.tintFloor2} if it is meant to read as a tint`);
+      }
+      if (advice.length) lines.push(`  ship ${advice.join(', ')}`);
+      emit(result, lines);
+      return 0;
+    }
+
     if (!result.feasible) {
       emit(result, [
         `${args[1]} on ${args[0]}: unreachable — even at alpha 1 the pair measures ` +
@@ -545,10 +754,7 @@ function runCli(argv) {
       ]);
       return 1;
     }
-    const ground =
-      result.backdrop === 'worst-case'
-        ? 'a worst-case backdrop'
-        : `a ${formatColor(result.backdrop)} backdrop`;
+
     emit(result, [
       `${args[1]} on ${args[0]} needs alpha >= ${result.alpha.toFixed(6)} for ` +
         `${result.target}:1 over ${ground}`,

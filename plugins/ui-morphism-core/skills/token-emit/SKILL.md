@@ -1,19 +1,28 @@
 ---
 name: token-emit
 description: >-
-  Use to emit a design-token layer in the shared --um-<style>-<group>-<variant>
-  grammar, in any of five formats: vanilla :root CSS, a Tailwind v4 @theme mirror,
-  a TypeScript object, a SwiftUI enum, or a Compose object. Every ui-morphism style
-  skill calls this instead of hand-writing a stylesheet, so the dark-mode emission
-  shape and the Tailwind namespace mapping are identical across all ten styles.
-  Also use to validate an existing token set against the grammar and the closed
-  group vocabulary, and to resolve an intensity 0-100 onto a style's knobs under
-  the shared clamp and context-cap contract. Owns no token values.
+  Its contract is internal: a ui-morphism style skill calls it to emit that ONE
+  NAMED style's own token set in the shared --um-<style>-<group>-<variant>
+  grammar, as vanilla :root CSS, a Tailwind v4 @theme mirror, a TypeScript
+  object, a SwiftUI enum or a Compose object, so the dark-mode emission shape and
+  the Tailwind namespace mapping are identical across all ten styles and no style
+  skill hand-writes a stylesheet. It also validates a token set already in that
+  grammar against the closed group vocabulary, and resolves an intensity 0-100
+  onto the calling style's knobs. Owns no token values. Do NOT use for general
+  token, theming or design-system work with no ui-morphism style named: "set up
+  design tokens", "build a design system", "export my tokens", "export our design
+  tokens to Tailwind", "generate a theme", "validate our design tokens", or
+  naming, scale and theming review of a token set this skill did not emit. A
+  design-system or design-quality tool owns that work and should win it. With no
+  ui-morphism style named, this skill has nothing to emit.
 argument-hint: "[tokens.json] [--format=css|theme|ts|swift|kt] [--out=path]"
-allowed-tools: >-
-  Read Glob Grep Write
-  Bash(node ${CLAUDE_SKILL_DIR}/scripts/emit.mjs *)
-  Bash(node ${CLAUDE_SKILL_DIR}/scripts/intensity.mjs *)
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Write
+  - Bash(node ${CLAUDE_SKILL_DIR}/scripts/emit.mjs *)
+  - Bash(node ${CLAUDE_SKILL_DIR}/scripts/intensity.mjs *)
 license: MIT
 metadata:
   sourceDoc: docs/00-comparison-matrix.md

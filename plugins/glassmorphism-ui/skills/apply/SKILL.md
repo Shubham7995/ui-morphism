@@ -2,26 +2,30 @@
 name: apply
 description: >-
   Use when the user NAMES the style — glassmorphism, frosted glass, acrylic — or describes
-  its concrete moves: backdrop-blur, translucent or see-through panels, a frosted navbar,
-  card, modal, popover, command palette, dock or HUD, or porting an Apple Material or
-  Fluent Acrylic look to the web. Also for the mechanics only this style has: the
-  `@supports` opaque fallback, the `-webkit-backdrop-filter` twin,
-  `prefers-reduced-transparency` handling, the mesh-gradient ground glass depends on, a
-  five-rung fill-and-blur ladder, or toning existing glass down for contrast, blur cost or
-  battery. ui-morphism is descriptive and plural — one named language with measured tokens
+  its concrete moves: backdrop-blur, translucent panels, a frosted navbar, modal, popover,
+  command palette or dock, or porting Apple Material or Fluent Acrylic to the web. Also
+  for the mechanics only this style has: the `@supports` opaque fallback, the
+  `-webkit-backdrop-filter` twin, `prefers-reduced-transparency` handling, and the
+  mesh-gradient ground glass depends on. ui-morphism is descriptive and plural — one named language with measured tokens
   and a stated when-not-to-use — not a design-quality tool. Do NOT use for open-ended
   quality work: "make it look good", "make it modern", "polish this", "clean this up",
   "improve the design", "make it less AI-generated", taste or visual-craft critique,
   de-slopping, or animation and micro-interaction craft. A general design, taste or
   animation skill answers those better and should win them. Do not use for the sibling
-  languages either: Apple Liquid Glass refraction, lensing or iOS 26
-  specular chrome (liquid-glass-ui), same-hue soft extrusion on an opaque ground
-  (neumorphism-ui), puffy pastel clay (claymorphism-ui), hard-bordered zero-blur surfaces
-  (brutalism-ui), depth ladders and parallax (spatial-ui), tile-span layout
-  (bento-grid-ui), stripping decoration out (minimalism-ui). To review an implementation
-  without changing it, use glassmorphism-ui:audit.
+  languages either: hard-bordered zero-blur surfaces (brutalism-ui), tile-span layout
+  (bento-grid-ui). Nor for Apple Liquid Glass refraction and iOS 26 specular chrome,
+  same-hue soft extrusion, puffy pastel clay, depth ladders and parallax, or stripping
+  decoration out — separate visual languages, documented in docs/08, docs/02, docs/04,
+  docs/10 and docs/05, with plugins planned but not yet built.
+  To review an implementation without changing it, use glassmorphism-ui:audit.
 argument-hint: "[scope glob] [--tone=light|dark|auto] [--scope=chrome|overlays|cards|all] [--intensity=0-100] [--perf-target=desktop|mobile|low-end]"
-allowed-tools: Read Glob Grep Edit Write Bash(node ${CLAUDE_SKILL_DIR}/scripts/glass-scan.mjs *)
+allowed-tools:
+  - Read
+  - Glob
+  - Grep
+  - Edit
+  - Write
+  - Bash(node ${CLAUDE_SKILL_DIR}/scripts/glass-scan.mjs *)
 license: MIT
 metadata:
   sourceDoc: docs/03-glassmorphism.md
@@ -172,8 +176,8 @@ glassmorphism has settled into the boring, useful middle.
     is exceeded, drop rungs — lower blur before lower fill, since fill is the legibility
     lever — and record the downgrade.
 
-12. **Write `GLASS-AUDIT.md`** using the `ui-morphism-core` report template, with the budget
-    rows named in "What goes in the report" below.
+12. **Write `GLASS-AUDIT.md`** in the seven-section shape set out in "What goes in the
+    report" below.
 
 ## Outputs
 
@@ -272,25 +276,52 @@ scrim floor — but that derivation is not in the doc and should be recorded as 
 
 ## What goes in the report
 
-Core owns the template and the section order. These are the rows this style supplies:
+Seven sections, in this order, in every ui-morphism audit from every style. Do not add,
+remove or reorder them: the order is what lets a user diff two styles' audits of the same
+codebase. Where a section does not apply, write "None." — an empty section is information, a
+missing section is a hole. The sections are fixed; this style supplies the rows.
 
-- **Contrast table** — one row per text token, with the ratio computed against the composite
-  at the darkest ground pixel and again at the brightest, three decimal places, unrounded.
-  Both numbers, always. A single number for a glass surface is a wrong number.
-- **Budgets** — glass surfaces visible per route; estimated blurred viewport percentage;
-  maximum blur radius on any scroll-pinned surface; stacked-layer depth; CSS bytes; asset
-  weight, which must be 0 KB for the grain.
-- **Fallback coverage matrix** — for each emitted surface: `@supports` fallback,
-  `prefers-reduced-transparency`, `prefers-contrast`, `forced-colors`, `prefers-reduced-motion`,
-  print, and the `[data-transparency]` hook.
-- **Backdrop-root hazards** — every ancestor found by `glass-scan.mjs`, with the selector and
-  the property, and whether it was fixed or reported.
-- **Corrections** — every token the skill changed on its own, with before, after and reason.
-- **Refusals** — every anti-pattern requested and declined, with the alternative offered.
-- **Manual TODOs** — what could not be verified statically. For this style that always
-  includes: screenshot the composited pixels at three scroll positions and sample them, and
-  verify the focus ring against both extremes of the ground. Neither is computable from CSS
-  text, and saying so is part of the report.
+1. **Summary** — a two-column table: Style and plugin version; Intensity (effective,
+   requested, and the context that capped it); Scope; Framework / styling system with
+   detection confidence and whether the user confirmed; Tone and dark-mode strategy; Files
+   changed (written / modified / refused); Verdict (**PASS** / **PASS WITH CORRECTIONS** /
+   **FAIL**). Then one paragraph: what was applied to what, and whether this run generated
+   the ground.
+
+2. **Contrast** — columns `Pair | Backdrop | Ratio | Required | Verdict | Auto-correction`.
+   One row per text token per extreme: the ratio computed against the composite at the
+   **darkest** ground pixel and again at the **brightest**, three decimal places, unrounded.
+   Both numbers, always — a single number for a glass surface is a wrong number. Name the
+   worst-case backdrop in the Backdrop column and say why it is the worst case; where the
+   ground is uncontrolled, the worst case is the whole sRGB cube and the row says so.
+
+3. **Checklist** — two tables, universal first, both `Check | Verdict | Failing selector /
+   note`. The universal table has exactly nine rows: text contrast (1.4.3), non-text contrast
+   (1.4.11), focus visible (2.4.7 / 2.4.13), target size (2.5.8), forced colors, reduced
+   motion, reduced transparency, colour-only encoding (1.4.1), DOM order (1.3.2). The style
+   table carries `../audit/references/checklist.md` plus two matrices this style adds:
+   - **Fallback coverage** — per surface: `@supports` fallback, the `-webkit-` twin,
+     `prefers-reduced-transparency`, `prefers-contrast`, `forced-colors`,
+     `prefers-reduced-motion`, `@media print`, the `[data-transparency]` hook.
+   - **Backdrop-root hazards** — every ancestor `glass-scan.mjs` found, with selector,
+     property, file, line, and whether it was fixed or reported.
+
+4. **Budgets** — columns `Budget | Measured | Limit | Verdict`: glass surfaces visible per
+   route; estimated blurred viewport percentage; maximum blur radius on any scroll-pinned
+   surface; stacked-layer depth; CSS bytes; asset weight, which must be 0 KB for the grain.
+
+5. **Corrections** — columns `Token | Before | After | Reason`, one row per token this skill
+   changed on its own. Then a bullet per intensity cap and clamp, **including the ones that
+   changed nothing**: the `perfTarget: mobile` blur ceiling, the `a11yFloor: AAA` fill floor,
+   every rung dropped for the budget, and every step of the step-10 escalation ladder.
+
+6. **Refusals** — columns `Requested | Refused because | Offered instead`, one row per
+   `references/anti-patterns.md` entry that fired.
+
+7. **Manual TODOs** — a checkbox list naming the *method*, not the concern. For this style it
+   always includes at least these two, because neither is computable from CSS text:
+   screenshot the composited pixels at three scroll positions and sample them, and verify the
+   focus ring against both extremes of the ground.
 
 ## Validation — all must pass before reporting done
 

@@ -50,7 +50,8 @@ MARKETPLACE.md §8; the catalog stays installable.
 
 ```text
 .claude-plugin/marketplace.json   the catalog — four entries today
-docs/                             the research — source of truth, and the CI scripts
+check-plugins.sh                  the plugin gate — tests, manifests, stylesheets, contracts, skills
+docs/                             the research — source of truth, and its own two CI scripts
 plugins/                          ui-morphism-core, brutalism-ui, glassmorphism-ui, bento-grid-ui
 ```
 
@@ -75,11 +76,11 @@ Installing any style plugin pulls in `ui-morphism-core` automatically — it is 
 `dependencies`, and Claude Code enables a plugin required by an active one. Skills are namespaced by
 plugin, so they invoke as `/brutalism-ui:apply`, `/glassmorphism-ui:audit`, and so on.
 
-To check the catalog before publishing:
+Before publishing, run the gate — it validates the catalog and all four plugin manifests, and twelve
+other things besides:
 
 ```
-claude plugin validate .claude-plugin/marketplace.json --strict
-claude plugin validate ./plugins/brutalism-ui --strict
+./check-plugins.sh
 ```
 
 ---
@@ -89,8 +90,10 @@ claude plugin validate ./plugins/brutalism-ui --strict
 There is a good and growing set of design tools for Claude Code — Anthropic's first-party
 `frontend-design`, `impeccable` with its brand and product modes and its 59 anti-AI-slop detectors,
 `taste-skill` with its variance, motion-intensity and visual-density metrics, `emilkowalski/skills` for
-animation craft, `ui-ux-pro-max`. They are **normative**: they answer "make this better", and for that
-question there is broadly one right answer.
+animation craft, `ui-ux-pro-max`, `dataviz`. They are **normative**: they answer "make this better", and
+for that question there is broadly one right answer. `accesslint` is normative in the same way about a
+different axis, and it does something nothing here can: it drives a real browser and audits the live
+DOM and accessibility tree.
 
 ui-morphism answers a different question. It is **descriptive and plural**: ten named visual languages,
 each with measured token values, a performance budget, a sourced timeline and an explicit
@@ -106,10 +109,18 @@ tiles". None of them triggers on "make it look good", "make it modern", "polish 
 description that swallowed them would make this a bad citizen on a machine that already has one
 installed. Animation is out of scope for the same reason in reverse: each doc's §6 motion material is
 competent, and it is thin next to a skill built from a full animation course, so no skill here bids for
-"animate this".
+"animate this". The same applies to accessibility and to stack detection, which are the two places core
+could most easily overreach: `ui-morphism-core:a11y-validate` bids only for worst-case *composited*
+contrast over a translucent surface — the one measurement a static checker gets wrong and a live-DOM
+auditor cannot see from CSS text — and hands "audit my site's accessibility" to a tool that drives a
+browser. `ui-morphism-core:detect-stack` has nothing to contribute unless a ui-morphism style has
+already been named, and says so.
 
 The negative triggers therefore run in two directions: away from the nine sibling languages, and away
-from general design-quality, taste, de-slopping and animation-craft work.
+from general design-quality, taste, de-slopping, animation-craft, accessibility-sweep and
+project-survey work. That clause sits at the end of every skill description, which is exactly where a
+listing-cap truncation would silently remove it — hence check 9 of `./check-plugins.sh`, which asserts
+both halves: that every description still carries the clause, and that it ends inside the listing cap.
 
 ---
 
@@ -131,27 +142,61 @@ duplicating maths is not. The full division of labour is in
 
 ## CI
 
-Two scripts, both in `docs/`, both exiting non-zero on any failure. They need `bash` and `python3`.
+Two gates. One covers the research, one covers the artefact built from it. Both print every offence in
+every category rather than the first, and both exit non-zero once, at the end.
 
 ```
-cd docs
-./check-links.sh        # preflight + ten checks; shells out to check-contrast.py for check 10
-./check-contrast.py     # the numeric half on its own; --verbose for exclusions, --json for findings
+./check-plugins.sh              # the artefact: plugins/, the manifests and the catalog
+(cd docs && ./check-links.sh)   # the research: preflight + ten checks, the last of them numeric
 ```
 
-`check-links.sh` verifies link targets, the fourteen-heading contract, Tailwind v4 `@theme` and bracket-syntax
-rules, phantom tokens against a per-doc row-coverage ratchet, theme-selector discipline, target-token
-wiring, cross-referenced token names against a count ratchet, and dead tokens. `check-contrast.py` extracts
-every contrast figure and stated luminance in the doc set and recomputes the subset it can bind to two
-named colours.
+**`./check-plugins.sh`** needs `bash`, `node` v22+ and the `claude` CLI. It runs every `*.test.mjs`
+under `plugins/` through `node --test` and counts the assertions those tests actually execute, per
+file, against a committed baseline — because `node --test` counts each FILE as a passing subtest, so
+`# pass` alone cannot tell a suite from an empty one; validates the marketplace manifest and every
+plugin manifest with `claude plugin validate --strict`; holds each
+`plugins/<style>/skills/apply/assets/tokens.css` against its owning doc's §4 CSS block
+declaration-for-declaration in both directions, and the Tailwind `@theme` mirror, the `--um-*` bridge
+and `glass.layer.css` against that `tokens.css` and the doc; holds every
+`assets/intensity.contract.json` against its owning doc's §13 — the default intensity, both endpoints
+of every knob, and every context cap against a committed registry; resolves every marketplace `source`
+to a directory carrying a `.claude-plugin/plugin.json` and checks its name equals the entry name;
+parses every `SKILL.md` frontmatter, rejects a space-separated `allowed-tools` scalar, prints every
+description length against the 1,450-character budget and asserts the deference clause is still in it;
+resolves every `references/`, `assets/` or `scripts/` path a `SKILL.md` names; traces every `N:1`
+contrast figure the plugin tree prints back to a figure the docs print; keeps `.claude-plugin/`
+directories manifest-only; and asserts the WCAG contrast arithmetic exists in exactly one file, with
+nothing outside `ui-morphism-core` so much as naming it.
 
-**Read [what a green run proves, and what it does not](./docs/README.md#what-a-green-run-proves-and-what-it-does-not)
-before trusting either.** The short version: of 576 contrast figures, 157 are recomputed — roughly 27%.
-The 47 alpha-composited figures, which are exactly the ones deciding whether glass carries legible text,
-cannot be recomputed by any tool, because recomputing them means knowing what is behind the panel. They
-were hand-verified on 2026-08-08 and that does not renew itself. The structural checks also have uneven
-scope: five read all fourteen markdown files, five read only the ten style docs. That linked section is
-the authoritative account; this paragraph is a pointer to it.
+**`docs/check-links.sh`** needs `bash` and `python3`. It verifies link targets, the fourteen-heading
+contract, Tailwind v4 `@theme` and bracket-syntax rules, phantom tokens against a per-doc row-coverage
+ratchet, theme-selector discipline, target-token wiring, cross-referenced token names against a count
+ratchet, and dead tokens, then shells out to `docs/check-contrast.py` for the numeric half.
+`./check-contrast.py` also runs standalone — `--verbose` for the exclusion list, `--json` for findings.
+
+Neither script skips. A missing prerequisite — no `python3`, no `node`, no `claude` — is reported
+loudly **and fails the run**, because CI reads the exit code and not the log, and a check that did not
+run did not pass. The same rule covers an empty glob: zero test files, zero token layers or zero
+catalog entries is a failure, never a quiet `ok`.
+
+**What a green run does not prove.** For the research half, the authoritative account is
+[what a green run proves, and what it does not](./docs/README.md#what-a-green-run-proves-and-what-it-does-not).
+Read it before trusting `All structural checks passed.` — it is specific about how many contrast
+figures are actually recomputed, about the alpha-composited ones that no tool can recompute and that
+are hand-verified instead, and about the checks whose scope is narrower than the doc set. For the
+plugin half: `check-plugins.sh` proves the artefact agrees with the research and with itself. It never
+runs a skill, renders nothing, and has no way to tell whether a description triggers when it should.
+The deference clauses that keep these skills off the incumbent tools' territory are held two ways —
+the clause must be present, and it must end inside the listing cap, since it sits in the tail of each
+description and the tail is what truncation eats first — but "present" is not "effective", and no gate
+here can tell you that a description actually loses the requests it means to lose.
+
+The script's own header carries the current list of what it does **not** gate — `glass.layer.css`'s
+ordinary declarations, the plugin READMEs, whether an `allowed-tools` entry names a tool that exists,
+the arithmetic (as opposed to the provenance) of a contrast figure restated in a reference file, and
+the one intensity cap in the set whose number appears in no doc. Read it before trusting
+`All plugin checks passed.` Every defect that gate now catches got in through a class nobody had
+written down, so the list is part of the deliverable and not a footnote to it.
 
 ---
 
@@ -159,8 +204,12 @@ the authoritative account; this paragraph is a pointer to it.
 
 `docs/` is the source of truth for every plugin, so a change there is a change to the artefact. To refresh
 research: re-verify the numbered sources in each doc's §14, update the moving facts first, bump
-`last_researched` in the frontmatter of every doc you touched, and re-run `./check-links.sh`. Hand-check
+`last_researched` in the frontmatter of every doc you touched, and re-run `docs/check-links.sh`. Hand-check
 any alpha-composited contrast figure you edit — CI will stay green over a wrong one.
+
+Editing a **§4 token block** of a doc that has a plugin is the one change that must not stop there: the
+plugin's `skills/apply/assets/tokens.css` is that block, verbatim, and `./check-plugins.sh` compares the
+two declaration-for-declaration. Change the doc, re-copy the block, run both scripts.
 
 ---
 
