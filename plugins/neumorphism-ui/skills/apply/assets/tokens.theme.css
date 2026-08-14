@@ -1,0 +1,188 @@
+/* ---------------------------------------------------------------------------
+ * Neumorphism — Tailwind v4 @theme mirror of assets/tokens.css.
+ *
+ * Source of truth: docs/02-neumorphism.md §5, "Tailwind CSS v4". Values match
+ * assets/tokens.css (docs §4) exactly; only the custom-property names change,
+ * because Tailwind v4 derives utilities from namespaced theme variables.
+ *
+ * Three invariants, all enforced by ui-morphism-core:token-emit:
+ *   1. @theme is never nested inside @media, @layer, or any other at-rule.
+ *   2. Theme switching happens outside @theme, on ordinary selectors — which is
+ *      why the dark blocks below sit on their own.
+ *   3. The dark values are declared TWICE, under the guarded media query and
+ *      under :root[data-theme="dark"], so a system preference and an explicit
+ *      toggle both win. Doc §5's own Tailwind listing redeclares them under the
+ *      `.dark` class only; a class-only theme never responds to the OS setting,
+ *      so the class branch rides alongside the other two rather than replacing
+ *      them.
+ *
+ * No plugin is required. Doc §5: the two historical Tailwind plugins
+ * (tailwindcss-neumorphism v0.1.0, published 10 June 2020; tailwindcss-
+ * neumorphism-ui, 15 stars) both predate or barely address v4. Variables under
+ * --shadow-* generate shadow-<name> utilities and --inset-shadow-* generate
+ * inset-shadow-<name>, which is most of what this style needs.
+ *
+ * Two groups sit OUTSIDE @theme, in ordinary :root blocks below, because
+ * Tailwind v4 has no theme namespace for them: the two surface gradients and
+ * the three durations. They are consumed as bg-[image:var(--nm-convex)] and
+ * duration-[var(--nm-t-press)]. Inventing a namespace that generates no
+ * utilities would look like configuration and do nothing.
+ *
+ * The shadow rungs are written as var() references onto the colour tokens in
+ * this same block rather than as inlined hexes, so retheming one colour rethemes
+ * every rung and the dark override does not have to restate ten shadow values.
+ * Distances and blurs are literal because Tailwind cannot derive
+ * blur = 2 x distance for you: that relation is applied when the value is
+ * written, here and in tokens.css alike.
+ * ------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+@theme {
+  /* colors -> bg-*, text-*, border-* */
+  --color-nm-surface:  #e6e7ee;
+  --color-nm-sunken:   #dfe0e8;
+  --color-nm-dark:     #b8b9be;
+  --color-nm-light:    #ffffff;
+  --color-nm-hairline: #7c7f93;
+  --color-nm-text:     #33364d;
+  --color-nm-muted:    #5a5e77;
+  --color-nm-accent:   #4c5bd4;
+  --color-nm-accent-ink: #ffffff;
+  --color-nm-danger:   #b3261e;
+
+  /* radius -> rounded-nm-ctl, rounded-nm-card, rounded-nm-slab, rounded-nm-pill */
+  --radius-nm-ctl:  14px;
+  --radius-nm-card: 24px;
+  --radius-nm-slab: 36px;
+  --radius-nm-pill: 999px;
+
+  /* raised rungs -> shadow-nm-sm / -md / -lg. blur is 2 x distance at each. */
+  --shadow-nm-sm:  5px 5px 10px var(--color-nm-dark), -5px -5px 10px var(--color-nm-light);
+  --shadow-nm-md:  8px 8px 16px var(--color-nm-dark), -8px -8px 16px var(--color-nm-light);
+  --shadow-nm-lg:  14px 14px 28px var(--color-nm-dark), -14px -14px 28px var(--color-nm-light);
+
+  /* pressed rungs -> inset-shadow-nm-sm / -md. 0.6 x the raised distance. */
+  --inset-shadow-nm-sm: inset 3px 3px 6px var(--color-nm-dark), inset -3px -3px 6px var(--color-nm-light);
+  --inset-shadow-nm-md: inset 5px 5px 10px var(--color-nm-dark), inset -5px -5px 10px var(--color-nm-light);
+
+  /* type -> font-nm, text-nm-100 … text-nm-700 */
+  --font-nm: "Inter", "SF Pro Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --text-nm-100: 0.75rem;
+  --text-nm-200: 0.875rem;
+  --text-nm-300: 1rem;
+  --text-nm-400: 1.25rem;
+  --text-nm-500: 1.5rem;
+  --text-nm-600: 2rem;
+  --text-nm-700: 2.75rem;
+
+  /* space -> p-nm-1 … gap-nm-8, and min-h-nm-target for the 44px hit target */
+  --spacing-nm-1: 4px;
+  --spacing-nm-2: 8px;
+  --spacing-nm-3: 12px;
+  --spacing-nm-4: 16px;
+  --spacing-nm-5: 24px;
+  --spacing-nm-6: 32px;
+  --spacing-nm-7: 48px;
+  --spacing-nm-8: 64px;
+  --spacing-nm-target: 44px;
+
+  /* motion -> ease-nm-in, ease-nm-out */
+  --ease-nm-in:  cubic-bezier(0.4, 0, 1, 1);
+  --ease-nm-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* The two groups with no v4 namespace. Same names as assets/tokens.css, so a
+   project that loads both sheets gets one definition of each. */
+:root {
+  --nm-convex:  linear-gradient(145deg, #f6f7ff, #cfd0d6);
+  --nm-concave: linear-gradient(145deg, #cfd0d6, #f6f7ff);
+  --nm-t-press: 120ms;
+  --nm-t-hover: 180ms;
+  --nm-t-morph: 240ms;
+}
+
+/* Dark mode, in ui-morphism-core's emission shape. The media-query branch is
+   written so an explicit light choice still wins, and the attribute branch is
+   duplicated so a toggle wins in both directions. Every colour is restated —
+   a partial override is what leaves a light-mode shadow pair on a dark surface,
+   where the multiplicative delta collapses and the extrusion disappears. The
+   shadow rungs are not restated because they read their colours from the
+   variables below. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-nm-surface:  #2a2e39;
+    --color-nm-sunken:   #24272f;
+    --color-nm-dark:     #17191f;
+    --color-nm-light:    #3d4353;
+    --color-nm-hairline: #767d92;
+    --color-nm-text:     #e8eaf2;
+    --color-nm-muted:    #a7adc2;
+    --color-nm-accent:   #8f9dff;
+    --color-nm-accent-ink: #141722;
+    --color-nm-danger:   #ff9a92;
+
+    --nm-convex:  linear-gradient(145deg, #333845, #22252e);
+    --nm-concave: linear-gradient(145deg, #22252e, #333845);
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-nm-surface:  #2a2e39;
+  --color-nm-sunken:   #24272f;
+  --color-nm-dark:     #17191f;
+  --color-nm-light:    #3d4353;
+  --color-nm-hairline: #767d92;
+  --color-nm-text:     #e8eaf2;
+  --color-nm-muted:    #a7adc2;
+  --color-nm-accent:   #8f9dff;
+  --color-nm-accent-ink: #141722;
+  --color-nm-danger:   #ff9a92;
+
+  --nm-convex:  linear-gradient(145deg, #333845, #22252e);
+  --nm-concave: linear-gradient(145deg, #22252e, #333845);
+}
+
+/* Tailwind's class variant, for projects that toggle dark mode with a class.
+   Doc §5 uses this branch alone; it is kept, and it is not a substitute for the
+   two above. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-nm-surface:  #2a2e39;
+  --color-nm-sunken:   #24272f;
+  --color-nm-dark:     #17191f;
+  --color-nm-light:    #3d4353;
+  --color-nm-hairline: #767d92;
+  --color-nm-text:     #e8eaf2;
+  --color-nm-muted:    #a7adc2;
+  --color-nm-accent:   #8f9dff;
+  --color-nm-accent-ink: #141722;
+  --color-nm-danger:   #ff9a92;
+
+  --nm-convex:  linear-gradient(145deg, #333845, #22252e);
+  --nm-concave: linear-gradient(145deg, #22252e, #333845);
+}
+
+/* The guard utility. forced-colors deletes box-shadow outright, which in this
+   style deletes 100% of the visual structure, so the class that restores a real
+   border is not an enhancement — it is the only thing between a neumorphic
+   control and an unbordered rectangle of Canvas on Canvas. Put .nm-guard on
+   every element that carries a shadow utility. */
+@layer utilities {
+  @media (forced-colors: active) {
+    .nm-guard {
+      box-shadow: none !important;
+      background: Canvas !important;
+      border: 2px solid ButtonText !important;
+      forced-color-adjust: none;
+    }
+    .nm-guard:focus-visible {
+      outline: 3px solid Highlight !important;
+      outline-offset: 2px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nm-guard { transition-duration: 1ms !important; }
+  }
+}

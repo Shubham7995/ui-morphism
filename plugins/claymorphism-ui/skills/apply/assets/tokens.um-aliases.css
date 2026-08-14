@@ -1,0 +1,214 @@
+/* ---------------------------------------------------------------------------
+ * Claymorphism — `--um-claymorphism-*` grammar bridge.
+ *
+ * assets/tokens.css carries the style's own `--clay-*` names verbatim from
+ * docs/04-claymorphism.md §4. ui-morphism-core:token-emit speaks the shared
+ * grammar `--um-<style>-<group>[-<variant>]` defined in
+ * docs/00-comparison-matrix.md §7. This file is the mapping between them, taken
+ * from that section's §7.3 group vocabulary and its §7.5 migration map. The
+ * style segment is `claymorphism`, character for character from doc 04's
+ * frontmatter `name` (§7.2).
+ *
+ * Direction: `--um-claymorphism-*` reads from `--clay-*`, not the reverse, so
+ * the verbatim §4 block stays the single place a value is written. Load
+ * tokens.css first, then this file. Both themes work with no duplication here,
+ * because every alias is a var() reference and inherits whichever theme block
+ * in tokens.css is active.
+ *
+ * THE ONE MAPPING THAT IS NOT ONE-TO-ONE. §7.3's `surface-1 … surface-4` is an
+ * ascending elevation ramp in nine of the ten styles. In this one it is not,
+ * and §7.3 says so directly: "Claymorphism has no single `surface` — clay
+ * surfaces are per-hue, so `surface-1` … `surface-4` hold the pastel ramp
+ * instead of an elevation ramp." The numbering here is therefore a slot index,
+ * not an ascent, and nothing should read `surface-4` as "higher" than
+ * `surface-2`. Clay's actual elevation ladder is the shadow ladder below.
+ *
+ * Groups deliberately NOT populated for this style:
+ *   elev          — §4 labels the four drop shadows "Elevation 1 — chips"
+ *                   through "Elevation 4 — modals". The shadow ladder IS the
+ *                   elevation ladder, and a parallel ramp is how a scale
+ *                   drifts.
+ *   saturate      — no backdrop-filter saturation exists in this style. Clay is
+ *                   opaque; there is nothing behind the surface to saturate.
+ *   noise         — no grain layer. Clay's material is matte and untextured;
+ *                   §12 puts texture maps in skeuomorphism and calls the graft
+ *                   a 2011 pastiche.
+ *   accent-subtle — the low-emphasis tint in this style is a pastel surface,
+ *                   which is already the `surface` ramp. A second name for it
+ *                   would be a second place to change it.
+ *   font-mono     — §4 declares one family stack and §3 argues for it (rounded,
+ *                   high x-height, weight 500-700). There is no mono token.
+ *   tracking      — §4 declares no letter-spacing token. Rounded sans at its
+ *                   own default tracking is the style; a tracking token nothing
+ *                   consumes is worse than none.
+ *   shadow-5      — the ladder has exactly four rungs (§4). A fifth name with
+ *                   no value is a name that gets filled in later by guesswork.
+ *
+ * ONE DELIBERATE DEVIATION FROM §7's migration table, stated so it is not read
+ * as an error. That table's "Standard easing" row maps clay's column to
+ * `--clay-ease-squish`. This file maps `ease-standard` to `--clay-ease-out`
+ * instead and puts the squish on `ease-exit`, because §4 annotates
+ * `--clay-ease-squish` as "Overshoot on release" and §6 is explicit that
+ * overshoot on press-in "makes the button feel loose" — a consumer applying
+ * `ease-standard` to a hover would get exactly the motion §6 rules out. The
+ * squish is a named, reachable token; it is just not the standard one.
+ *
+ * Tokens with no home in the closed group vocabulary (§7.3), which therefore
+ * keep their `--clay-*` names and are consumed directly:
+ *   --clay-bg-alt        section banding. Not a `surface` — it is ground, and
+ *                        the vocabulary's `bg` is a single value.
+ *   --clay-butter
+ *   --clay-coral         pastel surfaces five and six. The surface ramp is four
+ *                        slots and this style ships a neutral plus five hues.
+ *                        Every one of them is contrast-checked against
+ *                        --clay-ink whether or not it carries a `--um-*` name;
+ *                        the alias is a naming convenience, not the thing that
+ *                        makes a colour safe.
+ *   --clay-ink-on-clay   equal to --clay-ink in both themes by construction,
+ *                        and kept because §5's recipes consume it by that name:
+ *                        it records the intent "this is the ink that sits on a
+ *                        coloured clay surface", which is the rule §7 exists to
+ *                        enforce and §10 states as "dark ink on pastel, never
+ *                        white".
+ *   --clay-danger-ink    the foreground for `danger`. The vocabulary gives
+ *                        `accent` an `-fg` variant and `danger` none.
+ *   --clay-border        the border SHORTHAND, `0 solid transparent`. The
+ *                        `border` group is a colour, so the shorthand cannot
+ *                        live there; the colour component is what is aliased
+ *                        below.
+ *   --clay-border-hc     the forced-colors border, `2px solid ButtonText`.
+ *                        Declared once in §4 and consumed by BOTH forced-colors
+ *                        blocks in §5, which is what stops the literal being
+ *                        written out twice.
+ *   --clay-r-modal       the fifth radius rung. The vocabulary's ladder is
+ *                        sm / md / lg / pill and this style ships five.
+ *   --clay-shadow-h
+ *   --clay-shadow-s
+ *   --clay-shadow-l      the shadow hue channels. Not a colour and not a
+ *                        shadow — three numbers the atoms compose. They are the
+ *                        knob the per-surface hue match turns, and the reason
+ *                        `.clay--sky { --clay-shadow-h: 202 }` works at all.
+ *   --clay-rim
+ *   --clay-sheen
+ *   --clay-shade
+ *   --clay-drop-1 … -4   the four shadow ATOMS. `shadow-1 … shadow-4` are the
+ *                        composed rungs; the atoms are what composes them, and
+ *                        the vocabulary has one shadow concept, not two.
+ *   --clay-blur-max      the per-layer shadow-blur ceiling (§8). Not the
+ *                        `blur` group, which is backdrop radius.
+ *   --clay-backdrop      `blur(0)`. A filter function rather than a radius, and
+ *                        raised only on the §12 glass hybrid.
+ *   --clay-sp-14         the 56px step. The space ramp is eight rungs and this
+ *                        style ships nine.
+ *   --clay-gap           the 24px minimum grid gap. A layout rule with a number
+ *                        attached (§3: overlapping clay shadows look like mud),
+ *                        not a step on the spacing ramp.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- ground and planes. See the header: the surface slots hold the pastel
+     ramp, not an ascent. ---- */
+  --um-claymorphism-bg:              var(--clay-bg);
+  --um-claymorphism-surface-1:       var(--clay-surface);
+  --um-claymorphism-surface-2:       var(--clay-lavender);
+  --um-claymorphism-surface-3:       var(--clay-sky);
+  --um-claymorphism-surface-4:       var(--clay-mint);
+
+  /* ---- foreground ---- */
+  --um-claymorphism-ink:             var(--clay-ink);
+  --um-claymorphism-ink-muted:       var(--clay-ink-muted);
+  --um-claymorphism-ink-inverse:     var(--clay-primary-ink);
+
+  /* ---- boundaries. Clay's decorative edge is genuinely absent — the shadow is
+     the edge — so `border` is the transparent colour component of §4's
+     zero-width shorthand. `border-strong` is NOT absent and may not be: §7's
+     1.4.11 argument is that a blurred shadow at 30% alpha over a
+     similar-lightness ground rarely reaches 3:1, and its stated mitigation (b)
+     is a 1px inset ring that survives independently of the blur. That ring is
+     this token, and it is the one every control's edge is measured against. ---- */
+  --um-claymorphism-border:          transparent;
+  --um-claymorphism-border-strong:   hsl(258 40% 55% / .55);
+
+  /* ---- action hues ---- */
+  --um-claymorphism-accent:          var(--clay-primary);
+  --um-claymorphism-accent-fg:       var(--clay-primary-ink);
+  --um-claymorphism-danger:          var(--clay-danger);
+
+  /* ---- geometry. §7's migration table pins `radius-md` to --clay-r-btn; the
+     rest of the ladder follows from it. ---- */
+  --um-claymorphism-radius-sm:       var(--clay-r-input);
+  --um-claymorphism-radius-md:       var(--clay-r-btn);
+  --um-claymorphism-radius-lg:       var(--clay-r-card);
+  --um-claymorphism-radius-pill:     var(--clay-r-chip);
+
+  /* ---- shadow ladder = elevation ladder. Each rung is four layers in paint
+     order, first on top: rim, sheen, shade, drop. `shadow-inset` is §5's
+     recessed recipe for inputs and wells — the one place clay inverts its own
+     light so the surface reads as pressed into the page rather than inflated
+     out of it. ---- */
+  --um-claymorphism-shadow-1:        var(--clay-1);
+  --um-claymorphism-shadow-2:        var(--clay-2);
+  --um-claymorphism-shadow-3:        var(--clay-3);
+  --um-claymorphism-shadow-4:        var(--clay-4);
+  --um-claymorphism-shadow-inset:
+    inset 0 6px 12px -6px hsl(var(--clay-shadow-h) 45% 30% / .34),
+    inset 0 -4px 8px -6px hsl(0 0% 100% / .55);
+  --um-claymorphism-shadow-press:    var(--clay-pressed);
+
+  /* ---- the backdrop contract: clay is opaque, and declaring the zero is the
+     point. --clay-backdrop holds the `blur(0)` filter function this number is
+     the radius of; §12 raises it only on the glass hybrid. ---- */
+  --um-claymorphism-blur:            0px;
+
+  /* ---- space. §7.3: `space-4` is the 16px-class default step, which is
+     --clay-sp-4 exactly. ---- */
+  --um-claymorphism-space-1:         var(--clay-sp-1);
+  --um-claymorphism-space-2:         var(--clay-sp-2);
+  --um-claymorphism-space-3:         var(--clay-sp-3);
+  --um-claymorphism-space-4:         var(--clay-sp-4);
+  --um-claymorphism-space-5:         var(--clay-sp-5);
+  --um-claymorphism-space-6:         var(--clay-sp-6);
+  --um-claymorphism-space-7:         var(--clay-sp-8);
+  --um-claymorphism-space-8:         var(--clay-sp-10);
+
+  /* ---- type. One family stack fills both slots: §3 names Nunito, Quicksand,
+     Fredoka, Outfit, Baloo 2 and Plus Jakarta Sans as alternatives for the same
+     slot, not as a display/body pair, and §4 declares exactly one. ---- */
+  --um-claymorphism-font-body:       var(--clay-font);
+  --um-claymorphism-font-display:    var(--clay-font);
+
+  --um-claymorphism-text-xs:         var(--clay-fs-xs);
+  --um-claymorphism-text-sm:         var(--clay-fs-sm);
+  --um-claymorphism-text-base:       var(--clay-fs-md);
+  --um-claymorphism-text-lg:         var(--clay-fs-lg);
+  --um-claymorphism-text-xl:         var(--clay-fs-xl);
+  --um-claymorphism-text-2xl:        var(--clay-fs-2xl);
+  --um-claymorphism-text-3xl:        var(--clay-fs-3xl);
+
+  /* ---- weights. §4's table states 500 / 600 / 700 and adds "Never 300-400 for
+     UI labels"; the §4 CSS block declares no custom property for them, so these
+     three are the doc's literals rather than aliases. ---- */
+  --um-claymorphism-weight-body:     500;
+  --um-claymorphism-weight-heading:  600;
+  --um-claymorphism-weight-display:  700;
+
+  --um-claymorphism-leading-body:    var(--clay-lh-body);
+  --um-claymorphism-leading-display: var(--clay-lh-display);
+
+  /* ---- motion. The press cycle is the whole language: 90ms down, 180ms lift,
+     260ms spring back, and §6 budgets the round trip under 400ms. ---- */
+  --um-claymorphism-dur-fast:        var(--clay-dur-press);
+  --um-claymorphism-dur-base:        var(--clay-dur-hover);
+  --um-claymorphism-dur-slow:        var(--clay-dur-release);
+  --um-claymorphism-ease-standard:   var(--clay-ease-out);
+  --um-claymorphism-ease-enter:      var(--clay-ease-out);
+  --um-claymorphism-ease-exit:       var(--clay-ease-squish);
+
+  /* ---- focus and targets. §7 is blunt about both: the ring is never deleted
+     "because it breaks the softness", and the offset is required because a ring
+     drawn on the element edge disappears into the drop shadow. ---- */
+  --um-claymorphism-focus-color:     var(--clay-focus-color);
+  --um-claymorphism-focus-width:     var(--clay-focus-width);
+  --um-claymorphism-focus-offset:    var(--clay-focus-offset);
+  --um-claymorphism-target-min:      var(--clay-target-min);
+}

@@ -1,0 +1,331 @@
+/* ---------------------------------------------------------------------------
+ * liquid-glass-ui — Tailwind CSS v4 mirror of the token layer
+ *
+ * Source of truth for the SHAPE: docs/08-liquid-glass.md §5 "Tailwind CSS v4".
+ * Source of truth for the VALUES: §4, i.e. ./tokens.css. Where the two disagree
+ * the §4 value wins and the disagreement is named below, because this file's
+ * whole claim is "the same tokens under Tailwind names".
+ *
+ * Two §5-vs-§4 differences, stated rather than silently reconciled:
+ *   * §5's Tailwind snippet writes the dark reduced-transparency fill as
+ *     `rgb(28 28 30 / 0.98)`. §4 writes `rgba(24, 24, 26, 0.98)`. This file
+ *     ships §4's value: the flattened dark fill is a legibility override, and
+ *     the override table in §4 is the one the audit measures.
+ *   * §5 folds the three depth tokens into one `--shadow-glass`. §4 declares
+ *     them separately, so they are separate here and `--shadow-glass` composes
+ *     them with `var()`. Composing keeps every literal in this file a literal
+ *     tokens.css also declares, which is what makes the mirror checkable.
+ *
+ * Four invariants this file exists to protect:
+ *   1. `@theme` is never nested inside `@media`, `@layer` or any other at-rule.
+ *      Tailwind v4 silently drops a nested `@theme`, so a dark palette or a
+ *      mandatory reduced-transparency fallback written inside one never emits
+ *      at all. Theme switching happens outside it, on ordinary selectors, over
+ *      the same custom properties the utilities already read.
+ *   2. Reference a theme token with v4's PARENTHESIS syntax — `ease-(--ease-glass)`,
+ *      `outline-(--color-glass-accent)`. The bracket form takes a literal, so
+ *      `ease-[--ease-glass]` emits `transition-timing-function: --ease-glass`,
+ *      which is invalid and dropped: default easing, no entrance animation and
+ *      no focus-ring colour, silently. Registered tokens have generated names —
+ *      `ease-glass`, `animate-glass-settle`, `rounded-glass-control` — and
+ *      those are what the markup should use.
+ *   3. Refraction stays behind `@supports (backdrop-filter: url(#lg-refract))`.
+ *      It is the Chromium-only tier; Safari and Firefox get the blur-only tier
+ *      underneath it, and nothing branches on a user-agent string.
+ *   4. The legibility overrides at the bottom are mandatory, not optional, and
+ *      they flatten the elevation rungs as well as the base pair.
+ *
+ * Load ./tokens.css instead of this file for a non-Tailwind project. Do not
+ * load both: they declare the same concepts under two names, and the second
+ * one loaded wins whichever it is.
+ * ------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+@theme {
+  /* ---- surface. Rung 1 IS the default pair; rungs 2 and 3 are the sheet and
+     the alert. There is no shadow ladder in this style — elevation is carried
+     by fill plus blur (§4). ---- */
+  --color-glass-fill: rgba(255, 255, 255, 0.62);
+  --color-glass-fill-clear: rgba(255, 255, 255, 0.28);
+  --color-glass-scrim: rgba(0, 0, 0, 0.22);
+  --color-glass-tint: rgba(120, 180, 255, 0.10);
+  --color-glass-elev-1: rgba(255, 255, 255, 0.62);
+  --color-glass-elev-2: rgba(255, 255, 255, 0.72);
+  --color-glass-elev-3: rgba(255, 255, 255, 0.86);
+
+  /* ---- edges ---- */
+  --color-glass-rim: rgba(255, 255, 255, 0.85);
+  --color-glass-rim-dark: rgba(255, 255, 255, 0.18);
+  --color-glass-border: rgba(255, 255, 255, 0.45);
+
+  /* ---- foreground ---- */
+  --color-glass-fg: #1C1C1E;
+  --color-glass-fg-2: rgba(28, 28, 30, 0.62);
+  --color-glass-accent: #0A84FF;
+
+  /* ---- optics. The blur steps are the three elevation rungs' blurs, so the
+     ladder maps 1:1 onto `backdrop-blur-glass-*`. ---- */
+  --blur-glass: 20px;
+  --blur-glass-2: 24px;
+  --blur-glass-3: 28px;
+
+  /* ---- geometry. Concentric, not arbitrary: the control is a capsule, the
+     card is 26px against 12px inner padding, the sheet matches the display
+     corner. ---- */
+  --radius-glass-control: 999px;
+  --radius-glass-card: 26px;
+  --radius-glass-sheet: 38px;
+
+  /* ---- depth. One ambient layer, one contact layer, one inner bevel — never
+     a Material-style elevation ladder. ---- */
+  --shadow-glass-ambient: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-glass-contact: 0 1px 2px rgba(0, 0, 0, 0.10);
+  --shadow-glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.60);
+  --shadow-glass: var(--shadow-glass-ambient), var(--shadow-glass-contact), var(--shadow-glass-inset);
+
+  /* ---- type. 17px is the body minimum on glass and 600 is the weight floor;
+     both are legibility values, not taste. ---- */
+  --text-glass-xs: 13px;
+  --text-glass-sm: 15px;
+  --text-glass-md: 17px;
+  --text-glass-lg: 20px;
+  --text-glass-xl: 28px;
+  --text-glass-2xl: 34px;
+  --font-weight-glass: 600;
+
+  /* ---- motion ---- */
+  --ease-glass: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-glass-spring: linear(0, 0.35, 0.86, 1.04, 1.01, 1);
+  --animate-glass-settle: glass-settle 520ms var(--ease-glass);
+}
+
+@keyframes glass-settle {
+  0% { transform: scale(0.94); opacity: 0; }
+  62% { transform: scale(1.015); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---------------------------------------------------------------------------
+ * Tokens with no Tailwind namespace. They stay plain custom properties and are
+ * consumed with var(): a saturation percentage, a brightness percentage, an SVG
+ * filter scale, the lensed rim's width, three durations and the hit-target
+ * floor map onto no utility namespace, and inventing one would generate
+ * utilities nobody can use.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  --lg-sat: 180%;
+  --lg-bright: 108%;
+  --lg-refract-scale: 48;
+  --lg-refract-band: 16px;
+  --lg-target-min: 44px;
+  --lg-dur-state: 180ms;
+  --lg-dur-morph: 320ms;
+  --lg-dur-settle: 520ms;
+}
+
+/* ---------------------------------------------------------------------------
+ * Utilities. Tier 1 is the base surface and works wherever `backdrop-filter`
+ * does. Tier 2 adds real refraction and only runs where an SVG filter is a
+ * legal `backdrop-filter` value.
+ * ------------------------------------------------------------------------- */
+
+@utility glass {
+  position: relative;
+  isolation: isolate;
+  color: var(--color-glass-fg);
+  background-color: var(--color-glass-fill);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-glass-card);
+  box-shadow: var(--shadow-glass);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+  backdrop-filter: blur(var(--blur-glass)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+  contain: paint;
+}
+
+/* The specular rim, as a masked border gradient: bright upper-left arc at 135
+   degrees, dim lower-right arc. Apply with `before:glass-rim-after` on a
+   `glass-rim` element. It is decoration and must never be the control's only
+   boundary. */
+@utility glass-rim {
+  position: relative;
+}
+
+@utility glass-rim-after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    var(--color-glass-rim) 0%,
+    transparent 38%,
+    transparent 62%,
+    var(--color-glass-rim-dark) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Chromium-only refraction. The `@supports` test is the feature itself, so it
+   cannot pass in an engine that would then render nothing. */
+@utility glass-refract {
+  @supports (backdrop-filter: url(#lg-refract)) {
+    -webkit-backdrop-filter: url(#lg-refract) blur(var(--blur-glass)) saturate(var(--lg-sat));
+    backdrop-filter: url(#lg-refract) blur(var(--blur-glass)) saturate(var(--lg-sat));
+    background-color: color-mix(in srgb, var(--color-glass-fill) 78%, transparent);
+  }
+}
+
+/* Tier 0. No `backdrop-filter` at all: a near-opaque fill, still bordered,
+   still readable. */
+@utility glass-tier-0 {
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: rgba(246, 246, 248, 0.98);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Theme switching. Outside `@theme`, on ordinary selectors, because `@theme`
+ * may not be nested and a nested one is dropped without a warning.
+ *
+ * Light values are the `@theme` block above. Dark is written twice: guarded so
+ * it cannot beat an explicit `data-theme="light"`, and again under
+ * `:root[data-theme="dark"]` so a manual toggle beats the OS preference. Both
+ * lists are complete — a partial override leaves half the palette on the other
+ * theme, which is the bug that puts dark ink on a dark surface.
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-glass-fill: rgba(28, 28, 30, 0.58);
+    --color-glass-fill-clear: rgba(28, 28, 30, 0.26);
+    --color-glass-scrim: rgba(0, 0, 0, 0.34);
+    --color-glass-tint: rgba(120, 180, 255, 0.08);
+    --color-glass-elev-1: rgba(28, 28, 30, 0.58);
+    --color-glass-elev-2: rgba(28, 28, 30, 0.68);
+    --color-glass-elev-3: rgba(28, 28, 30, 0.82);
+    --color-glass-rim: rgba(255, 255, 255, 0.55);
+    --color-glass-rim-dark: rgba(255, 255, 255, 0.10);
+    --color-glass-border: rgba(255, 255, 255, 0.16);
+    --color-glass-fg: #F2F2F7;
+    --color-glass-fg-2: rgba(242, 242, 247, 0.66);
+    --color-glass-accent: #0A84FF;
+    --blur-glass: 24px;
+    --blur-glass-2: 28px;
+    --blur-glass-3: 30px;
+    --shadow-glass-ambient: 0 8px 32px rgba(0, 0, 0, 0.44);
+    --shadow-glass-contact: 0 1px 2px rgba(0, 0, 0, 0.30);
+    --shadow-glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    --lg-sat: 160%;
+    --lg-bright: 96%;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-glass-fill: rgba(28, 28, 30, 0.58);
+  --color-glass-fill-clear: rgba(28, 28, 30, 0.26);
+  --color-glass-scrim: rgba(0, 0, 0, 0.34);
+  --color-glass-tint: rgba(120, 180, 255, 0.08);
+  --color-glass-elev-1: rgba(28, 28, 30, 0.58);
+  --color-glass-elev-2: rgba(28, 28, 30, 0.68);
+  --color-glass-elev-3: rgba(28, 28, 30, 0.82);
+  --color-glass-rim: rgba(255, 255, 255, 0.55);
+  --color-glass-rim-dark: rgba(255, 255, 255, 0.10);
+  --color-glass-border: rgba(255, 255, 255, 0.16);
+  --color-glass-fg: #F2F2F7;
+  --color-glass-fg-2: rgba(242, 242, 247, 0.66);
+  --color-glass-accent: #0A84FF;
+  --blur-glass: 24px;
+  --blur-glass-2: 28px;
+  --blur-glass-3: 30px;
+  --shadow-glass-ambient: 0 8px 32px rgba(0, 0, 0, 0.44);
+  --shadow-glass-contact: 0 1px 2px rgba(0, 0, 0, 0.30);
+  --shadow-glass-inset: inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --lg-sat: 160%;
+  --lg-bright: 96%;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* ---------------------------------------------------------------------------
+ * User and OS legibility overrides. Mandatory, not optional, and last so they
+ * win in both themes. Every rung is flattened, not just the base pair: a
+ * surface that re-points its fill and blur at rung 2 or 3 would otherwise walk
+ * straight back through a rung-blind override.
+ *
+ * Safari does not implement `prefers-reduced-transparency` as of August 2026,
+ * and Apple's own users are the ones most likely to have Reduce Transparency
+ * on. Ship the `[data-transparency="reduced"]` hook and an in-app control as
+ * well; the media query alone is not coverage.
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --color-glass-fill: rgba(246, 246, 248, 0.98);
+    --color-glass-fill-clear: rgba(246, 246, 248, 0.98);
+    --color-glass-elev-1: rgba(246, 246, 248, 0.98);
+    --color-glass-elev-2: rgba(246, 246, 248, 0.98);
+    --color-glass-elev-3: rgba(246, 246, 248, 0.98);
+    --blur-glass: 0px;
+    --blur-glass-2: 0px;
+    --blur-glass-3: 0px;
+    --lg-sat: 100%;
+    --lg-bright: 100%;
+    --lg-refract-scale: 0;
+  }
+
+  :root[data-theme="dark"] {
+    --color-glass-fill: rgba(24, 24, 26, 0.98);
+    --color-glass-fill-clear: rgba(24, 24, 26, 0.98);
+    --color-glass-elev-1: rgba(24, 24, 26, 0.98);
+    --color-glass-elev-2: rgba(24, 24, 26, 0.98);
+    --color-glass-elev-3: rgba(24, 24, 26, 0.98);
+  }
+}
+
+@media (prefers-color-scheme: dark) and (prefers-reduced-transparency: reduce) {
+  :root:not([data-theme="light"]) {
+    --color-glass-fill: rgba(24, 24, 26, 0.98);
+    --color-glass-fill-clear: rgba(24, 24, 26, 0.98);
+    --color-glass-elev-1: rgba(24, 24, 26, 0.98);
+    --color-glass-elev-2: rgba(24, 24, 26, 0.98);
+    --color-glass-elev-3: rgba(24, 24, 26, 0.98);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --color-glass-fill: rgba(255, 255, 255, 0.92);
+    --color-glass-elev-1: rgba(255, 255, 255, 0.92);
+    --color-glass-elev-2: rgba(255, 255, 255, 0.94);
+    --color-glass-elev-3: rgba(255, 255, 255, 0.96);
+    --color-glass-border: rgba(0, 0, 0, 0.55);
+    --blur-glass: 10px;
+    --blur-glass-2: 10px;
+    --blur-glass-3: 10px;
+    --lg-refract-scale: 0;
+  }
+}
+
+[data-transparency="reduced"] {
+  --color-glass-fill: rgba(246, 246, 248, 0.98);
+  --color-glass-fill-clear: rgba(246, 246, 248, 0.98);
+  --color-glass-elev-1: rgba(246, 246, 248, 0.98);
+  --color-glass-elev-2: rgba(246, 246, 248, 0.98);
+  --color-glass-elev-3: rgba(246, 246, 248, 0.98);
+  --blur-glass: 0px;
+  --blur-glass-2: 0px;
+  --blur-glass-3: 0px;
+  --lg-refract-scale: 0;
+}

@@ -1,0 +1,174 @@
+/* ---------------------------------------------------------------------------
+ * Liquid Glass — `--um-liquid-glass-*` grammar bridge.
+ *
+ * ./tokens.css carries the style's own `--lg-*` names verbatim from
+ * docs/08-liquid-glass.md §4. ui-morphism-core:token-emit speaks the shared
+ * grammar `--um-<style>-<group>[-<variant>]` defined in
+ * docs/00-comparison-matrix.md §7. This file is the mapping between them, and
+ * it matches the table-by-table mapping in ../references/tokens.md.
+ *
+ * Direction: `--um-liquid-glass-*` reads from `--lg-*`, never the reverse, so
+ * the verbatim §4 block stays the single place a value is written. Load
+ * tokens.css first, then this file. One copy covers every theme and every
+ * legibility override: each alias is a var() reference, so it inherits
+ * whichever of tokens.css's blocks is active — bare :root, the guarded dark
+ * media query, an explicit [data-theme], reduced transparency or increased
+ * contrast. Duplicating the aliases per theme is how the two lists drift.
+ *
+ * Groups deliberately NOT populated for this style:
+ *   elev      — §4 is explicit that there is no shadow ladder here. A rung is a
+ *               fill plus a blur, and re-pointing `--lg-fill` / `--lg-blur`
+ *               locally raises a surface because `--lg-backdrop` re-resolves
+ *               per element. The three rungs keep their `--lg-elev-N-*` names
+ *               below rather than becoming a parallel `elev` ramp, which would
+ *               be a second name for the same three steps.
+ *   font      — §4 fixes a type scale and a weight floor but names no families;
+ *               the recipes use `system-ui`, which is the point on Apple
+ *               platforms. Nothing to tokenise.
+ *   tracking  — §4 ships no letter-spacing values.
+ *   noise     — this material has no grain layer. Its texture is optical, not
+ *               granular; a noise overlay reads as a dirty lens.
+ *   accent-2… — one accent, system blue. Colour variety belongs to the content
+ *               layer under the glass, never to the glass.
+ *
+ * Tokens with no home in the closed group vocabulary (§7.3), which therefore
+ * keep their `--lg-*` names and are consumed directly. The list is closed on
+ * purpose, and core's rule is explicit: a concept with no entry gets a value
+ * with a comment, not a twenty-third group and not an invented variant. Every
+ * one of these is still validated by ui-morphism-core:a11y-validate — an alias
+ * is a naming convenience, not the thing that makes a value safe.
+ *   --lg-bright             the brightness term in the backdrop chain (108%
+ *                           light / 96% dark). There is no `brightness` group
+ *                           word, and it is an optional part of a filter chain
+ *                           rather than a surface property.
+ *   --lg-backdrop           the composed `blur() saturate() brightness()`
+ *                           shorthand. A composition of three tokens, not a
+ *                           token.
+ *   --lg-refract-scale      the `feDisplacementMap` scale attribute. Unitless
+ *                           by necessity — SVG filter primitives take numbers,
+ *                           not lengths — and the single knob that separates
+ *                           this style from glassmorphism. No group word
+ *                           models a filter-primitive attribute.
+ *   --lg-refract-band       the width of the lensed rim. Geometry of an effect,
+ *                           not of a box, so it is not a `radius` or a `space`.
+ *   --lg-fill-clear         the Clear variant's fill. `surface-N` ascends;
+ *                           Clear is not a rung above or below Regular, it is
+ *                           the other variant, and it is illegal without
+ *                           `--lg-scrim` beneath it.
+ *   --lg-scrim              the mandatory dimming layer under Clear. It sits
+ *                           BELOW the surface rather than being one, so it is
+ *                           not a `surface` rung.
+ *   --lg-tint               the optional brand tint, alpha <= 0.12. It is a
+ *                           layer inside the material, not the material.
+ *   --lg-rim / --lg-rim-dark
+ *                           the two ends of the specular arc. `border` is the
+ *                           control boundary; the rim is a highlight, and §7 is
+ *                           explicit that it is never the boundary.
+ *   --lg-elev-1/2/3-fill and -blur
+ *                           the three rungs, as fill+blur pairs. See `elev`
+ *                           above.
+ *   the focus halo and light ring
+ *                           `0 0 0 5px rgba(0,0,0,0.55)` and the third
+ *                           `0 0 0 8px rgba(255,255,255,0.9)` ring. `focus` is
+ *                           colour/width/offset; the two extra rings are a
+ *                           fourth thing and they live in the focus recipe in
+ *                           ../references/recipes.md.
+ *
+ * Not tokenisable at all, and therefore absent by design: the displacement
+ * map's geometry — the squircle profile, the band width in map pixels, the
+ * per-channel fringe offset. SVG filter primitives do not read CSS custom
+ * properties, so the map is generated as a data URI by
+ * ../scripts/displacement-map.mjs and only its scale is a custom property.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- surface. The Regular variant's fill is the whole style's legibility
+     lever: §7 puts the shipped floor at 0.55 and the safe default at 0.62, and
+     no intensity may take it below the floor. There is no `bg` group: this is
+     a chrome material and the content layer beneath it belongs to whatever
+     system already owns the page. ---- */
+  --um-liquid-glass-surface-1: var(--lg-fill);
+
+  /* ---- optics ---- */
+  --um-liquid-glass-blur: var(--lg-blur);
+  --um-liquid-glass-saturate: var(--lg-sat);
+
+  /* ---- edges. The 1px border is the control boundary and it is structural:
+     forced-colors strips shadows, so a shadow-only edge leaves the surface
+     with no boundary at all. At 0.45 alpha it rarely clears 3:1 against an
+     arbitrary backdrop, which is why §4 sets the hit target at 44px and why
+     ui-morphism-core:a11y-validate must solve it up where it delimits a
+     control. These two values are the resting appearance, not a compliant
+     boundary. ---- */
+  --um-liquid-glass-border: var(--lg-border);
+  --um-liquid-glass-border-strong: var(--lg-rim);
+
+  --um-liquid-glass-radius-sm: var(--lg-radius-card);
+  --um-liquid-glass-radius-md: var(--lg-radius-card);
+  --um-liquid-glass-radius-lg: var(--lg-radius-sheet);
+  --um-liquid-glass-radius-pill: var(--lg-radius-control);
+
+  /* ---- depth. Two layers and an inner bevel, never an elevation ladder. ---- */
+  --um-liquid-glass-shadow-1: var(--lg-shadow-contact);
+  --um-liquid-glass-shadow-2: var(--lg-shadow-ambient);
+  --um-liquid-glass-shadow-inset: var(--lg-inset);
+
+  /* ---- foreground. §7: with the fill at 0.62 and a KNOWN foreground polarity
+     you clear 4.5:1 across the whole backdrop range. Flip the polarity and the
+     same surface fails — white ink on the light fill over a mid-grey backdrop
+     is 1.56:1. The ink token is therefore paired with the fill, not chosen. ---- */
+  --um-liquid-glass-ink: var(--lg-fg);
+  --um-liquid-glass-ink-muted: var(--lg-fg-2);
+  --um-liquid-glass-accent: var(--lg-accent);
+
+  /* ---- danger. §4 declares no error colour: this material carries state in
+     the content layer, never in the glass, because a state signalled by fill
+     alpha alone is invisible against half the backdrops it will sit on. The
+     accent is the only hue the material itself takes. ---- */
+
+  /* ---- motion ---- */
+  --um-liquid-glass-dur-fast: var(--lg-dur-state);
+  --um-liquid-glass-dur-base: var(--lg-dur-morph);
+  --um-liquid-glass-dur-slow: var(--lg-dur-settle);
+  --um-liquid-glass-ease-standard: var(--lg-ease);
+  --um-liquid-glass-ease-spring: var(--lg-ease-spring);
+
+  /* ---- focus. §7's triple ring: an accent outline, a dark halo and a light
+     halo, so at least one edge clears 3:1 against any backdrop. §4 declares no
+     focus custom properties; the colour below is §4's accent and the width and
+     offset are §5's and §7's literals promoted to tokens. The two halo rings
+     are box-shadows, they are additive to the outline, and forced-colors
+     deletes them — which is exactly why the outline is the one that carries
+     the criterion. ---- */
+  --um-liquid-glass-focus-color: var(--lg-accent);
+  --um-liquid-glass-focus-width: 3px;
+  --um-liquid-glass-focus-offset: 2px;
+
+  /* ---- hit target. Theme-independent. SC 2.5.8's floor is 24px, but that
+     floor presumes a perceivable boundary; the rim is frequently under 3:1
+     against its backdrop, so the user is aiming at an edge they cannot see.
+     44px is the Apple HIG value this style descends from. ---- */
+  --um-liquid-glass-target-min: var(--lg-target-min);
+
+  /* ---- type. 17px body minimum and weight 600 on glass are legibility
+     values: thin type disappears into a displaced, blurred backdrop long
+     before it disappears on an opaque one. ---- */
+  --um-liquid-glass-text-xs: var(--lg-text-xs);
+  --um-liquid-glass-text-sm: var(--lg-text-sm);
+  --um-liquid-glass-text-base: var(--lg-text-md);
+  --um-liquid-glass-text-lg: var(--lg-text-lg);
+  --um-liquid-glass-text-xl: var(--lg-text-xl);
+  --um-liquid-glass-text-2xl: var(--lg-text-2xl);
+  --um-liquid-glass-weight-min: var(--lg-weight-on-glass);
+  --um-liquid-glass-leading-body: 1.2;
+
+  /* ---- space. §4's ramp. The 12px minimum inset from the lensed rim is
+     space-3: text closer than that sits inside the displacement band and
+     warps with the backdrop. ---- */
+  --um-liquid-glass-space-1: var(--lg-space-1);
+  --um-liquid-glass-space-2: var(--lg-space-2);
+  --um-liquid-glass-space-3: var(--lg-space-3);
+  --um-liquid-glass-space-4: var(--lg-space-4);
+  --um-liquid-glass-space-5: var(--lg-space-5);
+  --um-liquid-glass-space-6: var(--lg-space-6);
+}

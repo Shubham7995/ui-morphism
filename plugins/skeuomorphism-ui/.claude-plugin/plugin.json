@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "skeuomorphism-ui",
+  "displayName": "Skeuomorphism UI",
+  "version": "0.1.0",
+  "description": "Skeuomorphic restyling — the soft-and-physical language in which the surface IMITATES A NAMED MATERIAL. Emits a material token layer built on one overhead light source, rewrites components to the four-layer shadow stack plus a three-stop face gradient, a hairline material border and letterpress type, puts a single inline-SVG grain layer on the chassis rather than on every component, inverts the stack for recessed wells, and self-audits every emitted pair against WCAG 2.2. A soft surface imitating nothing is neumorphism-ui (same colour as the page ground) or claymorphism-ui (inflated pastel).",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/01-skeuomorphism.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "skeuomorphism",
+    "neo-skeuomorphism",
+    "material-realism",
+    "bevel",
+    "letterpress",
+    "texture",
+    "design-tokens"
+  ],
+  "dependencies": [
+    { "name": "ui-morphism-core", "version": "^0.1.0" }
+  ],
+  "metadata": {
+    "sourceDoc": "docs/01-skeuomorphism.md",
+    "docSection": "13",
+    "lastResearched": "2026-08-08",
+    "statusIn2026": "revival",
+    "a11yRisk": "medium",
+    "perfCost": "medium"
+  }
+}

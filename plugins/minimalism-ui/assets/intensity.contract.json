@@ -1,0 +1,110 @@
+{
+  "style": "minimalism",
+  "default": 60,
+  "sourceDoc": "docs/05-minimalism.md",
+  "docSection": "13",
+  "baselineAtZero": "A conventional interface with its affordances intact: the full three-rung elevation ladder, a tinted neutral ramp, the wide 1.414 type scale with the bold weight band, dense 0.75x between-group rhythm — and, because affordanceFloor is inverted and clamped at 40, still a filled primary button, a control boundary at --min-border-strong, underlined links, a 2px focus ring at 2px offset and targets sized from --min-target-min. Intensity 0 in this style is not an absence of minimalism, it is an ordinary interface that has not yet been subtracted from.",
+  "invertedKnob": "affordanceFloor",
+  "knobs": {
+    "chromaBudget": {
+      "unit": "OKLCH C",
+      "anchors": [[0, 0.06], [60, 0.02], [100, 0.0]],
+      "note": "Doc §13: max OKLCH chroma allowed on non-accent surfaces, range 0.00-0.06. Inverse but monotone — rule 1 permits that. The anchor at the default intensity is doc §3's own stated ceiling, 'chroma <= 0.02 in OKLCH' for the 90-95% of painted pixels that are neutral; a straight line between the endpoints would resolve the default to 0.024 and emit a ramp louder than the style's own stated ceiling at the value most users never change. The doc's shipped ramp in §4 is `pure` (<= 0.006 light, <= 0.010 dark) and sits comfortably under every resolution of this knob.",
+      "pairedCurve": {
+        "name": "accentCoveragePct",
+        "unit": "%",
+        "anchors": [[0, 15], [100, 1]],
+        "note": "Doc §13 states this knob as two things: the chroma ceiling AND 'share of pixels the accent may occupy', 1%-15%. Linear, because the doc states no midpoint; at the default 60 it resolves to 6.6%, inside §3's 5-10% implied by '90-95% of painted pixels are neutral'. Core's resolver reads `anchors` on the knob itself, so this curve is resolved and reported by the skill."
+      }
+    },
+    "decorationBudget": {
+      "unit": "shadow rungs",
+      "anchors": [
+        [0, 3], [24.9, 3],
+        [25, 2], [49.9, 2],
+        [50, 1], [74.9, 1],
+        [75, 0], [100, 0]
+      ],
+      "note": "Doc §13: number of permitted elevation/decoration layers, '0-3 shadow steps'. At 0, three steps and gradients allowed on heroes; at 100, zero shadows, borders only, no gradients anywhere. Stepped rather than continuous because a shadow rung is a count, not a length: the plateaus encode the hold and the 0.1-wide ramps sit below each boundary so no integer intensity lands inside one. The band boundaries at 25/50/75 are this plugin's reading — the doc states the endpoints and the count, not where the steps fall. The default 60 lands on one rung, which is exactly doc §12's flat-2.0 prescription: '--min-shadow-1 as the only elevation and --min-border-strong as the boundary'. At 0 rungs, an overlay is separated by --min-border-strong plus its scrim rather than by elevation, which is also doc §8's cheaper-fallback advice.",
+      "pairedCurves": [
+        {
+          "name": "shadowOpacityMax",
+          "anchors": [[0, 0.12], [60, 0.06], [100, 0.0]],
+          "note": "Doc §13 states the second half of this knob as 'shadow opacity 0.00-0.12'. The anchor at the default is §4's own ladder: --min-shadow-2's leading layer is `rgb(0 0 0 / 0.06)`, so a straight line (0.048 at 60) would reject the doc's own shipped shadow at the doc's own default intensity. Doc §3 caps the style at 'under 8% opacity' independently."
+        },
+        {
+          "name": "gradientsAllowed",
+          "unit": "boolean",
+          "trueWhile": "decorationBudget == 3",
+          "note": "Doc §13 permits 'gradients allowed on heroes' at intensity 0 and 'no gradients anywhere' at 100 and states nothing in between. Tying the permission to the top rung of decorationBudget — intensity < 25 — is this plugin's reading of a two-endpoint statement, recorded as such. Gradients are hero-only at every intensity that permits them, never on product chrome, and doc §13 step 6 strips multi-stop gradients from non-overlay elements regardless."
+        }
+      ]
+    },
+    "whitespaceMultiplier": {
+      "unit": "x",
+      "anchors": [[0, 0.75], [60, 1.0], [100, 2.0]],
+      "note": "Doc §13: scalar on the between-group spacing ramp, range 0.75-2.0. The anchor at the default is 1.0 — the §4 ramp unscaled — because doc §3 states the style's section rhythm as 64-96px desktop and 40-56px mobile, which IS the §4 ramp at 1.0. A straight line would resolve the default to 1.5 and ship a 144px section gap as this style's out-of-the-box rhythm, contradicting §3 at the one value most users never change. The doc's endpoint prose ('dense, 12-24px' at 0; 'airy, 96-192px' at 100) is descriptive gloss and does not divide out to the stated multiplier range; the numeric range is what this contract encodes. Within-group spacing does NOT scale: doc §3's 4:1 between-group to within-group ratio is what produces perceived grouping, so scaling both would cancel the knob out.",
+      "appliesTo": ["--min-space-8", "--min-space-12", "--min-space-16", "--min-space-24"]
+    },
+    "typeContrast": {
+      "unit": "scale ratio",
+      "anchors": [[0, 1.414], [60, 1.2], [100, 1.125]],
+      "note": "Doc §13: 'ratio 1.125-1.414'. Inverse but monotone. The anchor at the default is 1.200 because §4 states the shipped nine-step ramp's ratio as 1.200 (minor third) and §13 step 5 tells the skill to reduce the host's font-size inventory to 'the nine-step 1.200 scale' — a straight line would resolve the default to 1.241 and generate a ramp the doc does not ship. §3 bounds the style at 1.125-1.250, so intensities below about 33 generate a ratio above that band and are display/marketing territory, not product chrome.",
+      "pairedCurve": {
+        "name": "weightMax",
+        "anchors": [[0, 700], [24.9, 700], [25, 600], [74.9, 600], [75, 500], [100, 500]],
+        "note": "Doc §13 states the second half of this knob as the permitted weight span, '{400,500,600,700} -> {400,500}'. Stepped for the same reason as decorationBudget: a weight is a rung. NOTE the hard clamp weightMax <= 600 below: §4 says 'No weight above 600 in this style' and §3 says 700+ is 'used sparingly or not at all', so the 700 band never ships. The clamp fires below intensity 25 and is reported as a Correction every time it does, including when it changes nothing."
+      }
+    },
+    "affordanceFloor": {
+      "unit": "0-100",
+      "anchors": [[0, 0], [100, 100]],
+      "note": "Doc §13: 'how much signifier is retained regardless of the above', never below 40 in shipped output. This is the knob that makes the style safe. It is deliberately inverted relative to the other four — raising overall intensity RAISES it — because aggressive minimalism increases the risk of lost affordance, so the skill compensates rather than compounds. At 100 it means filled primary buttons, 3:1 boundaries on every control, underlined links and 44px targets. The 40 floor is a clamp, not a curve, so the whole low end of the range still ships a usable interface."
+    }
+  },
+  "clamps": {
+    "chromaBudget": { "min": 0.0, "max": 0.06 },
+    "decorationBudget": { "min": 0, "max": 3 },
+    "whitespaceMultiplier": { "min": 0.75, "max": 2.0 },
+    "typeContrast": { "min": 1.125, "max": 1.414 },
+    "affordanceFloor": { "min": 40, "max": 100 }
+  },
+  "contextCaps": [
+    {
+      "when": { "audience": "novice" },
+      "cap": 0,
+      "reason": "Doc §9: novice, occasional and low-confidence audiences — consumer government services, healthcare intake for older adults, first-run onboarding — 'need maximum signifiers, not maximum restraint', and NN/g's flat-design guidance limits low-signifier design to simple sites, returning users and tech-expert audiences. Intensity 0 is this style's least-subtracted rung. It is NOT on its own the right answer for this audience, because the cap also lowers affordanceFloor; see contextClamps, which raises that knob to 100 in the same breath."
+    },
+    {
+      "when": { "surfaceType": "safety-critical" },
+      "cap": 0,
+      "reason": "Doc §9: 'The interface is safety-critical or irreversible. Delete, transfer, and deploy actions need loud, unambiguous, over-signified controls.' Same shape as the novice cap and the same pairing with a raised affordanceFloor."
+    }
+  ],
+  "contextClamps": [
+    {
+      "when": { "audience": "novice" },
+      "clamps": { "affordanceFloor": { "min": 100 } },
+      "reason": "affordanceFloor is the inverted knob, so the intensity cap above would take it to its 40 floor — the opposite of what doc §9 asks for. Core's resolver caps intensity rather than individual knobs, so the skill applies this clamp after resolution and reports it on the same audit line as the cap. Without the pair, capping intensity for a novice audience DELETES signifiers, which is precisely this style's documented failure mode."
+    },
+    {
+      "when": { "surfaceType": "safety-critical" },
+      "clamps": { "affordanceFloor": { "min": 100 } },
+      "reason": "Same pairing, same reason: doc §9 wants over-signified destructive controls, and the cap alone would under-signify them."
+    }
+  ],
+  "deviation": "MARKETPLACE.md §7.2 rule 5 gives sibling styles a numeric context cap of 45 (brutalism `scope: product`, liquid-glass and spatial-ui `backdropControl: arbitrary`). Doc 05 §13 states no numeric cap at all — it states the when-not-to-use conditions in §9 instead. The two caps above therefore resolve to 0, this style's own least-subtracted rung, and each is paired with a contextClamp on affordanceFloor because a cap alone moves the inverted knob the wrong way. Core's resolver does not consume `contextClamps`; the skill applies them and reports each one alongside the cap that triggered it. Recorded here because a derivation the doc does not state must be visible.",
+  "clampsNotExpressibleHere": {
+    "bodyTextFloor": "4.5:1 normal text and 3:1 for >= 24px or >= 18.66px bold, at every intensity. Doc §7 and §13 item 1: refuse and substitute the nearest passing value, logging the substitution.",
+    "controlBoundaryFloor": "3:1 for any boundary that is a control's only affordance, at every intensity. --min-border-subtle is decorative and never carries a control.",
+    "focusIndicator": "outline, >= 2px at >= 2px offset, on 100% of focusable elements, at every intensity. Never box-shadow — forced-colors deletes a shadow.",
+    "targetMin": ">= 24x24 CSS px taken from --min-target-min rather than a literal, never overridden downward; resting size from --min-control-lg (40px); 44px on any touch-primary surface.",
+    "weightMax": "600. Doc §4: 'No weight above 600 in this style.' Overrides the 700 band of typeContrast's paired weightMax curve below intensity 25.",
+    "hueCount": "<= 2 chromatic hues in the emitted palette — the single accent and the danger semantic — and <= 11 neutral steps. Doc §13 items 2 and 8 of the anti-pattern list.",
+    "backdropBlur": "0px, declared explicitly. No backdrop-filter on any base-layer surface at any intensity; declaring the zero is the anti-glassmorphism contract.",
+    "durationCeiling": "<= 300ms on every transition and animation, with a prefers-reduced-motion block covering every animated selector.",
+    "measure": "65ch, max 75ch, expressed in ch or rem — never a px max-width, which does not grow at 200% zoom.",
+    "cssBudget": "<= 40 KB compressed total, <= 14 KB critical inlined, 0 KB JS for the visual layer.",
+    "note": "These constrain the emitted CSS rather than the value of a knob, so ui-morphism-core:a11y-validate, scripts/quantize-scan.mjs and ../skills/audit/references/checklist.md enforce them. Recorded here so the clamp table reads as the complete list."
+  }
+}

@@ -3,7 +3,7 @@
   "name": "bento-grid-ui",
   "displayName": "Bento Grid UI",
   "version": "0.1.0",
-  "description": "Build or convert an asymmetric modular tile layout — Apple-style feature grids, dashboards, portfolio indexes and overview screens. Assigns spans by content weight on a locked gutter, keeps DOM order equal to reading order, normalises the tile frame and media, and self-audits every emitted grid against WCAG 2.2.",
+  "description": "Build or convert an asymmetric modular tile layout — Apple-style feature grids, dashboards, portfolio indexes and overview screens. The only ui-morphism plugin that restructures MARKUP AND LAYOUT rather than restyling surfaces, so it composes with any of the ten style languages rather than competing with them. Assigns spans by content weight on a locked gutter, keeps DOM order equal to reading order, normalises the tile frame and media, and self-audits every emitted grid against WCAG 2.2.",
   "author": {
     "name": "UI Morphism",
     "url": "https://github.com/Shubham7995/ui-morphism"

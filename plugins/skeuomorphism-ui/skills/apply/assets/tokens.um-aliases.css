@@ -1,0 +1,208 @@
+/* ---------------------------------------------------------------------------
+ * Skeuomorphism — `--um-skeuomorphism-*` grammar bridge.
+ *
+ * assets/tokens.css carries the style's own `--sk-*` names verbatim from
+ * docs/01-skeuomorphism.md §4. ui-morphism-core:token-emit speaks the shared
+ * grammar `--um-<style>-<group>[-<variant>]` defined in
+ * docs/00-comparison-matrix.md §7. This file is the mapping between them.
+ *
+ * Direction: `--um-skeuomorphism-*` reads from `--sk-*`, not the reverse, so the
+ * verbatim §4 block stays the single place a value is written. Load tokens.css
+ * first, then this file. Every alias is a var() reference and inherits whichever
+ * theme block in tokens.css is active, so both themes work with no duplication
+ * here — with one stated exception, the focus colour, at the end of this file.
+ *
+ * WHICH GROUPS THIS STYLE POPULATES, AND WHICH IT DOES NOT
+ *
+ *   elev 0-3   — populated, and `shadow-1` … `shadow-5` deliberately are NOT.
+ *                This is the mirror image of brutalism's choice, for the same
+ *                reason. There, elevation IS offset distance, so the shadow
+ *                ladder is the elevation ladder and no `elev` group is emitted.
+ *                Here, docs §4 names the compounds --sk-elev-0 … --sk-elev-3 and
+ *                defines them as depth levels — wells, chips, buttons and cards,
+ *                dialogs — that happen to be spelled as box-shadow values. A
+ *                parallel `shadow-N` ramp would be the same four values under a
+ *                second name, and two names for one ramp is how a scale drifts.
+ *                `shadow-press` IS populated: the pressed stack is a state, not
+ *                a depth level, and the vocabulary has a slot for exactly that.
+ *
+ *   noise-opacity — populated. `noise-freq` is NOT, and this is the one gap in
+ *                this file that is a fact about the medium rather than a style
+ *                preference. The grain ships as a single inline-SVG data URI
+ *                (--sk-noise), and a data URI is an opaque string: CSS cannot
+ *                interpolate a custom property inside it. baseFrequency 0.9 and
+ *                numOctaves 2 are therefore baked into the URI and edited there,
+ *                in all three places that carry a copy of it — the --sk-noise
+ *                declaration in tokens.css, the `@utility sk-grain` in
+ *                tokens.theme.css, and the NOISE constant in docs §5's React
+ *                component. Aliasing a `noise-freq` token here would advertise a
+ *                dial that does not turn: writing to it would change nothing on
+ *                screen, and the first person to trust it would ship the wrong
+ *                material. docs §4 states this outright and the intensity
+ *                contract splits the two knobs on the same line — `grainOpacity`
+ *                rewrites --sk-noise-opacity, while changing the frequency means
+ *                emitting a different data URI.
+ *
+ *   blur       — not populated. This style has no backdrop blur of its own. The
+ *                sanctioned hybrid (docs §12: glass above, material below) puts
+ *                the blur on the glass layer, which is glassmorphism-ui's token,
+ *                not this one. Declaring a 0px here would claim the absence of
+ *                blur as a contract, and the absence is incidental rather than
+ *                diagnostic — unlike brutalism, where it is the whole style.
+ *
+ *   saturate   — not populated. Nothing here filters a backdrop.
+ *
+ *   accent-subtle — not populated. docs §4 tables one accent (walnut / brass)
+ *                and one danger. A low-emphasis tint of a material colour is not
+ *                a concept this style has: emphasis comes from elevation and
+ *                bevel depth, not from a paler fill.
+ *
+ *   font-display / font-mono — not populated. docs §4 tables one family stack.
+ *                Its note asks for "a real slab or grotesk for panel labels",
+ *                which is a recommendation to the project, not a second token.
+ *
+ *   weight     — not populated. docs §4 has no weight ramp; §5 sets 600 inline
+ *                on controls and labels.
+ *
+ *   tracking-tight — not populated. The style tracks labels OUT (0.06em,
+ *                uppercase); it never tracks in.
+ *
+ *   space-8    — not populated. The ramp docs §4 states is seven steps
+ *                (4/8/12/16/24/32/48), and inventing an eighth to fill the slot
+ *                would put a number in the token layer that no doc measured.
+ *
+ * Tokens with no home in the closed group vocabulary (§7.3), which therefore
+ * keep their `--sk-*` names and are consumed directly:
+ *
+ *   --sk-surface-hi / --sk-surface-lo   the top and bottom stops of the 3-stop
+ *                       face. They are not `surface-2` and `surface-3`: the
+ *                       vocabulary's surface ladder ASCENDS through planes,
+ *                       whereas these two are the light and shade of ONE plane.
+ *                       Mapping them onto the ladder would tell every consumer
+ *                       that a skeuomorphic button is three cards stacked.
+ *   --sk-well           the recessed fill. A hole, not a raised plane.
+ *   --sk-face           the composed 3-stop gradient.
+ *   --sk-shadow-contact / --sk-shadow-ambient / --sk-bevel-top /
+ *   --sk-bevel-bottom   the four shadow ATOMS. The vocabulary carries composed,
+ *                       ready-to-use shadows; these are the layers the compounds
+ *                       are built from, and they are what the intensity knob
+ *                       scales. They are load-bearing enough to keep their names.
+ *   --sk-press-inner / --sk-press-inner-2   the two pressed layers.
+ *   --sk-emboss / --sk-deboss   the letterpress text-shadows. `text-shadow` has
+ *                       no group; it is not a box shadow and not an elevation.
+ *   --sk-specular       the elliptical hotspot colour for curved parts.
+ *   --sk-noise          the grain data URI itself. See noise-freq above.
+ *   --sk-hairline       the 1px border WIDTH. The `border` group is colour only.
+ *   --sk-dur-panel      the fourth duration. The vocabulary's ladder is
+ *                       fast/base/slow and this style ships four rungs — press,
+ *                       hover, release, panel — so the longest keeps its name.
+ *   --sk-focus-ring     the composed additive ring. The `focus` group is
+ *                       colour/width/offset; the ring is a two-stop box-shadow
+ *                       and the composition is the style's, not the grammar's.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- ground and planes ---- */
+  --um-skeuomorphism-bg:              var(--sk-bg);
+  --um-skeuomorphism-surface-1:       var(--sk-surface);
+
+  /* ---- foreground ---- */
+  --um-skeuomorphism-ink:             var(--sk-ink);
+  --um-skeuomorphism-ink-muted:       var(--sk-ink-muted);
+  --um-skeuomorphism-ink-inverse:     var(--sk-ink-inverse);
+
+  /* ---- boundaries. Two genuinely different tokens in this style, which is why
+     the vocabulary has two slots. `border` is the decorative hairline and must
+     never be a control's only edge; `border-strong` is the control boundary and
+     is the token a11y-validate checks first, in both themes. ---- */
+  --um-skeuomorphism-border:          var(--sk-border);
+  --um-skeuomorphism-border-strong:   var(--sk-border-strong);
+
+  /* ---- action hues ---- */
+  --um-skeuomorphism-accent:          var(--sk-accent);
+  --um-skeuomorphism-accent-fg:       var(--sk-ink-inverse);
+  --um-skeuomorphism-danger:          var(--sk-danger);
+
+  /* ---- geometry. Radius is a material statement here: 4px machined metal,
+     10px moulded plastic, 16px rubber and soft goods. ---- */
+  --um-skeuomorphism-radius-sm:       var(--sk-r-sm);
+  --um-skeuomorphism-radius-md:       var(--sk-r-md);
+  --um-skeuomorphism-radius-lg:       var(--sk-r-lg);
+  --um-skeuomorphism-radius-pill:     var(--sk-r-pill);
+
+  /* ---- depth. elev-0 is the inverted stack: wells, inputs and tracks get the
+     highlight at the BOTTOM and the shade at the top, which is the one permitted
+     exception to the top-light rule and is what makes a hole read as a hole. ---- */
+  --um-skeuomorphism-elev-0:          var(--sk-elev-0);
+  --um-skeuomorphism-elev-1:          var(--sk-elev-1);
+  --um-skeuomorphism-elev-2:          var(--sk-elev-2);
+  --um-skeuomorphism-elev-3:          var(--sk-elev-3);
+
+  /* ---- the pressed state: outer shadows collapse, insets deepen ---- */
+  --um-skeuomorphism-shadow-press:    var(--sk-press-inner), var(--sk-press-inner-2);
+
+  /* ---- grain. Opacity only — see the header. ---- */
+  --um-skeuomorphism-noise-opacity:   var(--sk-noise-opacity);
+
+  /* ---- space ---- */
+  --um-skeuomorphism-space-1:         var(--sk-s-1);
+  --um-skeuomorphism-space-2:         var(--sk-s-2);
+  --um-skeuomorphism-space-3:         var(--sk-s-3);
+  --um-skeuomorphism-space-4:         var(--sk-s-4);
+  --um-skeuomorphism-space-5:         var(--sk-s-5);
+  --um-skeuomorphism-space-6:         var(--sk-s-6);
+  --um-skeuomorphism-space-7:         var(--sk-s-7);
+
+  /* ---- type ---- */
+  --um-skeuomorphism-font-body:       var(--sk-font);
+
+  --um-skeuomorphism-text-xs:         var(--sk-fs-100);
+  --um-skeuomorphism-text-sm:         var(--sk-fs-200);
+  --um-skeuomorphism-text-base:       var(--sk-fs-300);
+  --um-skeuomorphism-text-lg:         var(--sk-fs-400);
+  --um-skeuomorphism-text-xl:         var(--sk-fs-500);
+  --um-skeuomorphism-text-2xl:        var(--sk-fs-600);
+  --um-skeuomorphism-text-3xl:        var(--sk-fs-700);
+
+  --um-skeuomorphism-leading-tight:   var(--sk-lh-tight);
+  --um-skeuomorphism-leading-body:    var(--sk-lh-body);
+  --um-skeuomorphism-tracking-label:  var(--sk-label-tracking);
+
+  /* ---- motion. `enter` is the press — the entry into the pressed state — and
+     `exit` is the release, which is the only easing in the style permitted an
+     overshoot, and only under 4%: real plastic does not bounce. ---- */
+  --um-skeuomorphism-dur-fast:        var(--sk-dur-press);
+  --um-skeuomorphism-dur-base:        var(--sk-dur-hover);
+  --um-skeuomorphism-dur-slow:        var(--sk-dur-release);
+  --um-skeuomorphism-ease-standard:   var(--sk-ease-standard);
+  --um-skeuomorphism-ease-enter:      var(--sk-ease-press);
+  --um-skeuomorphism-ease-exit:       var(--sk-ease-release);
+
+  /* ---- focus and targets.
+     THE ONE EXCEPTION to "every alias is a var() reference". docs §4 ships the
+     focus indicator as --sk-focus-ring, a composed two-stop box-shadow whose
+     ring colour is written inline inside the compound; there is no --sk-focus-
+     color to point at. The grammar requires focus-color in all ten styles, so
+     the colour is stated here and re-stated in the two dark blocks below —
+     duplicated for the same reason tokens.css duplicates its dark values, so an
+     explicit toggle wins in both directions. The width comes from the token.
+     The offset is the 2px gap docs §6 specifies between the control edge and the
+     ring, which is the same 2px the width token carries.
+     The emitted rule uses `outline` — never box-shadow alone — because
+     forced-colors deletes a shadow and would leave the control with no visible
+     focus at all. ---- */
+  --um-skeuomorphism-focus-color:     #2b6cb0;
+  --um-skeuomorphism-focus-width:     var(--sk-focus-width);
+  --um-skeuomorphism-focus-offset:    2px;
+  --um-skeuomorphism-target-min:      var(--sk-target-min);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --um-skeuomorphism-focus-color:   #7cb0ff;
+  }
+}
+
+:root[data-theme="dark"] {
+  --um-skeuomorphism-focus-color:     #7cb0ff;
+}

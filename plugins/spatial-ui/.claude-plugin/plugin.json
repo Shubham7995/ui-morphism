@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "spatial-ui",
+  "displayName": "Spatial UI",
+  "version": "0.1.0",
+  "description": "Depth-first restyling in both dialects, native XR and the flat-screen depth idiom most teams actually ship — the translucent-depth language in which depth is GEOMETRY, not material. Emits a six-step translateZ ladder with the counter-scale that holds apparent size constant, puts the camera on exactly one stage element, converts toolbars to orbiters, adds reduced-motion-guarded pointer parallax, gives every movable or resizable panel a non-drag alternative, and self-audits every emitted surface against WCAG 2.2. Translucent panels with no camera are glassmorphism-ui (blurred) or liquid-glass-ui (refracting).",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/10-spatial-ui.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "spatial",
+    "spatial-computing",
+    "visionos",
+    "android-xr",
+    "depth",
+    "parallax",
+    "perspective",
+    "design-tokens"
+  ],
+  "dependencies": [
+    { "name": "ui-morphism-core", "version": "^0.1.0" }
+  ],
+  "metadata": {
+    "sourceDoc": "docs/10-spatial-ui.md",
+    "docSection": "13",
+    "lastResearched": "2026-08-08",
+    "statusIn2026": "emerging",
+    "a11yRisk": "high",
+    "perfCost": "medium"
+  }
+}

@@ -1,0 +1,221 @@
+/* ---------------------------------------------------------------------------
+ * Maximalism token layer.
+ *
+ * Source of truth: docs/06-maximalism.md §4, "Anatomy & Design Tokens". Every
+ * declaration below is reproduced verbatim from that section's CSS block,
+ * including its own comments; the only addition is this header. Do not edit
+ * values here — edit the doc, then re-copy.
+ *
+ * Two things in this file are load-bearing and are easy to "tidy" into a bug.
+ *
+ * 1. The dark block swaps paper and ink. `--max-paper` becomes near-black and
+ *    `--max-ink` becomes cream, so `--max-text-on-ink` describes text on a
+ *    CREAM surface in dark mode and must bind to a DEEP accent. Both ramps are
+ *    kept for that reason: the lifted accents for the dark ground, the `-deep`
+ *    pair for the cream surface. §7's dark contrast table is the working.
+ * 2. The loud-layer budget is not in here. Nothing in CSS can count the loud
+ *    layers in a viewport, so the cap of three is a review and lint constraint
+ *    enforced by scripts/max-scan.mjs and by ../../audit/references/checklist.md,
+ *    not a custom property. §4 says this in as many words.
+ *
+ * Intensity does not rewrite this file. It writes a small set of overrides onto
+ * the scene root — see ../references/tokens.md §4. Nothing in this file computes
+ * a contrast ratio; every ratio quoted in a comment is one docs/06-maximalism.md
+ * §4 and §7 state, and ui-morphism-core:a11y-validate is what decides pass or
+ * fail.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Ground & ink ---- */
+  --max-paper:        #FFF8E7;
+  --max-ink:          #0B0A0F;
+  --max-surface:      #FFFFFF;
+  --max-surface-2:    #F2ECDA;
+  --max-muted:        #4A4553;
+
+  /* ---- Chroma ---- */
+  --max-magenta:      #FF2E88;
+  --max-lime:         #C6FF00;
+  --max-cyan:         #00E5FF;
+  --max-violet:       #6C2BD9;
+  --max-cobalt:       #1B39FF;
+  --max-orange:       #FF6B00;
+
+  /* Role bindings: which accents are legal as TEXT on which ground */
+  --max-text-on-paper: var(--max-violet);   /* 6.64:1 */
+  --max-text-on-ink:   var(--max-lime);     /* 16.63:1 */
+  --max-accent-safe:   var(--max-magenta);  /* 5.63:1 on ink, 3.31:1 on paper */
+
+  /* ---- Strokes & radii ---- */
+  --max-stroke-1: 2px;
+  --max-stroke-2: 3px;
+  --max-stroke-3: 6px;
+  --max-r-0: 0px;
+  --max-r-1: 4px;
+  --max-r-2: 14px;
+  --max-r-3: 28px;
+  --max-r-pill: 999px;
+  --max-r-blob: 42% 58% 63% 37% / 51% 42% 58% 49%;
+
+  /* ---- Shadows (zero blur is the signature) ---- */
+  --max-shadow-hard:  6px 6px 0 var(--max-ink);
+  --max-shadow-press: 2px 2px 0 var(--max-ink);
+  --max-shadow-stack: 4px 4px 0 var(--max-magenta),
+                      8px 8px 0 var(--max-cyan),
+                      12px 12px 0 var(--max-ink);
+  --max-lift: -4px;
+
+  /* ---- Texture ---- */
+  --max-grain-opacity: 0.08;
+  --max-boost: saturate(1.35) contrast(1.06);
+  --max-blur-halo: 28px;
+  --max-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  /* ---- Type ---- */
+  --max-font-display: "Archivo Expanded", "Anton", system-ui, sans-serif;
+  --max-font-kicker:  "Archivo Condensed", "Oswald", sans-serif;
+  --max-font-body:    "Inter", system-ui, -apple-system, sans-serif;
+  --max-font-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --max-t-cap:  0.75rem;   /* 12px */
+  --max-t-sm:   0.875rem;  /* 14px */
+  --max-t-base: 1rem;      /* 16px */
+  --max-t-lg:   1.25rem;   /* 20px */
+  --max-t-xl:   1.75rem;   /* 28px */
+  --max-t-2xl:  2.625rem;  /* 42px */
+  --max-t-3xl:  4rem;      /* 64px */
+  --max-t-hero: clamp(3rem, 12vw, 11rem);
+
+  --max-track-display: -0.04em;
+  --max-track-kicker:  0.14em;
+  --max-leading-display: 0.9;
+  --max-leading-body:    1.55;
+
+  /* ---- Space & tilt ---- */
+  --max-s-1: 4px;
+  --max-s-2: 8px;
+  --max-s-3: 12px;
+  --max-s-4: 20px;
+  --max-s-5: 32px;
+  --max-s-6: 52px;
+  --max-s-7: 84px;
+  --max-tilt-s: -1.5deg;
+  --max-tilt-m: -3deg;
+  --max-tilt-l: 5deg;
+
+  /* ---- Motion ---- */
+  --max-dur-tap:     120ms;
+  --max-dur-hover:   220ms;
+  --max-dur-enter:   420ms;
+  --max-dur-marquee: 24s;
+  --max-ease-snap: cubic-bezier(0.2, 0.9, 0.1, 1.25);
+  --max-ease-out:  cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* ---- Focus ----
+     Two concentric rings. `--max-focus-ring` is the composite the :focus-visible
+     rule in §5 consumes as its `outline` shorthand; the outer halo has to be a
+     box-shadow because an element gets only one outline. */
+  --max-focus-inner:  var(--max-cyan);
+  --max-focus-outer:  var(--max-ink);
+  --max-focus-w:      4px;
+  --max-focus-offset: 2px;
+  --max-focus-ring:   var(--max-focus-w) solid var(--max-focus-inner);
+
+  /* ---- Targets ---- */
+  /* WCAG 2.2 SC 2.5.8 floor is 24px; this style needs more. Rotation means the
+     hit test runs against the transformed box, and the hard offset shadow
+     inflates the apparent one, so the area a user can reliably hit is smaller
+     than the area they see. Measure after transform, not before. */
+  --max-target-min: 44px;
+}
+
+/* ---------------------------------------------------------------------------
+   DARK MODE. Read this before editing it.
+
+   In dark mode `--max-paper` and `--max-ink` SWAP: "paper" becomes near-black
+   and "ink" becomes cream. That means `--max-text-on-ink` — a role token whose
+   whole job is to prevent illegal accent-on-ground pairings — now describes
+   text on a CREAM surface, and the lifted, high-luminance accents are exactly
+   the wrong answer for it. The lifted violet #B18CFF measures 2.46:1 on cream:
+   a hard 1.4.3 failure, on the one token §7 holds up as the mechanism that
+   makes those failures impossible.
+
+   So the dark block keeps BOTH ramps: the lifted accents for decoration and
+   text on the dark ground, and the original deep accents (suffix `-deep`) for
+   text on the cream surface. The role bindings pick from the correct ramp.
+   Full dark-mode contrast table in §7.
+
+   Structure follows the set-wide rule: light on bare `:root`, dark duplicated
+   under a guarded media query AND under `:root[data-theme="dark"]`, so an
+   explicit toggle beats the OS preference in both directions.
+--------------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --max-paper:     #0B0A0F;
+    --max-ink:       #FFF8E7;
+    --max-surface:   #17141F;
+    --max-surface-2: #221D2E;
+    --max-muted:     #B9B2C6;
+
+    /* Lifted ramp — legal as TEXT on the dark ground, decorative on cream. */
+    --max-magenta: #FF5BA0;   /* 6.82:1 on paper, 2.73:1 on ink */
+    --max-violet:  #B18CFF;   /* 7.58:1 on paper, 2.46:1 on ink — NOT text on ink */
+    --max-cobalt:  #7EA0FF;   /* 7.85:1 on paper, 2.37:1 on ink */
+    --max-orange:  #FF8A33;   /* 8.39:1 on paper, 2.22:1 on ink */
+
+    /* Deep ramp — the only accents that carry text on the cream ink surface. */
+    --max-violet-deep: #6C2BD9;  /* 6.64:1 on ink (cream) */
+    --max-cobalt-deep: #1B39FF;  /* 6.45:1 on ink (cream) */
+
+    --max-text-on-paper: var(--max-lime);         /* 16.63:1 on #0B0A0F */
+    --max-text-on-ink:   var(--max-violet-deep);  /* 6.64:1 on #FFF8E7 */
+    --max-accent-safe:   var(--max-magenta);      /* 6.82:1 on paper; on ink 2.73:1, decorative only */
+
+    --max-shadow-hard:  6px 6px 0 var(--max-ink);
+    --max-shadow-press: 2px 2px 0 var(--max-ink);
+    --max-shadow-stack: 4px 4px 0 var(--max-magenta),
+                        8px 8px 0 var(--max-cyan),
+                        12px 12px 0 var(--max-ink);
+
+    --max-grain-opacity: 0.05;   /* grain reads louder on dark; halve it */
+    --max-boost: saturate(1.18) contrast(1.02);
+  }
+}
+
+/* Explicit opt-in override, so a toggle beats the media query both ways.
+   This block redefines the full token list — setting only `color-scheme`
+   here (as an earlier draft did) meant the toggle changed nothing at all. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --max-paper:     #0B0A0F;
+  --max-ink:       #FFF8E7;
+  --max-surface:   #17141F;
+  --max-surface-2: #221D2E;
+  --max-muted:     #B9B2C6;
+
+  --max-magenta: #FF5BA0;
+  --max-violet:  #B18CFF;
+  --max-cobalt:  #7EA0FF;
+  --max-orange:  #FF8A33;
+
+  --max-violet-deep: #6C2BD9;
+  --max-cobalt-deep: #1B39FF;
+
+  --max-text-on-paper: var(--max-lime);
+  --max-text-on-ink:   var(--max-violet-deep);
+  --max-accent-safe:   var(--max-magenta);
+
+  --max-shadow-hard:  6px 6px 0 var(--max-ink);
+  --max-shadow-press: 2px 2px 0 var(--max-ink);
+  --max-shadow-stack: 4px 4px 0 var(--max-magenta),
+                      8px 8px 0 var(--max-cyan),
+                      12px 12px 0 var(--max-ink);
+
+  --max-grain-opacity: 0.05;
+  --max-boost: saturate(1.18) contrast(1.02);
+}
+
+:root[data-theme="light"] { color-scheme: light; }

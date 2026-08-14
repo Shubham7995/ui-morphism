@@ -2,8 +2,10 @@
 # Structural CI check for the ui-morphism plugin tree.
 #
 # ./docs/check-links.sh gates the research. Nothing gated the artefact built from
-# it: 120 unit tests, four plugin manifests, a marketplace and nine skills, none
-# of them run by anything. This is that gate.
+# it: the unit tests, the plugin manifests, the marketplace and the skills, none
+# of them run by anything. This is that gate. The tree it now covers is complete
+# — eleven plugins, ui-morphism-core plus one for each of the ten researched
+# styles, with 493 tests over 15 files and 23 skills.
 #
 #   0. preflight: the plugin set on disk, the marketplace catalog and the tables
 #      in this file all name the same plugins
@@ -21,8 +23,9 @@
 #      resolve every var() they read, and every literal they state is traceable
 #      to tokens.css or to the owning doc
 #   5. assets/intensity.contract.json against the owning doc §13: the default
-#      intensity, both endpoints of every knob, the knob set itself, and every
-#      context cap against a committed registry
+#      intensity, the knob set itself, both endpoints of every knob to whatever
+#      depth the doc's own table shape supports, and every context cap against a
+#      committed registry
 #   6. every marketplace source resolves to a directory that exists and holds a
 #      .claude-plugin/plugin.json, and every plugin.json name equals its
 #      marketplace entry name, exactly
@@ -83,6 +86,22 @@
 #     cap in the set whose number appears nowhere in its owning doc — §13 states
 #     no number and §9 states the constraint in prose. It is pinned by the
 #     registry in cap_of() below and is NOT doc-gated. See the note there.
+#   * skeuomorphism-ui's and minimalism-ui's knob ENDPOINT VALUES are not
+#     doc-gated. Docs 01 and 05 write their §13 endpoint columns as prose — "no
+#     shadows", "flat fill", "Dense, 12-24px section rhythm" — rather than as
+#     values, so there is no number on the doc side to compare. Check 5 gates
+#     their knob SET in both directions and says plainly that the endpoints are
+#     ungated. See knob_table_shape_of().
+#   * check 11's DOC-side figure pool is extracted from the whole doc, fenced
+#     code included, because docs do state real figures inside fences. That pool
+#     therefore also carries about a dozen values that are not contrast figures
+#     at all — font-weights, a scale() argument, some alphas — and any of them
+#     could source a plugin figure no doc actually claimed. The plugin side is
+#     stripped; the doc side is not. See the note at the check.
+#   * check 3 compares tokens.css against ONE registered ```css fence per doc.
+#     A second fence in a doc's §4 is registered in sec4_fences_of() and is not
+#     compared against anything — today that is doc 02's alternative OKLCH
+#     derivation, which no plugin ships.
 #
 # Exits non-zero once, after printing every offence in every category.
 
@@ -99,11 +118,18 @@ trap '[ -n "$tmpdir" ] && rm -rf "$tmpdir"' EXIT
 # ----------------------------------------------------------------- registry ---
 
 # The plugins built so far. docs/MARKETPLACE.md §8 plans eleven — core plus ten
-# styles — and README's "Built versus planned" records that four exist. This is
-# the number that makes growing the set a reviewed act rather than an accident,
-# exactly as DOC_COUNT does in check-links.sh. Changing it is the last step of
-# adding a plugin, not the first.
-PLUGIN_COUNT=4
+# styles — and the set is now complete: every one of the ten researched styles
+# has a plugin, and there is no eleventh style to add. This is the number that
+# makes growing the set a reviewed act rather than an accident, exactly as
+# DOC_COUNT does in check-links.sh. Changing it is the last step of adding a
+# plugin, not the first.
+#
+# The set being COMPLETE does not make this constant dead. It now guards the
+# other direction: a twelfth directory under plugins/ — a scratch copy, a
+# half-started style with no doc behind it, an accidental `cp -r` — fails the
+# preflight loudly rather than riding along. Verified by mutation: `mkdir
+# plugins/zzz-ui` prints PLUGINSET found 12 … expected 11 and exits non-zero.
+PLUGIN_COUNT=11
 
 # The doc whose §4 owns each plugin's token layer, and whose §13 owns its
 # intensity contract. A plugin with no entry here FAILS the preflight: this is a
@@ -115,11 +141,18 @@ PLUGIN_COUNT=4
 # used to hide an artefact from a fidelity check.
 doc_of() {
   case "$1" in
-    ui-morphism-core) echo '-'                        ;;
-    brutalism-ui)     echo 'docs/07-brutalism.md'     ;;
-    glassmorphism-ui) echo 'docs/03-glassmorphism.md' ;;
-    bento-grid-ui)    echo 'docs/09-bento-grid.md'    ;;
-    *)                echo ''                         ;;
+    ui-morphism-core)  echo '-'                         ;;
+    skeuomorphism-ui)  echo 'docs/01-skeuomorphism.md'  ;;
+    neumorphism-ui)    echo 'docs/02-neumorphism.md'    ;;
+    glassmorphism-ui)  echo 'docs/03-glassmorphism.md'  ;;
+    claymorphism-ui)   echo 'docs/04-claymorphism.md'   ;;
+    minimalism-ui)     echo 'docs/05-minimalism.md'     ;;
+    maximalism-ui)     echo 'docs/06-maximalism.md'     ;;
+    brutalism-ui)      echo 'docs/07-brutalism.md'      ;;
+    liquid-glass-ui)   echo 'docs/08-liquid-glass.md'   ;;
+    bento-grid-ui)     echo 'docs/09-bento-grid.md'     ;;
+    spatial-ui)        echo 'docs/10-spatial-ui.md'     ;;
+    *)                 echo ''                          ;;
   esac
 }
 
@@ -149,12 +182,21 @@ CORE='plugins/ui-morphism-core'
 # `test.skip`, or in a helper nothing calls; the executed count is the only one
 # that answers "did this suite actually assert anything".
 #
-# Measured today. The four-figure count on assign-spans is a full 0-100 sweep
-# asserting per step, not a typo.
+# Measured today, all fifteen files, on the complete eleven-plugin set. The two
+# four-figure counts are not typos: assign-spans sweeps 0-100 asserting per step,
+# and displacement-map asserts per pixel over a generated squircle profile.
 assert_baseline_of() {
   case "$1" in
     plugins/bento-grid-ui/skills/apply/scripts/assign-spans.test.mjs)            echo 6280 ;;
+    plugins/claymorphism-ui/skills/apply/scripts/clay-scan.test.mjs)             echo   69 ;;
     plugins/glassmorphism-ui/skills/apply/scripts/glass-scan.test.mjs)           echo   40 ;;
+    plugins/liquid-glass-ui/skills/apply/scripts/displacement-map.test.mjs)      echo 4233 ;;
+    plugins/liquid-glass-ui/skills/apply/scripts/lg-scan.test.mjs)               echo   70 ;;
+    plugins/maximalism-ui/skills/apply/scripts/max-scan.test.mjs)                echo  302 ;;
+    plugins/minimalism-ui/skills/apply/scripts/quantize-scan.test.mjs)           echo  167 ;;
+    plugins/neumorphism-ui/skills/apply/scripts/neu-scan.test.mjs)               echo  107 ;;
+    plugins/skeuomorphism-ui/skills/apply/scripts/skeuo-scan.test.mjs)           echo   87 ;;
+    plugins/spatial-ui/skills/apply/scripts/spatial-scan.test.mjs)               echo  123 ;;
     plugins/ui-morphism-core/skills/a11y-validate/scripts/audit-css.test.mjs)    echo   78 ;;
     plugins/ui-morphism-core/skills/a11y-validate/scripts/budget.test.mjs)       echo   46 ;;
     plugins/ui-morphism-core/skills/a11y-validate/scripts/contrast.test.mjs)     echo  274 ;;
@@ -167,7 +209,15 @@ assert_baseline_of() {
 # Every test file the baseline table names, so check 1 can fail on a DELETED
 # test file as well as on a shrunken one. Kept in step with assert_baseline_of().
 BASELINED_TESTS='plugins/bento-grid-ui/skills/apply/scripts/assign-spans.test.mjs
+plugins/claymorphism-ui/skills/apply/scripts/clay-scan.test.mjs
 plugins/glassmorphism-ui/skills/apply/scripts/glass-scan.test.mjs
+plugins/liquid-glass-ui/skills/apply/scripts/displacement-map.test.mjs
+plugins/liquid-glass-ui/skills/apply/scripts/lg-scan.test.mjs
+plugins/maximalism-ui/skills/apply/scripts/max-scan.test.mjs
+plugins/minimalism-ui/skills/apply/scripts/quantize-scan.test.mjs
+plugins/neumorphism-ui/skills/apply/scripts/neu-scan.test.mjs
+plugins/skeuomorphism-ui/skills/apply/scripts/skeuo-scan.test.mjs
+plugins/spatial-ui/skills/apply/scripts/spatial-scan.test.mjs
 plugins/ui-morphism-core/skills/a11y-validate/scripts/audit-css.test.mjs
 plugins/ui-morphism-core/skills/a11y-validate/scripts/budget.test.mjs
 plugins/ui-morphism-core/skills/a11y-validate/scripts/contrast.test.mjs
@@ -218,11 +268,164 @@ cap_of() {
       'tileCountBand=over-9	45	doc' ;;
     brutalism-ui) printf '%s\n' \
       'scope=product	45	doc' ;;
+    claymorphism-ui) printf '%s\n' \
+      'surface=data-dense	0	doc' \
+      'register=high-gravity	0	doc' ;;
     glassmorphism-ui) printf '%s\n' \
       'perfTarget=low-end	0	doc' \
       'backdropControl=arbitrary	0	doc' ;;
+    liquid-glass-ui) printf '%s\n' \
+      'backdropControl=arbitrary	45	doc' ;;
+    maximalism-ui) printf '%s\n' \
+      'surfaceType=app-accent	45	doc' ;;
+    minimalism-ui) printf '%s\n' \
+      'audience=novice	0	doc' \
+      'surfaceType=safety-critical	0	doc' ;;
+    neumorphism-ui) printf '%s\n' \
+      'contentDensity=dense	0	doc' ;;
+    skeuomorphism-ui) printf '%s\n' \
+      'surface=running-text	0	doc' \
+      'surface=data-table	0	doc' ;;
+    spatial-ui) printf '%s\n' \
+      'backdropControl=arbitrary	45	doc' ;;
     ui-morphism-core) ;;   # declares no style token layer and no contract
     *) return 1 ;;
+  esac
+}
+
+# WHERE EACH CONTRACT'S DEFAULT INTENSITY COMES FROM, for check 5.
+#
+#   doc      the owning doc's §13 inputs TABLE carries an `intensity | 0-100 | N`
+#            row, and check 5 compares the contract against N.
+#   derived  §13 states the 0-100 range without a default beside it, so there is
+#            no number on the doc side to compare. The contract must then carry a
+#            `defaultProvenance` string saying where its default came from, and
+#            check 5 asserts that field is present and non-empty.
+#
+# There is exactly one `derived` plugin. Doc 04 is the only doc in the set whose
+# §13 inputs are a bullet list rather than a table; claymorphism-ui's contract
+# records that its 50 comes from §13's own "Reference (intensity 50)" knob column
+# and from §5's React components, which default the prop to 50. Registered rather
+# than inferred, so a doc that stops stating a default cannot quietly become an
+# unchecked one — the previous revision printed NODEFAULT and passed.
+default_provenance_of() {
+  case "$1" in
+    claymorphism-ui) echo 'derived' ;;
+    *)               echo 'doc'     ;;
+  esac
+}
+
+# HOW EACH DOC ENCODES ITS §13 KNOB ENDPOINTS. Three shapes, and which one a doc
+# uses decides what check 5 can honestly assert about it.
+#
+#   oriented  the endpoint columns are labelled with an intensity — `Min
+#             (intensity 0)` / `Max (intensity 100)` — and hold the knob VALUE at
+#             that end. Fully gated: the contract value at 0 must appear in the
+#             Min cell and the value at 100 in the Max cell. Docs 06, 07, 10.
+#   range     a bare `Min` / `Max` pair, which states the numeric RANGE and says
+#             nothing about which end intensity 0 sits at. Gated as a SET, with
+#             the orientation pinned by knob_orientation_of() below. Docs 02, 03,
+#             04, 08, 09.
+#   prose     the endpoint columns DESCRIBE the behaviour at each end — "no
+#             shadows", "flat fill", "Dense, 12-24px section rhythm" — rather
+#             than stating the knob value, and the numeric range, where it is
+#             stated at all, sits in a separate `Range` column in a shape that
+#             differs per row. Docs 01 and 05.
+#
+# `prose` is the honest half of this table and the reason it exists. Docs 01 and
+# 05 head their knob columns `At 0` / `At 100` and `At intensity 0` / `At
+# intensity 100`, which the previous revision matched with nothing at all: both
+# plugins reported NOKNOBS, five EXTRAKNOBs apiece and zero endpoints compared,
+# and the run stayed green on them. Reading those headings now buys the KNOB SET
+# in both directions — a knob added, removed or renamed fails — which is real and
+# was not being had before. It does not buy the endpoint VALUES, because the doc
+# does not state them as values, and no parser can extract a number a doc did not
+# write. Those two contracts hold their endpoints by their own tests and by this
+# registration alone; the endpoints are declared ungated here rather than
+# reported as passing. Same treatment as the `nodoc` cap in cap_of().
+knob_table_shape_of() {
+  case "$1" in
+    docs/01-skeuomorphism.md) echo 'prose'    ;;
+    docs/05-minimalism.md)    echo 'prose'    ;;
+    docs/06-maximalism.md)    echo 'oriented' ;;
+    docs/07-brutalism.md)     echo 'oriented' ;;
+    docs/10-spatial-ui.md)    echo 'oriented' ;;
+    docs/02-neumorphism.md)   echo 'range'    ;;
+    docs/03-glassmorphism.md) echo 'range'    ;;
+    docs/04-claymorphism.md)  echo 'range'    ;;
+    docs/08-liquid-glass.md)  echo 'range'    ;;
+    docs/09-bento-grid.md)    echo 'range'    ;;
+    *)                        echo ''         ;;
+  esac
+}
+
+# COMMITTED KNOB ORIENTATION REGISTRY for the `range` docs, as
+# `<knob><TAB>at0-is-min` or `<knob><TAB>at0-is-max` — which of the doc's two
+# range cells the contract's intensity-0 value sits in. Deliberately NOT called
+# ascending/descending: doc 04 tables `squishAmount` as Min `scale(1.00)` and Max
+# `scale(0.93)`, so its "Min" column is the larger number, and a name implying
+# numeric order would be wrong on that row.
+#
+# A bare Min/Max pair states the range and not the direction, so the direction is
+# pinned here and re-asserted every run. Both ways: a knob that reverses fails,
+# and an entry naming a knob no range table compares fails. Without it the set
+# comparison would be a real loosening — `fillAlpha` running 0.55 → 0.95 instead
+# of 0.95 → 0.55 inverts the whole material, and against a range alone both
+# orientations satisfy the doc equally.
+#
+# The `oriented` and `prose` docs need no entries: the first gate direction from
+# the doc itself, the second gate no endpoint numbers at all.
+knob_orientation_of() {
+  case "$1" in
+    neumorphism-ui) printf '%s\n' \
+      'coverage	at0-is-min'        \
+      'shadowDelta	at0-is-min'    \
+      'distance	at0-is-min'        \
+      'hairlineOpacity	at0-is-min' \
+      'radius	at0-is-min' ;;
+    glassmorphism-ui) printf '%s\n' \
+      'fillAlpha	at0-is-min'      \
+      'blurRadius	at0-is-min'     \
+      'saturation	at0-is-min'     \
+      'borderAlpha	at0-is-min'    \
+      'grainOpacity	at0-is-min' ;;
+    claymorphism-ui) printf '%s\n' \
+      'radiusScale	at0-is-min'    \
+      'insetStrength	at0-is-min'  \
+      'dropDepth	at0-is-min'      \
+      'surfaceChroma	at0-is-min'  \
+      'squishAmount	at0-is-min' ;;
+    liquid-glass-ui) printf '%s\n' \
+      'refractionScale	at0-is-min' \
+      'fillAlpha	at0-is-max'      \
+      'blurRadius	at0-is-min'     \
+      'specularOpacity	at0-is-min' \
+      'saturation	at0-is-min' ;;
+    bento-grid-ui) printf '%s\n' \
+      'spanVariance	at0-is-min'   \
+      'radius	at0-is-min'         \
+      'surfaceDelta	at0-is-min'   \
+      'mediaBleed	at0-is-min'     \
+      'motion	at0-is-min' ;;
+    *) ;;
+  esac
+}
+
+# ENDPOINT CELLS AN `oriented` DOC STATES IN WORDS, as `<knob><TAB>0|100`.
+#
+# One row in the set. docs/10-spatial-ui.md tables `--sp-perspective` Min
+# (intensity 0) as "`none` (flat, shadows only)" — the CSS keyword, not a length
+# — while the contract resolves intensity 0 to a 4000px camera, which is the same
+# picture expressed in a property that has no `none`. There is no number in that
+# cell to compare against, and there is no defect either.
+#
+# Registered rather than tolerated, and adjudicated both ways: an entry whose
+# cell DOES state a number fails as stale, and an unregistered numberless cell in
+# an `oriented` table fails and asks to be looked at.
+endpoint_exempt_of() {
+  case "$1" in
+    spatial-ui) printf '%s\n' '--sp-perspective	0' ;;
+    *) ;;
   esac
 }
 
@@ -241,9 +444,15 @@ cap_of() {
 #                         the owning-doc test. Reword every figure and the check
 #                         certifies a corpus it never read — the exact defect
 #                         docs/check-contrast.py records in its own §5.
-ASSET_DECL_BASELINE=333
-SKILLREF_BASELINE=53
-FIGURE_BASELINE=113
+#
+# Re-measured on the complete eleven-plugin set. FIGURE_BASELINE moved for two
+# reasons at once and both are in the number: seven more plugins to trace, and
+# check 11 no longer counting `N : 1` out of fenced blocks and inline code spans
+# on the plugin side. That second change LOWERS the count by five against the
+# same tree, which is why this is a re-measurement and not an arithmetic bump.
+ASSET_DECL_BASELINE=1454
+SKILLREF_BASELINE=172
+FIGURE_BASELINE=485
 
 # A SKILL.md may name a path that belongs to ANOTHER plugin: core's a11y-validate
 # says "the style plugin's own `references/checklist.md`" and core's token-emit
@@ -346,21 +555,19 @@ mk_entries() {
   ' "$MARKETPLACE"
 }
 
-# The body of every ```css fence inside a doc's §4.
+# The body of the Nth ```css fence inside a doc's §4.
 sec4_css() {
-  awk '
+  awk -v want="${2:-1}" '
     /^## 4\. Anatomy & Design Tokens/ { sec = 1; next }
     sec && /^## /                     { exit }
     !sec                              { next }
-    /^```css/                         { fence = 1; next }
+    /^```css/                         { n++; fence = (n == want); next }
     fence && /^```/                   { fence = 0; next }
     fence
   ' "$1"
 }
 
-# How many ```css fences that §4 has. Exactly one is the contract — the
-# ready-to-paste custom-property block. Two would make "the §4 declarations"
-# ambiguous, and an ambiguous comparison is one that cannot run.
+# How many ```css fences that §4 has.
 sec4_fence_count() {
   awk '
     /^## 4\. Anatomy & Design Tokens/ { sec = 1; next }
@@ -368,6 +575,33 @@ sec4_fence_count() {
     sec && /^```css/                  { n++ }
     END                               { print n + 0 }
   ' "$1"
+}
+
+# COMMITTED §4 FENCE REGISTRY for check 3, as `<total fences>:<contract fence>`.
+#
+# The contract is ONE block — the ready-to-paste custom-property block that
+# tokens.css is a copy of. The previous revision asserted that by requiring §4 to
+# hold exactly one ```css fence, and that assertion was not a fact about the
+# corpus: docs/02-neumorphism.md §4 holds two, and the whole of neumorphism-ui's
+# token layer went unchecked with a single FENCES line to show for it.
+#
+# "Just take the first fence" would have fixed the symptom and thrown away the
+# guarantee, because a doc that grows a THIRD fence, or reorders its two, would
+# then be compared against the wrong block silently. So the fence count is
+# registered per doc and re-counted at runtime: a doc whose §4 fence count no
+# longer matches this table FAILS and asks to be looked at, exactly as it did
+# before, and the contract block is named rather than guessed.
+#
+# Nine of the ten docs put the ready-to-paste block alone in §4. Doc 02 puts a
+# second `css` fence AFTER it, under "### Deriving the two shadow colours from a
+# base" — an OKLCH derivation offered as an alternative to the hex block above
+# it, explicitly not the block to paste. Fence 1 is the contract there.
+sec4_fences_of() {
+  case "$1" in
+    docs/02-neumorphism.md) echo '2:1' ;;
+    docs/0[13456789]-*.md|docs/10-*.md) echo '1:1' ;;
+    *) echo '' ;;
+  esac
 }
 
 # The body of a doc's §13, used by check 5.
@@ -577,9 +811,10 @@ if [ "$reg_ok" -eq 1 ]; then
   echo "  ok"
 else
   echo "  ^ the plugin set or its registration changed. Growing it is a reviewed decision,"
-  echo "    not a side effect: update doc_of(), cap_of(), assert_baseline_of(), BASELINED_TESTS"
-  echo "    and PLUGIN_COUNT in this script, .claude-plugin/marketplace.json, and README's"
-  echo "    \"Built versus planned\" — then re-run."
+  echo "    not a side effect: update doc_of(), cap_of(), knob_table_shape_of(),"
+  echo "    knob_orientation_of(), default_provenance_of(), sec4_fences_of(),"
+  echo "    assert_baseline_of(), BASELINED_TESTS and PLUGIN_COUNT in this script,"
+  echo "    .claude-plugin/marketplace.json, and README's \"The complete set\" — then re-run."
 fi
 
 # --------------------------------------------------------------- 1. tests -----
@@ -832,14 +1067,22 @@ for d in "${plugin_dirs[@]}"; do
     fail=1; tok_ok=0; continue
   fi
 
+  reg=$(sec4_fences_of "$doc")
+  if [ -z "$reg" ]; then
+    printf '  NOFENCEREG %s has no entry in sec4_fences_of() — which of its §4 ```css blocks is the contract is unknown, so %s was NOT compared\n' \
+      "$doc" "$css"
+    fail=1; tok_ok=0; continue
+  fi
+  want_n=${reg%%:*}
+  want_i=${reg##*:}
   nf=$(sec4_fence_count "$doc")
-  if [ "$nf" -ne 1 ]; then
-    printf '  FENCES   %s §4 holds %s ```css block(s); the contract is exactly one ready-to-paste block, so %s was NOT compared\n' \
-      "$doc" "$nf" "$css"
+  if [ "$nf" -ne "$want_n" ]; then
+    printf '  FENCES   %s §4 holds %s ```css block(s); sec4_fences_of() registers %s, so %s was NOT compared\n' \
+      "$doc" "$nf" "$want_n" "$css"
     fail=1; tok_ok=0; continue
   fi
 
-  doc_side=$(sec4_css "$doc" | css_decls | sort)
+  doc_side=$(sec4_css "$doc" "$want_i" | css_decls | sort)
   css_side=$(css_decls < "$css" | sort)
   n_doc=$(printf '%s' "$doc_side" | grep -c .)
   n_css=$(printf '%s' "$css_side" | grep -c .)
@@ -1161,10 +1404,21 @@ else
 
     caps_file="$tmpdir/caps.$p.tsv"
     cap_of "$p" > "$caps_file" 2>/dev/null
+    orient_file="$tmpdir/orient.$p.tsv"
+    knob_orientation_of "$p" > "$orient_file" 2>/dev/null
+    exempt_file="$tmpdir/exempt.$p.tsv"
+    endpoint_exempt_of "$p" > "$exempt_file" 2>/dev/null
+    def_prov=$(default_provenance_of "$p")
+    shape=$(knob_table_shape_of "$doc")
+    if [ -z "$shape" ]; then
+      printf '  NOSHAPE  %s has no entry in knob_table_shape_of() — how its §13 encodes knob endpoints is unknown, so %s was NOT compared\n' \
+        "$doc" "$contract"
+      fail=1; cap_ok=0; continue
+    fi
 
     out=$(node -e '
       const fs = require("fs");
-      const [contractPath, secPath, capsPath, docName] = process.argv.slice(1);
+      const [contractPath, secPath, capsPath, docName, orientPath, defProv, exemptPath, shape] = process.argv.slice(1);
       const say = (k, m) => console.log(k + "\t" + m);
 
       let j;
@@ -1184,13 +1438,47 @@ else
         const i = c.findIndex((x) => /^0\s*[-–]\s*100$/.test(x));
         if (i >= 0 && c[i + 1] !== undefined) docDefault = nums(c[i + 1])[0];
       }
-      if (docDefault === undefined || docDefault === null) {
+      // Nine docs table their inputs and state the default beside the 0-100
+      // range. Doc 04 writes its §13 inputs as a BULLET LIST and names a range
+      // with no default, so there is nothing on that side to compare and the
+      // check said so and moved on — a NOTRUN that exited 0. Which of the two
+      // situations a plugin is in is registered rather than inferred, so a doc
+      // that stops stating a default fails instead of silently going unchecked.
+      if (defProv === "derived") {
+        if (docDefault !== undefined && docDefault !== null) {
+          say("DEFAULTPROV", docName + " §13 now states default intensity " + docDefault + ", but the registry records the default for this plugin as derived — re-register it as `doc`");
+        } else if (!String(j.defaultProvenance || "").trim()) {
+          say("NOPROV", docName + " §13 states no default intensity and the contract carries no `defaultProvenance` explaining where " + j.default + " came from");
+        } else {
+          say("note", "default intensity " + j.default + " is NOT stated by " + docName + " §13; it is derived, and the contract `defaultProvenance` field says from what");
+        }
+      } else if (docDefault === undefined || docDefault === null) {
         say("NODEFAULT", docName + " §13 states no `intensity | 0-100 | N` input row, so the contract default was NOT checked");
       } else if (j.default !== docDefault) {
         say("DEFAULT", "contract default is " + j.default + "; " + docName + " §13 says " + docDefault);
       }
 
       // --- the knob table -----------------------------------------------------
+      //
+      // The ten docs head this table five different ways, and the previous
+      // revision read only one of them. `Min` / `Max` matched docs 02, 03, 04,
+      // 08 and 09; docs 01 ("At 0" / "At 100") and 05 ("At intensity 0" / "At
+      // intensity 100") matched NOTHING, so skeuomorphism-ui and minimalism-ui
+      // reported NOKNOBS, five EXTRAKNOBs each and zero endpoints compared —
+      // two whole intensity contracts held against nothing.
+      //
+      // The five headings also carry two DIFFERENT MEANINGS, which is the part
+      // that mattered. A column labelled with an intensity — `Min (intensity
+      // 0)`, `At 0`, `At intensity 0` — states the value AT that endpoint, so
+      // the comparison is oriented. A bare `Min` / `Max` pair states the knob
+      // numeric RANGE and says nothing about which end intensity 0 sits at.
+      // Reading a bare `Min` as "the value at intensity 0" is what made
+      // the `fillAlpha` of liquid-glass-ui look broken: the contract runs 0.95 → 0.55
+      // because a glassier surface is a THINNER fill, and doc 08 tables that
+      // same pair as the range 0.55 .. 0.95. The contract was right and the
+      // check was wrong.
+      const ORIENT_LO = /^(min\s*\(\s*intensity\s*0\s*\)|at\s*(intensity\s*)?0)$/i;
+      const ORIENT_HI = /^(max\s*\(\s*intensity\s*100\s*\)|at\s*(intensity\s*)?100)$/i;
       let col = null; const docKnobs = {};
       for (const l of sec.split("\n")) {
         if (!/^\s*\|/.test(l)) { col = null; continue; }
@@ -1198,17 +1486,33 @@ else
         if (!c.length || /^:?-+:?$/.test(c[0])) continue;
         if (!col) {
           const k = c.findIndex((x) => /^knob\b/i.test(x));
-          const mn = c.findIndex((x) => /^min\b/i.test(x));
-          const mx = c.findIndex((x) => /^max\b/i.test(x));
-          if (k >= 0 && mn >= 0 && mx >= 0) col = { k, mn, mx };
+          if (k < 0) continue;
+          let lo = c.findIndex((x) => ORIENT_LO.test(x));
+          let hi = c.findIndex((x) => ORIENT_HI.test(x));
+          let oriented = true;
+          if (lo < 0 || hi < 0) {
+            lo = c.findIndex((x) => /^min\b/i.test(x));
+            hi = c.findIndex((x) => /^max\b/i.test(x));
+            oriented = false;
+          }
+          if (lo >= 0 && hi >= 0) col = { k, lo, hi, oriented };
           continue;
         }
-        // Doc 07 glosses two knob names in the cell: `chroma (accent saturation)`.
-        const name = (c[col.k] || "").replace(/\s*\(.*\)\s*$/, "").trim();
-        if (name) docKnobs[name] = { min: nums(c[col.mn] || ""), max: nums(c[col.mx] || "") };
+        // Doc 07 glosses in parentheses — `chroma (accent saturation)`; doc 05
+        // glosses after an em dash — `chromaBudget — max OKLCH chroma …`. Doc
+        // 10 states one knob as two custom properties joined by " / ", which is
+        // the real knob name and must survive both strips.
+        const name = (c[col.k] || "")
+          .replace(/\s*[—–]\s.*$/, "")
+          .replace(/\s*\(.*\)\s*$/, "")
+          .trim();
+        // `oriented` is carried on the ROW, not read back off `col` later: `col`
+        // is reset the moment the table ends, and reading it after the loop is
+        // how this check briefly reported NOKNOBS for all ten docs at once.
+        if (name) docKnobs[name] = { lo: nums(c[col.lo] || ""), hi: nums(c[col.hi] || ""), oriented: col.oriented };
       }
       if (!Object.keys(docKnobs).length) {
-        say("NOKNOBS", docName + " §13 yielded no Knob/Min/Max table — the knob curves were NOT checked");
+        say("NOKNOBS", docName + " §13 yielded no knob table this check can read — the knob curves were NOT checked");
       }
 
       const jKnobs = j.knobs || {};
@@ -1218,6 +1522,35 @@ else
       for (const n of Object.keys(docKnobs)) {
         if (!jKnobs[n]) say("MISSINGKNOB", docName + " §13 tables knob `" + n + "`; the contract declares no such knob");
       }
+
+      // The shape the doc was registered as must be the shape it still has. A
+      // doc that reformats its knob table from oriented columns to a bare range,
+      // or the other way, changes what this check is entitled to assert, and it
+      // may not do that silently.
+      const seenShape = Object.values(docKnobs).some((d) => d.oriented) ? "oriented" : "range";
+      if (shape !== "prose" && shape !== seenShape) {
+        say("SHAPE", docName + " §13 now heads its knob table as `" + seenShape + "`; knob_table_shape_of() registers `" + shape + "`");
+      }
+
+      // Orientation registry for the `range` docs, keyed knob -> at0-is-min |
+      // at0-is-max: which of the two range cells the intensity-0 value sits in.
+      const orient = new Map();
+      for (const l of fs.readFileSync(orientPath, "utf8").split("\n")) {
+        if (!l.trim()) continue;
+        const [k, dir] = l.split("\t");
+        orient.set(k, dir);
+      }
+      const orientSeen = new Set();
+
+      // Endpoint cells an `oriented` doc states in words rather than numbers.
+      const exempt = new Set();
+      for (const l of fs.readFileSync(exemptPath, "utf8").split("\n")) {
+        if (!l.trim()) continue;
+        const [k, x] = l.split("\t");
+        exempt.add(k + "@" + x);
+      }
+      const exemptSeen = new Set();
+
       let endpoints = 0;
       for (const [n, k] of Object.entries(jKnobs)) {
         const dk = docKnobs[n];
@@ -1229,17 +1562,61 @@ else
           }
           return x === 0 ? k.at0 : k.at100;
         };
-        for (const [x, want, label] of [[0, dk.min, "Min (intensity 0)"], [100, dk.max, "Max (intensity 100)"]]) {
-          const got = at(x);
-          if (got === undefined) {
-            say("NOENDPOINT", "knob `" + n + "` states no value at intensity " + x + " — neither an anchor at " + x + " nor at" + x);
+        const v0 = at(0), v100 = at(100);
+        if (v0 === undefined || v100 === undefined) {
+          say("NOENDPOINT", "knob `" + n + "` states no value at intensity " + (v0 === undefined ? 0 : 100) + " — no anchor there and no at0/at100");
+          continue;
+        }
+        if (shape === "prose") continue;   // knob names gated above; values are not gated at all
+        if (dk.oriented) {
+          for (const [x, got, want, label] of
+               [[0, v0, dk.lo, "Min (intensity 0)"], [100, v100, dk.hi, "Max (intensity 100)"]]) {
+            const key = n + "@" + x;
+            if (!want.length) {
+              if (exempt.has(key)) { exemptSeen.add(key); say("note", "knob `" + n + "` at intensity " + x + ": " + docName + " §13 states that end in words, not a number — registered in endpoint_exempt_of() and NOT doc-gated"); }
+              else say("NONUMBER", "knob `" + n + "` at intensity " + x + ": " + docName + " §13 " + label + " states no number, so " + got + " was NOT compared");
+              continue;
+            }
+            if (exempt.has(key)) {
+              exemptSeen.add(key);
+              say("STALEEXEMPT", "endpoint_exempt_of() registers `" + n + "` at intensity " + x + " as stated in words; " + docName + " §13 " + label + " now states " + want.join(" / "));
+              continue;
+            }
+            endpoints++;
+            if (!want.includes(got)) {
+              say("ENDPOINT", "knob `" + n + "` is " + got + " at intensity " + x + "; " + docName + " §13 " + label + " says " + want.join(" / "));
+            }
+          }
+        } else {
+          if (!dk.lo.length || !dk.hi.length) {
+            say("NONUMBER", "knob `" + n + "`: " + docName + " §13 tables no numeric Min/Max pair, so " + v0 + " → " + v100 + " was NOT compared");
             continue;
           }
-          endpoints++;
-          if (!want.includes(got)) {
-            say("ENDPOINT", "knob `" + n + "` is " + got + " at intensity " + x + "; " + docName + " §13 " + label + " says " + (want.join(" / ") || "<nothing>"));
+          endpoints += 2;
+          const loFirst = dk.lo.includes(v0) && dk.hi.includes(v100);
+          const hiFirst = dk.hi.includes(v0) && dk.lo.includes(v100);
+          if (!loFirst && !hiFirst) {
+            say("ENDPOINT", "knob `" + n + "` runs " + v0 + " → " + v100 + "; " + docName + " §13 tables the range " + dk.lo.join("/") + " .. " + dk.hi.join("/"));
+            continue;
+          }
+          const dir = loFirst ? "at0-is-min" : "at0-is-max";
+          orientSeen.add(n);
+          const reg = orient.get(n);
+          if (!reg) {
+            say("NOORIENT", "knob `" + n + "` runs " + dir + " (" + v0 + " → " + v100 + ") and " + docName + " §13 states only a range; register it in knob_orientation_of()");
+          } else if (reg !== dir) {
+            say("ORIENT", "knob `" + n + "` now runs " + dir + " (" + v0 + " → " + v100 + "); the committed registry says " + reg);
           }
         }
+      }
+      for (const n of orient.keys()) {
+        if (!orientSeen.has(n)) say("GONEORIENT", "knob_orientation_of() registers `" + n + "`; no range-tabled knob of that name was compared");
+      }
+      for (const key of exempt) {
+        if (!exemptSeen.has(key)) say("GONEEXEMPT", "endpoint_exempt_of() registers `" + key.replace("@", "` at intensity ") + "; no such knob endpoint was reached");
+      }
+      if (shape === "prose") {
+        say("note", docName + " §13 states its knob endpoints in words, not values (knob_table_shape_of: prose). The knob SET was gated in both directions; the endpoint numbers were NOT gated against the doc, because the doc does not state them");
       }
 
       // --- the context caps ---------------------------------------------------
@@ -1280,7 +1657,8 @@ else
         if (!seen.has(key)) say("GONECAP", "cap_of() registers `" + key + "`; the contract declares no such cap");
       }
       say("COUNT", String(endpoints));
-    ' "$contract" "$s13" "$caps_file" "$doc" 2>&1)
+      say("KNOBS", String(Object.keys(jKnobs).filter((n) => docKnobs[n]).length));
+    ' "$contract" "$s13" "$caps_file" "$doc" "$orient_file" "$def_prov" "$exempt_file" "$shape" 2>&1)
 
     if [ $? -ne 0 ]; then
       printf '  SCANFAIL %s: the contract scan itself failed\n' "$p"
@@ -1289,7 +1667,19 @@ else
     fi
 
     n=$(printf '%s\n' "$out" | awk -F'\t' '$1 == "COUNT" { print $2; exit }')
-    if [ -z "$n" ] || [ "$n" -eq 0 ]; then
+    nk=$(printf '%s\n' "$out" | awk -F'\t' '$1 == "KNOBS" { print $2; exit }')
+    if [ "$shape" = 'prose' ]; then
+      # Zero endpoints is the REGISTERED outcome here, not a silent skip. What
+      # must still be non-zero is the knob set: a prose doc whose knob table
+      # yields no knobs at all has told this check nothing.
+      if [ -z "$nk" ] || [ "$nk" -eq 0 ]; then
+        printf '  NOKNOBSET %s: %s §13 is registered `prose`, so no endpoint is gated — and not one knob NAME was compared either\n' "$p" "$doc"
+        fail=1; cap_ok=0
+      else
+        cap_files=$((cap_files + 1))
+        printf '  %-17s %s knob name(s) vs %s §13, endpoints NOT doc-gated (prose)\n' "$p" "$nk" "$doc"
+      fi
+    elif [ -z "$n" ] || [ "$n" -eq 0 ]; then
       printf '  NOENDPOINTS %s: not one knob endpoint was compared against %s §13\n' "$p" "$doc"
       fail=1; cap_ok=0
     else
@@ -1298,7 +1688,7 @@ else
     fi
     while IFS=$'\t' read -r kind msg; do
       case "${kind:-}" in
-        COUNT|'') ;;
+        COUNT|KNOBS|'') ;;
         note) printf '  note     %s: %s\n' "$p" "$msg" ;;
         *)    printf '  %-9s %s: %s\n' "$kind" "$p" "$msg"; fail=1; cap_ok=0 ;;
       esac
@@ -1748,12 +2138,46 @@ else
     const walk = (d) => fs.readdirSync(d, { withFileTypes: true })
       .flatMap((e) => e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]);
     const RE = /([0-9]+(?:\.[0-9]+)?)\s*:\s*1(?![0-9])/g;
-    const figs = (txt) => { const out = []; let m; RE.lastIndex = 0; while ((m = RE.exec(txt))) out.push(m[1]); return out; };
+
+    // CODE IS NOT A CONTRAST CLAIM, and `N : 1` inside it is not a figure. Four
+    // ternaries and one destructuring line in the plugin tree read as figures to
+    // a bare regex and were reported as fabricated ratios:
+    //
+    //   `travel(t) = round( t <= 60 ? t/60 : 1 + (t-60)/40 )`   → "60:1"
+    //   `.scaleEffect(pressed ? 0.97 : 1.0)`                    → "0.97:1"
+    //   `(shape === "pressed" ? 0.6 : 1)`                       → "0.6:1"
+    //   `at0: 1, at100: 5`                                      → "0:1"
+    //
+    // So the PLUGIN side — the side whose extraction decides what gets
+    // adjudicated, and where a false positive is a false failure — drops fenced
+    // blocks and inline code spans before matching.
+    //
+    // The DOC side is deliberately NOT stripped, and the asymmetry is the point.
+    // That side is a POOL OF SOURCES: a figure missing from it is a false
+    // failure, and the docs do state real figures inside fences — doc 07 line
+    // 285 argues the `#848077` composite at 3.66:1 inside a fenced walk-through,
+    // and brutalism-ui restates that figure in four files. Stripping there broke
+    // all four. Being permissive on the source side costs only sensitivity: the
+    // pool carries about a dozen values that are not figures at all (300, 400
+    // and 500 out of font-weights, 0.97 out of a scale() call, some alphas), and
+    // any of them could "source" a plugin figure no doc actually claimed. That
+    // is a real hole, it is smaller than the false failures the symmetric
+    // version caused, and it is recorded in the ungated list in the header.
+    const codeless = (txt) => {
+      let out = "", fence = false;
+      for (const line of txt.split("\n")) {
+        if (/^\s*```/.test(line)) { fence = !fence; continue; }
+        if (!fence) out += line.replace(/`[^`]*`/g, " ") + "\n";
+      }
+      return out;
+    };
+    const rawFigs = (txt) => { const out = []; let m; RE.lastIndex = 0; while ((m = RE.exec(txt))) out.push(m[1]); return out; };
+    const figs = (txt) => rawFigs(codeless(txt));
     const dp = (s) => (s.split(".")[1] || "").length;
 
     const docFigs = {}; const all = [];
     for (const f of fs.readdirSync("docs").filter((x) => x.endsWith(".md"))) {
-      docFigs["docs/" + f] = figs(fs.readFileSync("docs/" + f, "utf8"));
+      docFigs["docs/" + f] = rawFigs(fs.readFileSync("docs/" + f, "utf8"));
       all.push(...docFigs["docs/" + f]);
     }
     if (!all.length) { console.log("NODOCFIGS\t\t\t"); process.exit(0); }

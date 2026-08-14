@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "liquid-glass-ui",
+  "displayName": "Apple Liquid Glass UI",
+  "version": "0.1.0",
+  "description": "Apple Liquid Glass on the web and on Apple platforms — the translucent-depth language in which the backdrop is GEOMETRICALLY DISPLACED, not merely blurred. Generates the squircle-profile displacement map as an inlined data URI, emits the three-tier @supports ladder (SVG refraction, blur-only, opaque), holds the fill-alpha floor that keeps text legible over a backdrop you do not control, refuses nested glass outright because the material cannot sample itself, and ships the SwiftUI path where the OS renders it for you. Blur with no displacement is glassmorphism-ui; panels at translateZ under a camera are spatial-ui.",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/08-liquid-glass.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "liquid-glass",
+    "ios-26",
+    "refraction",
+    "displacement-map",
+    "specular",
+    "backdrop-filter",
+    "swiftui",
+    "design-tokens",
+    "accessibility"
+  ],
+  "dependencies": [
+    { "name": "ui-morphism-core", "version": "^0.1.0" }
+  ],
+  "metadata": {
+    "sourceDoc": "docs/08-liquid-glass.md",
+    "docSection": "13",
+    "lastResearched": "2026-08-08",
+    "statusIn2026": "dominant",
+    "a11yRisk": "high",
+    "perfCost": "high"
+  }
+}

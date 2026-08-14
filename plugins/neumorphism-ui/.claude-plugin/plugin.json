@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "neumorphism-ui",
+  "displayName": "Neumorphism & Soft UI",
+  "version": "0.1.0",
+  "description": "Same-hue soft-extrusion restyling — the soft-and-physical language in which the surface is THE SAME COLOUR AS THE PAGE GROUND, with no texture and no material. Emits a neumorphic token layer with a five-rung dual-shadow ramp at blur = 2 x distance, rewrites controls to extruded and pressed surfaces, and ships the clean-neumorphism variant: a real 3:1 hairline carries the boundary because no same-hue shadow pair can, and a forced-colors block restores the structure box-shadow deletion removes. A surface with its own pastel fill is claymorphism-ui; one imitating a material is skeuomorphism-ui.",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/02-neumorphism.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "neumorphism",
+    "neomorphism",
+    "soft-ui",
+    "new-skeuomorphism",
+    "extruded",
+    "inner-shadow",
+    "design-tokens"
+  ],
+  "dependencies": [
+    { "name": "ui-morphism-core", "version": "^0.1.0" }
+  ],
+  "metadata": {
+    "sourceDoc": "docs/02-neumorphism.md",
+    "docSection": "13",
+    "lastResearched": "2026-08-08",
+    "statusIn2026": "accent-only",
+    "a11yRisk": "high",
+    "perfCost": "medium"
+  }
+}

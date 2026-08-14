@@ -1,0 +1,269 @@
+/* ---------------------------------------------------------------------------
+ * Maximalism — Tailwind v4 @theme mirror of assets/tokens.css.
+ *
+ * Source of truth: docs/06-maximalism.md §5, "Tailwind CSS v4". Every value
+ * below is the value assets/tokens.css declares (docs §4); only the custom
+ * property NAMES change, because Tailwind v4 derives its utilities from
+ * namespaced theme variables.
+ *
+ * Two deliberate departures from the doc's §5 listing, both about names and
+ * neither about values:
+ *
+ *   1. Every name is prefixed `max-`, so the utilities read `bg-max-paper`,
+ *      `text-max-hero`, `shadow-max-hard`. §5 writes `--color-paper` and
+ *      `--color-ink`; unprefixed, those collide with any project that already
+ *      owns a paper or an ink, and the collision is silent.
+ *   2. `--font-max-body` carries tokens.css's full stack, which includes
+ *      `-apple-system`. §5's Tailwind listing drops it. The mirror's whole
+ *      claim is that it agrees with tokens.css, so tokens.css wins.
+ *
+ * Three invariants, all enforced by ui-morphism-core:token-emit:
+ *   1. @theme is never nested inside @media, @layer, or any other at-rule.
+ *   2. Theme switching happens outside @theme, on ordinary selectors — which is
+ *      why the dark blocks below sit on their own.
+ *   3. The dark values are declared TWICE, under the guarded media query and
+ *      under :root[data-theme="dark"], so a system preference and an explicit
+ *      toggle both win, in both directions.
+ *
+ * The dark block carries BOTH accent ramps. The lifted ramp is legal as text on
+ * the dark ground and decorative on the cream surface; the `-deep` pair is the
+ * only one that carries text on cream. docs/06-maximalism.md §7's dark contrast
+ * table is the working, and the role bindings — not the raw accents — are what
+ * a component should reach for.
+ *
+ * Composite values (the shadows, the marquee animation, the focus ring) are
+ * written as var() references rather than repeated literals, so there is one
+ * place each number lives.
+ * ------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+@theme {
+  /* colors -> bg-max-*, text-max-*, border-max-* */
+  --color-max-paper:     #FFF8E7;
+  --color-max-ink:       #0B0A0F;
+  --color-max-surface:   #FFFFFF;
+  --color-max-surface-2: #F2ECDA;
+  --color-max-muted:     #4A4553;
+  --color-max-magenta:   #FF2E88;
+  --color-max-lime:      #C6FF00;
+  --color-max-cyan:      #00E5FF;
+  --color-max-violet:    #6C2BD9;
+  --color-max-cobalt:    #1B39FF;
+  --color-max-orange:    #FF6B00;
+
+  /* Role bindings. These, not the raw accents, are what text uses: half the
+     palette is decoration-only on any given ground, and which half flips
+     between light and dark. Rebound in both dark blocks below. */
+  --color-max-text-on-paper: var(--color-max-violet);
+  --color-max-text-on-ink:   var(--color-max-lime);
+  --color-max-accent-safe:   var(--color-max-magenta);
+
+  /* radius -> rounded-max-*; the blob is the sticker shape */
+  --radius-max-0:    0px;
+  --radius-max-1:    4px;
+  --radius-max-2:    14px;
+  --radius-max-3:    28px;
+  --radius-max-pill: 999px;
+  --radius-max-blob: 42% 58% 63% 37% / 51% 42% 58% 49%;
+
+  /* zero-blur shadows -> shadow-max-hard, shadow-max-stack, shadow-max-press */
+  --shadow-max-hard:  6px 6px 0 var(--color-max-ink);
+  --shadow-max-press: 2px 2px 0 var(--color-max-ink);
+  --shadow-max-stack: 4px 4px 0 var(--color-max-magenta),
+                      8px 8px 0 var(--color-max-cyan),
+                      12px 12px 0 var(--color-max-ink);
+
+  /* strokes -> border-max-1 / -2 / -3 via border-[length] utilities */
+  --stroke-max-1: 2px;
+  --stroke-max-2: 3px;
+  --stroke-max-3: 6px;
+
+  /* type -> font-max-display / -kicker / -body / -mono */
+  --font-max-display: "Archivo Expanded", "Anton", system-ui, sans-serif;
+  --font-max-kicker:  "Archivo Condensed", "Oswald", sans-serif;
+  --font-max-body:    "Inter", system-ui, -apple-system, sans-serif;
+  --font-max-mono:    "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --text-max-cap:  0.75rem;
+  --text-max-sm:   0.875rem;
+  --text-max-base: 1rem;
+  --text-max-lg:   1.25rem;
+  --text-max-xl:   1.75rem;
+  --text-max-2xl:  2.625rem;
+  --text-max-3xl:  4rem;
+  --text-max-hero: clamp(3rem, 12vw, 11rem);
+  --text-max-hero--line-height:    0.9;
+  --text-max-hero--letter-spacing: -0.04em;
+
+  --tracking-max-display: -0.04em;
+  --tracking-max-kicker:  0.14em;
+  --leading-max-display:  0.9;
+  --leading-max-body:     1.55;
+
+  /* space -> p-max-*, gap-max-* */
+  --spacing-max-1: 4px;
+  --spacing-max-2: 8px;
+  --spacing-max-3: 12px;
+  --spacing-max-4: 20px;
+  --spacing-max-5: 32px;
+  --spacing-max-6: 52px;
+  --spacing-max-7: 84px;
+
+  /* tilt -> rotate-max-s / -m / -l */
+  --rotate-max-s: -1.5deg;
+  --rotate-max-m: -3deg;
+  --rotate-max-l: 5deg;
+
+  /* motion. Ambient loops are opt-out at the source; see the reduced-motion
+     block at the foot of this file. */
+  --dur-max-tap:     120ms;
+  --dur-max-hover:   220ms;
+  --dur-max-enter:   420ms;
+  --dur-max-marquee: 24s;
+  --ease-max-snap: cubic-bezier(0.2, 0.9, 0.1, 1.25);
+  --ease-max-out:  cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-max-marquee: max-scroll var(--dur-max-marquee) linear infinite;
+
+  @keyframes max-scroll {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(-50%, 0, 0); }
+  }
+
+  /* texture. The grain is the inline SVG feTurbulence data URI from §4 — never
+     a raster tile, at any intensity. */
+  --grain-max-opacity: 0.08;
+  --grain-max-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  --boost-max: saturate(1.35) contrast(1.06);
+  --blur-max-halo: 28px;
+
+  /* focus and targets */
+  --color-max-focus-inner: var(--color-max-cyan);
+  --color-max-focus-outer: var(--color-max-ink);
+  --focus-max-w:      4px;
+  --focus-max-offset: 2px;
+  --target-max-min:   44px;
+}
+
+/* Dark mode, in ui-morphism-core's emission shape. Paper and ink SWAP: paper
+   becomes near-black and ink becomes cream. That is why `--color-max-text-on-ink`
+   rebinds to the DEEP violet here and not to the lifted one — the lifted ramp is
+   decoration on cream, and binding a role token to it is the failure §7 exists
+   to prevent. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-max-paper:     #0B0A0F;
+    --color-max-ink:       #FFF8E7;
+    --color-max-surface:   #17141F;
+    --color-max-surface-2: #221D2E;
+    --color-max-muted:     #B9B2C6;
+
+    --color-max-magenta: #FF5BA0;
+    --color-max-violet:  #B18CFF;
+    --color-max-cobalt:  #7EA0FF;
+    --color-max-orange:  #FF8A33;
+
+    --color-max-violet-deep: #6C2BD9;
+    --color-max-cobalt-deep: #1B39FF;
+
+    --color-max-text-on-paper: var(--color-max-lime);
+    --color-max-text-on-ink:   var(--color-max-violet-deep);
+    --color-max-accent-safe:   var(--color-max-magenta);
+
+    --grain-max-opacity: 0.05;
+    --boost-max: saturate(1.18) contrast(1.02);
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-max-paper:     #0B0A0F;
+  --color-max-ink:       #FFF8E7;
+  --color-max-surface:   #17141F;
+  --color-max-surface-2: #221D2E;
+  --color-max-muted:     #B9B2C6;
+
+  --color-max-magenta: #FF5BA0;
+  --color-max-violet:  #B18CFF;
+  --color-max-cobalt:  #7EA0FF;
+  --color-max-orange:  #FF8A33;
+
+  --color-max-violet-deep: #6C2BD9;
+  --color-max-cobalt-deep: #1B39FF;
+
+  --color-max-text-on-paper: var(--color-max-lime);
+  --color-max-text-on-ink:   var(--color-max-violet-deep);
+  --color-max-accent-safe:   var(--color-max-magenta);
+
+  --grain-max-opacity: 0.05;
+  --boost-max: saturate(1.18) contrast(1.02);
+}
+
+/* Tailwind's class variant, for projects that toggle dark mode with a class.
+   It rides alongside the two blocks above; it does not replace them, because a
+   class-only theme never responds to the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-max-paper:     #0B0A0F;
+  --color-max-ink:       #FFF8E7;
+  --color-max-surface:   #17141F;
+  --color-max-surface-2: #221D2E;
+  --color-max-muted:     #B9B2C6;
+
+  --color-max-magenta: #FF5BA0;
+  --color-max-violet:  #B18CFF;
+  --color-max-cobalt:  #7EA0FF;
+  --color-max-orange:  #FF8A33;
+
+  --color-max-violet-deep: #6C2BD9;
+  --color-max-cobalt-deep: #1B39FF;
+
+  --color-max-text-on-paper: var(--color-max-lime);
+  --color-max-text-on-ink:   var(--color-max-violet-deep);
+  --color-max-accent-safe:   var(--color-max-magenta);
+
+  --grain-max-opacity: 0.05;
+  --boost-max: saturate(1.18) contrast(1.02);
+}
+
+/* Custom utilities — v4 @utility, no plugin required. */
+@utility max-grain {
+  background-image: var(--grain-max-image);
+  background-size: 160px 160px;
+  mix-blend-mode: multiply;
+  opacity: var(--grain-max-opacity);
+  pointer-events: none;
+}
+
+@utility max-halftone {
+  background-image: radial-gradient(circle at 1px 1px,
+    color-mix(in oklab, var(--color-max-ink) 22%, transparent) 1.5px, transparent 1.6px);
+  background-size: 18px 18px;
+}
+
+@utility max-outline-type {
+  -webkit-text-stroke: 3px var(--color-max-ink);
+  color: transparent;
+  paint-order: stroke fill;
+}
+
+/* The double ring. One outline plus one box-shadow halo, because an element
+   gets only one outline and a single ring disappears the moment focus lands on
+   an element sitting on that same colour. */
+@utility max-focus-loud {
+  &:focus-visible {
+    outline: var(--focus-max-w) solid var(--color-max-focus-inner);
+    outline-offset: var(--focus-max-offset);
+    box-shadow: 0 0 0 8px var(--color-max-focus-outer);
+  }
+}
+
+/* Ambient motion is opt-out at the source, not per component. Calm mode is the
+   same switch under user control, and it is required whenever any infinite
+   animation ships — SC 2.2.2 is Level A and the OS preference is not a
+   substitute for an in-page control. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-max-marquee { animation: none !important; }
+}
+
+[data-calm="true"] .animate-max-marquee { animation: none !important; }

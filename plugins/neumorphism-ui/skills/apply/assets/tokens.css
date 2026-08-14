@@ -1,0 +1,138 @@
+/* ---------------------------------------------------------------------------
+ * Neumorphism token layer.
+ *
+ * Source of truth: docs/02-neumorphism.md §4, "Ready-to-paste custom
+ * properties". The declarations below are reproduced verbatim from that block;
+ * the only addition is this header. Do not edit values here — edit the doc,
+ * then re-copy.
+ *
+ * §4 carries a SECOND ```css block, the perceptual OKLCH derivation of the two
+ * shadow colours. It is deliberately not concatenated here: it re-declares
+ * --nm-surface, --nm-shadow-light and --nm-shadow-dark as oklch() and would
+ * override every hex value above it. The doc presents the two as alternatives —
+ * "use a perceptual, additive derivation instead", and "keep the hex block
+ * above as the @supports not (color: oklch(0 0 0)) fallback". This file is the
+ * hex block, which is the fallback and the default; the derivation is quoted in
+ * ../references/tokens.md §3 for the theme author who wants to drive both
+ * shadow colours off --nm-delta.
+ *
+ * Every contrast figure in the comments below is the doc's own, computed
+ * against the surface of the same mode. Nothing in this plugin computes a
+ * ratio: ui-morphism-core:a11y-validate is the single implementation.
+ *
+ * The two shadow colours are 1.23:1 and 1.59:1 against the light surface and
+ * 1.37:1 and 1.30:1 against the dark one. They are decoration. --nm-hairline
+ * is the boundary that satisfies SC 1.4.11, and it is not optional.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- surface ---- */
+  --nm-surface:        #e6e7ee;
+  --nm-surface-sunken: #dfe0e8;   /* only for large wells, never for controls */
+  --nm-shadow-dark:    #b8b9be;
+  --nm-shadow-light:   #ffffff;
+
+  /* ---- ink ---- */
+  --nm-text:      #33364d;        /*  9.59:1 on surface  */
+  --nm-text-mut:  #5a5e77;        /*  5.16:1 on surface  */
+  --nm-hairline:  #7c7f93;        /*  3.20:1 on surface  */
+  --nm-accent:    #4c5bd4;        /*  4.54:1 on surface  */
+  --nm-accent-ink:#ffffff;
+  --nm-danger:    #b3261e;
+
+  /* ---- geometry ---- */
+  --nm-d-xs: 3px;  --nm-b-xs: 6px;
+  --nm-d-sm: 5px;  --nm-b-sm: 10px;
+  --nm-d-md: 8px;  --nm-b-md: 16px;
+  --nm-d-lg: 14px; --nm-b-lg: 28px;
+  --nm-d-xl: 20px; --nm-b-xl: 40px;
+
+  --nm-r-ctl:  14px;
+  --nm-r-card: 24px;
+  --nm-r-slab: 36px;
+  --nm-r-pill: 999px;
+
+  /* ---- composed shadows ---- */
+  --nm-raised-sm:
+     var(--nm-d-sm)  var(--nm-d-sm)  var(--nm-b-sm) var(--nm-shadow-dark),
+    calc(var(--nm-d-sm) * -1) calc(var(--nm-d-sm) * -1) var(--nm-b-sm) var(--nm-shadow-light);
+  --nm-raised-md:
+     var(--nm-d-md)  var(--nm-d-md)  var(--nm-b-md) var(--nm-shadow-dark),
+    calc(var(--nm-d-md) * -1) calc(var(--nm-d-md) * -1) var(--nm-b-md) var(--nm-shadow-light);
+  --nm-raised-lg:
+     var(--nm-d-lg)  var(--nm-d-lg)  var(--nm-b-lg) var(--nm-shadow-dark),
+    calc(var(--nm-d-lg) * -1) calc(var(--nm-d-lg) * -1) var(--nm-b-lg) var(--nm-shadow-light);
+  --nm-pressed-sm:
+    inset 3px 3px 6px var(--nm-shadow-dark),
+    inset -3px -3px 6px var(--nm-shadow-light);
+  --nm-pressed-md:
+    inset 5px 5px 10px var(--nm-shadow-dark),
+    inset -5px -5px 10px var(--nm-shadow-light);
+  --nm-flat: 0 0 0 0 transparent;
+
+  /* ---- surface gradients ---- */
+  --nm-convex:  linear-gradient(145deg, #f6f7ff, #cfd0d6);
+  --nm-concave: linear-gradient(145deg, #cfd0d6, #f6f7ff);
+
+  /* ---- motion ---- */
+  --nm-t-press: 120ms;
+  --nm-t-hover: 180ms;
+  --nm-t-morph: 240ms;
+  --nm-e-in:    cubic-bezier(0.4, 0, 1, 1);
+  --nm-e-out:   cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* ---- hit targets ---- */
+  --nm-target-min: 44px;   /* SC 2.5.8 floor is 24px; 44 because the boundary
+                              is 1.2-1.7:1 and cannot be aimed at precisely */
+
+  /* ---- type & space ---- */
+  --nm-font: "Inter", "SF Pro Text", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nm-fs-100: 0.75rem; --nm-fs-200: 0.875rem; --nm-fs-300: 1rem;
+  --nm-fs-400: 1.25rem; --nm-fs-500: 1.5rem;  --nm-fs-600: 2rem; --nm-fs-700: 2.75rem;
+  --nm-sp-1: 4px;  --nm-sp-2: 8px;  --nm-sp-3: 12px; --nm-sp-4: 16px;
+  --nm-sp-5: 24px; --nm-sp-6: 32px; --nm-sp-7: 48px; --nm-sp-8: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --nm-surface:        #2a2e39;
+    --nm-surface-sunken: #24272f;
+    --nm-shadow-dark:    #17191f;   /* 1.30:1 */
+    --nm-shadow-light:   #3d4353;   /* 1.37:1 */
+
+    --nm-text:      #e8eaf2;        /* 11.29:1 */
+    --nm-text-mut:  #a7adc2;        /*  6.07:1 */
+    --nm-hairline:  #767d92;        /*  3.31:1 */
+    --nm-accent:    #8f9dff;        /*  5.45:1 */
+    --nm-accent-ink:#141722;
+    --nm-danger:    #ff9a92;
+
+    --nm-convex:  linear-gradient(145deg, #333845, #22252e);
+    --nm-concave: linear-gradient(145deg, #22252e, #333845);
+  }
+}
+
+:root[data-theme="dark"] {
+  --nm-surface:        #2a2e39;
+  --nm-surface-sunken: #24272f;
+  --nm-shadow-dark:    #17191f;
+  --nm-shadow-light:   #3d4353;
+  --nm-text:      #e8eaf2;
+  --nm-text-mut:  #a7adc2;
+  --nm-hairline:  #767d92;
+  --nm-accent:    #8f9dff;
+  --nm-accent-ink:#141722;
+  --nm-danger:    #ff9a92;
+  --nm-convex:  linear-gradient(145deg, #333845, #22252e);
+  --nm-concave: linear-gradient(145deg, #22252e, #333845);
+}
+
+body {
+  background: var(--nm-surface);
+  color: var(--nm-text);
+  font-family: var(--nm-font);
+  font-size: var(--nm-fs-300);
+  line-height: 1.5;
+}

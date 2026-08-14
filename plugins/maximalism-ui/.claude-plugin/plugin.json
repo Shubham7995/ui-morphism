@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "maximalism-ui",
+  "displayName": "Maximalism UI",
+  "version": "0.1.0",
+  "description": "Maximalist restyling — loud is necessary but not sufficient: this language STACKS LAYERS. At most three loud layers (patterned ground, grain, one ornament) over an opaque content plane, role-bound accents that swap ramps between light and dark, oversized display type on a four-family budget, zero-blur chromatic shadows, a Calm mode toggle for WCAG 2.2.2, and a self-audit of every emitted pair against WCAG 2.2. One saturated bordered plane with no layer stack is brutalism-ui.",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/06-maximalism.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "maximalism",
+    "dopamine-design",
+    "collage",
+    "bold-typography",
+    "anti-design",
+    "brand",
+    "design-tokens"
+  ],
+  "dependencies": [
+    { "name": "ui-morphism-core", "version": "^0.1.0" }
+  ],
+  "metadata": {
+    "sourceDoc": "docs/06-maximalism.md",
+    "docSection": "13",
+    "lastResearched": "2026-08-08",
+    "statusIn2026": "mainstream",
+    "a11yRisk": "high",
+    "perfCost": "high"
+  }
+}

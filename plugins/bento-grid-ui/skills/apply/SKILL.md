@@ -3,22 +3,19 @@ name: apply
 description: >-
   Use when the user NAMES the pattern — "bento", "bento box layout", "Apple-style feature
   grid" — or describes its concrete moves: an asymmetric or varied-span tile grid where size
-  encodes importance on a locked gutter, turning a list of features or stats into
-  differently sized tiles, assigning spans by content weight, or fixing reading order
-  against `grid-auto-flow: dense`. This skill
-  restructures markup and layout; it does not restyle surfaces. ui-morphism is descriptive
-  and plural — one named language with measured tokens and a stated when-not-to-use — not a
-  design-quality tool. Do NOT use for open-ended quality work: "make it look good", "make it
-  modern", "polish this", "clean this up", "improve the design", "make it less
-  AI-generated", "fix my layout", general information-architecture or responsive-design
-  review, taste or visual-craft critique, de-slopping, or animation and micro-interaction
-  craft. A general design, taste or animation skill answers those better and should win
-  them. Do not use for the sibling languages either:
-  translucent panels (glassmorphism-ui), hard-bordered zero-blur restyling (brutalism-ui).
-  Nor for Liquid Glass, soft extruded or puffy surfaces, material texture, quiet
-  subtraction, layered collage, or depth ladders — separate visual
-  languages, documented in docs/01 through docs/10, with plugins planned but not yet built.
-  To review an existing bento without changing it, use bento-grid-ui:audit.
+  encodes importance on a locked gutter, turning a list of features or stats into differently
+  sized tiles, assigning spans by content weight, or fixing reading order against
+  `grid-auto-flow: dense`. THE TEST against every other ui-morphism plugin: this one
+  restructures MARKUP AND LAYOUT and restyles no surface, so it composes with any of the ten
+  style languages rather than competing with them. ui-morphism is descriptive and plural: one
+  named language, measured tokens, a stated when-not-to-use — not a design-quality tool. Do
+  NOT use for open-ended quality work — "make it look good", "make it modern", "polish this",
+  "clean this up", "fix my layout", general information-architecture or responsive-design
+  review, taste critique, de-slopping, or animation craft. A general design, taste or
+  animation skill answers those better and should win them. For the surface treatment inside
+  the tiles pick the language by name: skeuomorphism-ui, neumorphism-ui, glassmorphism-ui,
+  claymorphism-ui, minimalism-ui, maximalism-ui, brutalism-ui, liquid-glass-ui, spatial-ui. To
+  review an existing bento without changing it, use bento-grid-ui:audit.
 argument-hint: "[scope glob] [--density=airy|standard|compact] [--intensity=0-100] [--interactive-tiles] [--dark=media|class|none]"
 allowed-tools:
   - Read

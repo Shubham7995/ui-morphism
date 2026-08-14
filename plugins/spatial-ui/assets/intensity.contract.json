@@ -1,0 +1,114 @@
+{
+  "style": "spatial-ui",
+  "default": 55,
+  "sourceDoc": "docs/10-spatial-ui.md",
+  "docSection": "13",
+  "baselineAtZero": "A flat, cameraless interface: perspective none, the depth ladder collapsed to its 0.25x rung with the contact-plus-ambient shadow pair still carrying the hierarchy, fully opaque panels at alpha 1.00 with no backdrop sampling, and no parallax at all. Doc §8 calls this fallback tier 1 and puts it at 90% of the read for 5% of the cost. Panels still have a hairline, controls still size from --sp-target-pointer, and focus is still a real outline, so nothing about the interface is missing — only the illusion is.",
+  "knobs": {
+    "--sp-perspective": {
+      "unit": "px",
+      "anchors": [[0, 4000], [55, 1200], [100, 800]],
+      "emitAs": "At intensity 0 the emitter writes `perspective: none`, not a distance. Above 0 it writes the resolved value rounded to integer px.",
+      "note": "Doc §13: Min (intensity 0) is `none` (flat, shadows only) and Max (intensity 100) is 800px; doc §3 gives 1200px as the default punchy read. This is an INVERSE knob — more intensity means a closer camera and stronger foreshortening — which rule 1 permits as long as it does not reverse. The anchor at intensity 0 is 4000px, the restrained end of doc §3's 2400-4000px range, and it exists only so the curve is defined below the default: a CSS keyword cannot be interpolated, so `none` is emitted as a mode at exactly 0 rather than as a number on the curve. Doc §13's Min cell states no number at all, which is the one endpoint in this contract that cannot be traced to a figure.",
+      "movesWithIt": "Every --sp-k-N is re-derived as 1 - z / perspective and re-emitted as a literal. At intensity 0 there is no perspective to divide by, so the counter-scale ladder collapses to 1 and the depth ladder reads through the shadow pairs alone."
+    },
+    "depthScale": {
+      "unit": "x",
+      "anchors": [[0, 0.25], [55, 1], [100, 2]],
+      "emitAs": "Multiplies the --sp-z-1 … --sp-z-5 literals, then re-derives --sp-k-1 … --sp-k-5 from 1 - z / perspective and rescales the shadow pairs to match, all before the CSS is written.",
+      "note": "Doc §13: 0.25x -> 4 / 6 / 8 / 10 / 14 px at intensity 0, 2x -> 32 / 48 / 64 / 80 / 112 px at 100, the 1x ladder at the default 55. --sp-z-0 is NOT scaled: it is a 0.1px sentinel that exists to force a stacking context rather than to express a distance. Doc §13 is explicit that this is not a token and must never become one — a unit the page could change at runtime would move the panels without moving their counter-scale or their shadows, and 16 / 24 / 32 / 40 / 56 are Android XR SpatialElevation dp values (8px x 2, 3, 4, 5, 7, skipping 6), so a calc(N x unit) rewrite would invent a regularity the source does not have."
+    },
+    "--sp-parallax-translate / --sp-parallax-tilt": {
+      "unit": "px",
+      "anchors": [[0, 0], [55, 12], [100, 24]],
+      "companion": {
+        "token": "--sp-parallax-tilt",
+        "unit": "deg",
+        "anchors": [[0, 0], [55, 4], [100, 8]],
+        "note": "Exactly the translate anchors divided by three at every anchor, so one evaluation of the primary curve determines both: tilt(deg) = translate(px) / 3."
+      },
+      "note": "Doc §13: 0px / 0deg at intensity 0, 24px / 8deg at 100, and doc §4's shipped tokens — 12px / 4deg — at the default 55. Both drop to zero under prefers-reduced-motion, and doc §6 requires the pointer listener to be DETACHED there rather than merely zeroed."
+    },
+    "Panel alpha / blur": {
+      "unit": "alpha",
+      "anchors": [[0, 1.0], [45, 0.72], [55, 0.62], [100, 0.55]],
+      "companion": {
+        "token": "--sp-blur",
+        "unit": "px",
+        "anchors": [[0, 0], [55, 24], [100, 48]],
+        "emitAs": "integer px. --sp-blur-strong keeps doc §4's 40:24 ratio to the resolved blur.",
+        "note": "0px at intensity 0 (fully opaque, no backdrop sampling at all) and 48px at 100, per doc §13's Min and Max cells; doc §4's shipped 24px sits at the default 55."
+      },
+      "note": "Doc §13: 1.00 / 0px at intensity 0, 0.55 / 48px at 100. The two intermediate anchors are doc §13's own sentence about the default: `intensity: 55` yields alpha 0.72 on an arbitrary backdrop or 0.62 when the backdrop is owned. Those are the same curve read at two effective intensities, because backdropControl: arbitrary — the default — caps intensity at 45, and 45 is where 0.72 sits. 0.72 is also doc §4's shipped --sp-panel, so the default run reproduces the shipped token exactly. The 0.55 end is below the arbitrary-backdrop floor and is reachable only with backdropControl: owned; the contrast clamp below holds it at 0.62 dark / 0.60 light otherwise. This is an INVERSE knob: more intensity means less fill."
+    },
+    "Shadow multiplier": {
+      "unit": "x",
+      "anchors": [[0, 0.4], [55, 1], [100, 1.6]],
+      "companion": {
+        "token": "shadow blur radius multiplier",
+        "unit": "x",
+        "anchors": [[0, 0.6], [55, 1], [100, 1.4]],
+        "note": "Doc §13 states the pair together: 0.4x alpha with 0.6x blur radius at intensity 0, 1.6x alpha with 1.4x blur radius at 100. Offsets and negative spreads are not scaled — they are the geometry of the contact/ambient split."
+      },
+      "note": "Doc §13: ambient and contact shadow strength, 1x at the default 55, which is doc §4's shipped ladder. Both shadows in every pair scale together; dropping one of the two is what turns a spatial panel back into a flat-design card."
+    }
+  },
+  "clamps": {
+    "--sp-perspective": { "min": 800, "max": 4000 },
+    "depthScale": { "min": 0.25, "max": 2 },
+    "--sp-parallax-translate / --sp-parallax-tilt": { "min": 0, "max": 12 },
+    "Panel alpha / blur": { "min": 0.55, "max": 1.0 },
+    "Shadow multiplier": { "min": 0.4, "max": 1.6 }
+  },
+  "clampNotes": {
+    "--sp-parallax-translate / --sp-parallax-tilt": "The knob's declared maximum is 24px / 8deg (doc §13) and the hard clamp is 12px / 4deg. That is not a transcription error and it is not a knob that goes to eleven. Doc §6 states the pointer-parallax cap as 12px of translation and 4deg of tilt, doc §10's Do column repeats it as a rule, and doc §4 ships exactly those values calling them nausea-safe full-range amplitude. Doc §13's 24px / 8deg row covers `pointer and scroll parallax amplitude` together, and doc §6 gives scroll-driven depth its own separate cap of +/-40px of z over a full viewport of scroll. So: the amplitude above 12px / 4deg is available to the scroll-driven variant, and pointer parallax is clamped at 12px / 4deg at every intensity including 100. The tension between the two sections is real and is recorded here rather than resolved silently.",
+    "Panel alpha / blur": "0.55 is the knob floor. It is NOT the shippable floor on a backdrop the project does not control — see contextClamps."
+  },
+  "contextCaps": [
+    {
+      "when": { "backdropControl": "arbitrary" },
+      "cap": 45,
+      "reason": "Doc §13: `backdropControl: arbitrary` forces panel alpha >= 0.62 (dark) / >= 0.60 (light) and caps intensity at 45. It is also the DEFAULT value of that input, so the default run resolves to effective 45, which is where the alpha curve sits at doc §4's shipped 0.72. Over a backdrop you do not own, the worst case is the whole sRGB cube and every alpha below the floor is a bet on a pixel you have never seen."
+    }
+  ],
+  "contextClamps": [
+    {
+      "when": { "backdropControl": "arbitrary" },
+      "clamps": { "Panel alpha / blur": { "min": 0.62 } },
+      "reason": "Doc §7 and §13: dark glass carrying light body text needs alpha >= 0.62 over an uncontrolled backdrop, and light glass carrying dark body text >= 0.60 (its contrast floor is 0.49; 0.60 is the legibility floor, because below it the backdrop imagery stays legible THROUGH the text — a real failure the ratio does not capture). The contract carries the higher of the two so a single numeric clamp is safe in either polarity; the skill applies the light-polarity 0.60 where it knows the tone. Core's resolver caps intensity rather than individual knobs, so this clamp is applied by the skill after resolution and reported on the same audit line as the cap."
+    },
+    {
+      "when": { "target": "headset" },
+      "clamps": { "targetMin": { "min": 60 } },
+      "reason": "Doc §13: `target: headset` forces 60px minimum targets, the 41 degree content cone and the 14px type floor. Eye tracking is imprecise, which is why visionOS asks for 60pt where iOS asks for 44pt. Not an intensity cap — it does not change how loud the style is, it changes what a control may measure."
+    },
+    {
+      "when": { "target": "both" },
+      "clamps": { "targetMin": { "min": 60 } },
+      "reason": "Doc §13 says `target` INCLUDES headset, so `both` carries the same 60px floor as `headset`. A layout that ships to a headset and a screen from one source is sized for the headset."
+    }
+  ],
+  "refusals": [
+    {
+      "when": { "density": "compact", "target": "headset" },
+      "action": "reject",
+      "reason": "Doc §13: `density: compact` is rejected outright when `target` includes `headset`. It is not clamped and not silently widened — compact density plus 60px gaze targets plus 8px minimum separation is a contradiction, and resolving it by moving one of the three would be resolving it by breaking it."
+    }
+  ],
+  "clampsNotExpressibleHere": {
+    "depthLadderQuantisation": "Every z value is one of 0.1 / 16 / 24 / 32 / 40 / 56 px times depthScale. Nothing lands between rungs, at any intensity (§3, §13 step 2).",
+    "counterScale": "Every panel at a non-zero z carries scale(1 - z / perspective). A z without its counter-scale is a zoom, not a depth (§3, §5).",
+    "targetSizes": "44px pointer, 60px under (pointer: coarse) or (hover: none), never below the 24px SC 2.5.8 floor, >= 8px separation between adjacent targets (§7).",
+    "typeFloor": ">= 14px, weight >= 500. Nothing on glass is lighter than 500 (§3, §7).",
+    "textPlaneRotation": "<= 12 degrees from the viewing plane. Past that, subpixel antialiasing and legibility collapse (§13).",
+    "preserve3dNesting": "<= 3 deep, and never on a scrolling list container (§8, §13).",
+    "backdropFilterSurfaces": "<= 6 concurrent on screen (§8).",
+    "compositedLayers": "<= 25 total, <= 96 MiB of GPU layer memory at the target viewport (§8).",
+    "permanentWillChange": "0. will-change goes on elements that are moving right now and comes off at transitionend (§8, §13).",
+    "concurrentDepthAnimations": "<= 3 panels changing depth at once (§8).",
+    "fixedInsidePerspective": "No position: fixed descendant of a perspective or transform subtree, ever. perspective establishes a containing block and the fixed element silently stops being fixed (§8, §13 step 9).",
+    "cssWeight": "<= 4 KB gzipped for the whole style. Larger means a 3D library was shipped by accident (§8).",
+    "note": "These constrain the emitted CSS and the composition rather than the value of a knob, so skills/apply/scripts/spatial-scan.mjs and ui-morphism-core:a11y-validate enforce them. Recorded here so the clamp table reads as the complete list."
+  },
+  "gateNote": "One endpoint in this contract cannot be traced to a number: doc §13's Min cell for --sp-perspective is the CSS keyword `none`, not a figure. Every other endpoint — 800, 0.25, 2, 0, 24, 1.00, 0.55, 0.4, 1.6 — is stated in the doc's own Min and Max columns and is checkable against them."
+}

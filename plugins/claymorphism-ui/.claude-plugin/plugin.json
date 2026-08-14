@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "claymorphism-ui",
+  "displayName": "Claymorphism UI",
+  "version": "0.1.0",
+  "description": "Claymorphic restyling — the soft-and-physical language in which the surface carries ITS OWN PASTEL FILL, distinct from the page ground and inflated at a large radius. Emits a pastel token layer whose shadow atoms are hue-derived from each surface own fill, rewrites components to the four-layer rim/sheen/shade/drop stack with the squish press, gives static panels a reduced treatment so affordance survives, inverts the recipe for inputs, and self-audits every emitted pair against WCAG 2.2. A surface matching the page ground is neumorphism-ui; one imitating a material is skeuomorphism-ui.",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/04-claymorphism.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "claymorphism",
+    "clay-ui",
+    "soft-3d",
+    "puffy-ui",
+    "inset-shadow",
+    "pastel",
+    "design-tokens"
+  ],
+  "dependencies": [
+    { "name": "ui-morphism-core", "version": "^0.1.0" }
+  ],
+  "metadata": {
+    "sourceDoc": "docs/04-claymorphism.md",
+    "docSection": "13",
+    "lastResearched": "2026-08-08",
+    "statusIn2026": "niche",
+    "a11yRisk": "medium",
+    "perfCost": "medium"
+  }
+}

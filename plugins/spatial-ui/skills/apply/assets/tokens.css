@@ -1,0 +1,214 @@
+/* ---------------------------------------------------------------------------
+ * Spatial UI token layer.
+ *
+ * Source of truth: docs/10-spatial-ui.md §4, "Anatomy & Design Tokens". The
+ * declarations below are reproduced verbatim from that section's CSS block; the
+ * only addition is this header. Do not edit values here — edit the doc, then
+ * re-copy.
+ *
+ * These are the doc's canonical reference values, not the resolution of any one
+ * intensity. Intensity moves five things, and it moves them before this file is
+ * written rather than at runtime: the camera distance, the depth ladder
+ * multiplier, the parallax pair, the panel alpha/blur pair and the shadow
+ * multiplier. See ../references/tokens.md §4 and ${CLAUDE_PLUGIN_ROOT}/assets/
+ * intensity.contract.json. The counter-scale ladder --sp-k-1 … --sp-k-5 is
+ * emitted as literals, re-derived from 1 − z / perspective whenever either of
+ * those moves; it is deliberately not a live calc(), because at intensity 0 the
+ * camera is `none` and there is no perspective left to divide by.
+ *
+ * The two panel alphas are contrast decisions, not taste. Over a backdrop the
+ * project does not control, --sp-panel at 0.72 measures 9.53:1 (light) and
+ * 6.52:1 (dark) worst case, and --sp-panel-legible measures 15.87:1 (light) and
+ * 12.37:1 (dark). Every one of those figures is doc §7's, composited per 8-bit
+ * channel in gamma-encoded sRGB. Nothing in this plugin computes them: the one
+ * implementation is ui-morphism-core:a11y-validate, and it is what re-checks
+ * every alpha this style ships.
+ *
+ * Load order: this file first, then tokens.um-aliases.css.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Stage / camera ---- */
+  --sp-perspective: 1200px;
+  --sp-perspective-origin: 50% 42%;
+  --sp-comfort-width: 1413px;      /* 41° cone at 500mm */
+  --sp-comfort-width-desk: 1693px; /* 41° cone at 600mm */
+
+  /* ---- Depth ladder (Android XR SpatialElevation, dp -> px) ---- */
+  --sp-z-0: 0.1px;
+  --sp-z-1: 16px;   /* orbiter, floating chrome */
+  --sp-z-2: 24px;   /* raised panel */
+  --sp-z-3: 32px;   /* popover, menu */
+  --sp-z-4: 40px;   /* sheet */
+  --sp-z-5: 56px;   /* modal dialog */
+  --sp-z-push: -125px;
+
+  /* ---- Counter-scale = 1 - z / perspective (Dynamic Scale) ---- */
+  --sp-k-1: 0.98667;
+  --sp-k-2: 0.98000;
+  --sp-k-3: 0.97333;
+  --sp-k-4: 0.96667;
+  --sp-k-5: 0.95333;
+
+  /* ---- Surfaces ---- */
+  --sp-env: #e8eaf0;
+  --sp-env-2: #dfe2ea;
+  --sp-panel: rgba(255, 255, 255, 0.72);
+  --sp-panel-legible: rgba(255, 255, 255, 0.92);
+  --sp-panel-opaque: #f7f8fb;
+  --sp-hairline: rgba(16, 16, 20, 0.12);
+  --sp-specular: rgba(255, 255, 255, 0.65);
+
+  /* ---- Material ---- */
+  --sp-blur: 24px;
+  --sp-blur-strong: 40px;
+  --sp-saturate: 165%;
+
+  /* ---- Ink (3 vibrancy tiers) ---- */
+  --sp-ink-1: #101014;
+  --sp-ink-2: #43464f;
+  --sp-ink-3: #6b6f7b;
+
+  /* ---- Radius ---- */
+  --sp-radius-panel: 32px;
+  --sp-radius-card: 20px;
+  --sp-radius-control: 14px;
+  --sp-radius-capsule: 999px;
+
+  /* ---- Targets & spacing ---- */
+  --sp-target-gaze: 60px;
+  --sp-target-pointer: 44px;
+  --sp-target-floor: 24px;
+  --sp-gap-list: 4px;
+  --sp-gap-target: 8px;
+  --sp-gap-stack: 16px;
+  --sp-orbiter-offset: 20px;
+
+  /* ---- Type ---- */
+  --sp-font-min: 14px;
+  --sp-text-body: 17px;
+  --sp-text-title: 22px;
+  --sp-weight-body: 500;
+  --sp-weight-title: 700;
+  --sp-tracking: 0.01em;
+
+  /* ---- Shadows: contact + ambient, per depth step ---- */
+  --sp-shadow-1: 0 2px 6px -2px rgba(12, 14, 22, 0.18),
+                 0 8px 20px -8px rgba(12, 14, 22, 0.22);
+  --sp-shadow-2: 0 4px 10px -3px rgba(12, 14, 22, 0.20),
+                 0 14px 32px -12px rgba(12, 14, 22, 0.26);
+  --sp-shadow-3: 0 6px 14px -4px rgba(12, 14, 22, 0.22),
+                 0 22px 48px -18px rgba(12, 14, 22, 0.30);
+  --sp-shadow-4: 0 9px 20px -6px rgba(12, 14, 22, 0.24),
+                 0 34px 70px -24px rgba(12, 14, 22, 0.36);
+  --sp-shadow-5: 0 12px 28px -8px rgba(12, 14, 22, 0.26),
+                 0 48px 96px -32px rgba(12, 14, 22, 0.42);
+
+  /* ---- Motion ---- */
+  --sp-dur-hover: 120ms;
+  --sp-dur-depth: 320ms;
+  --sp-dur-panel: 480ms;
+  --sp-ease-depth: cubic-bezier(0.2, 0, 0, 1);
+  --sp-ease-settle: cubic-bezier(0.34, 1.32, 0.64, 1);
+  --sp-parallax-translate: 12px;
+  --sp-parallax-tilt: 4deg;
+}
+
+/* Light values live on bare `:root` above. The dark set is written twice:
+   once guarded so it cannot beat an explicit `data-theme="light"`, and once
+   under `:root[data-theme="dark"]` so a manual toggle beats the OS
+   preference. Same shape as docs 01, 02, 04, 05, 06, 07, 08 and 09. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sp-env: #0b0c10;
+    --sp-env-2: #131620;
+    --sp-panel: rgba(22, 24, 30, 0.72);
+    --sp-panel-legible: rgba(22, 24, 30, 0.90);
+    --sp-panel-opaque: #15171d;
+    --sp-hairline: rgba(255, 255, 255, 0.16);
+    --sp-specular: rgba(255, 255, 255, 0.28);
+    --sp-saturate: 150%;
+    --sp-ink-1: #f5f6fa;
+    --sp-ink-2: #b9bdc9;
+    --sp-ink-3: #868b98;
+    --sp-shadow-1: 0 2px 6px -2px rgba(0, 0, 0, 0.42),
+                   0 8px 20px -8px rgba(0, 0, 0, 0.48);
+    --sp-shadow-2: 0 4px 10px -3px rgba(0, 0, 0, 0.46),
+                   0 14px 32px -12px rgba(0, 0, 0, 0.52);
+    --sp-shadow-3: 0 6px 14px -4px rgba(0, 0, 0, 0.50),
+                   0 22px 48px -18px rgba(0, 0, 0, 0.56);
+    --sp-shadow-4: 0 9px 20px -6px rgba(0, 0, 0, 0.54),
+                   0 34px 70px -24px rgba(0, 0, 0, 0.60);
+    --sp-shadow-5: 0 12px 28px -8px rgba(0, 0, 0, 0.58),
+                   0 48px 96px -32px rgba(0, 0, 0, 0.66);
+  }
+}
+
+/* Explicit opt-in override, so a toggle beats the media query both ways. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --sp-env: #0b0c10;
+  --sp-env-2: #131620;
+  --sp-panel: rgba(22, 24, 30, 0.72);
+  --sp-panel-legible: rgba(22, 24, 30, 0.90);
+  --sp-panel-opaque: #15171d;
+  --sp-hairline: rgba(255, 255, 255, 0.16);
+  --sp-specular: rgba(255, 255, 255, 0.28);
+  --sp-saturate: 150%;
+  --sp-ink-1: #f5f6fa;
+  --sp-ink-2: #b9bdc9;
+  --sp-ink-3: #868b98;
+  --sp-shadow-1: 0 2px 6px -2px rgba(0, 0, 0, 0.42),
+                 0 8px 20px -8px rgba(0, 0, 0, 0.48);
+  --sp-shadow-2: 0 4px 10px -3px rgba(0, 0, 0, 0.46),
+                 0 14px 32px -12px rgba(0, 0, 0, 0.52);
+  --sp-shadow-3: 0 6px 14px -4px rgba(0, 0, 0, 0.50),
+                 0 22px 48px -18px rgba(0, 0, 0, 0.56);
+  --sp-shadow-4: 0 9px 20px -6px rgba(0, 0, 0, 0.54),
+                 0 34px 70px -24px rgba(0, 0, 0, 0.60);
+  --sp-shadow-5: 0 12px 28px -8px rgba(0, 0, 0, 0.58),
+                 0 48px 96px -32px rgba(0, 0, 0, 0.66);
+}
+:root[data-theme="light"] { color-scheme: light; }
+
+/* Users who ask for less transparency get solid panels and no sampling.
+   These preference blocks come after the theme blocks so they win in both. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --sp-panel: var(--sp-panel-opaque);
+    --sp-panel-legible: var(--sp-panel-opaque);
+    --sp-blur: 0px;
+    --sp-blur-strong: 0px;
+    --sp-saturate: 100%;
+  }
+}
+
+/* Users who ask for less motion get depth without movement. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sp-parallax-translate: 0px;
+    --sp-parallax-tilt: 0deg;
+    --sp-dur-depth: 1ms;
+    --sp-dur-panel: 1ms;
+  }
+}
+
+/* Windows High Contrast / forced colors: flatten completely. */
+@media (forced-colors: active) {
+  :root {
+    --sp-perspective: none;
+    --sp-panel: Canvas;
+    --sp-panel-legible: Canvas;
+    --sp-panel-opaque: Canvas;
+    --sp-hairline: CanvasText;
+    --sp-blur: 0px;
+    --sp-saturate: 100%;
+    --sp-shadow-1: none;
+    --sp-shadow-2: none;
+    --sp-shadow-3: none;
+    --sp-shadow-4: none;
+    --sp-shadow-5: none;
+  }
+}

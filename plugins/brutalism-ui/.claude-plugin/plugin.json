@@ -3,7 +3,7 @@
   "name": "brutalism-ui",
   "displayName": "Brutalism & Neubrutalism UI",
   "version": "0.1.0",
-  "description": "Neubrutalist restyling. Emits a border-first token layer with a six-step zero-blur hard-shadow scale, rewrites components to border-plus-offset surfaces with the hover-into-its-own-shadow interaction, flips the border token to a light ink in dark mode, and self-audits every emitted pair against WCAG 2.2.",
+  "description": "Neubrutalist restyling — the flat-and-stark language that ADDS weight, and is defined by the absence of blur. Emits a border-first token layer with a six-step zero-blur hard-shadow scale, rewrites components to border-plus-offset surfaces with the hover-into-its-own-shadow interaction, flips the border token to a light ink in dark mode, and self-audits every emitted pair against WCAG 2.2. A request to strip ornament, quieten the palette or reduce to hairlines is minimalism-ui; one stacking loud layers over a patterned ground is maximalism-ui.",
   "author": {
     "name": "UI Morphism",
     "url": "https://github.com/Shubham7995/ui-morphism"

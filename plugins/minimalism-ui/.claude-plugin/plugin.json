@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "minimalism-ui",
+  "displayName": "Minimalism & Flat UI",
+  "version": "0.1.0",
+  "description": "Minimalist restyling — Swiss, Linear-like, Vercel-like, quiet UI; the flat-and-stark language that SUBTRACTS. Collapses the palette to a neutral ramp plus one accent, reduces shadows to three named rungs, quantises radius, spacing, type and motion onto the doc ramps, and then runs the compensating pass that puts the deleted affordance back: filled primary buttons, 3:1 control boundaries, hover underlines, focus rings and 24px target floors. Self-audits every emitted pair against WCAG 2.2. A request to ADD weight — 2-5px ink borders, hard offset shadows, saturated fills — is brutalism-ui.",
+  "author": {
+    "name": "UI Morphism",
+    "url": "https://github.com/Shubham7995/ui-morphism"
+  },
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/05-minimalism.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
+  "license": "MIT",
+  "keywords": [
+    "minimalism",
+    "minimal-ui",
+    "flat-design",
+    "swiss-style",
+    "quiet-ui",
+    "calm-interface",
+    "design-tokens"
+  ],
+  "dependencies": [
+    { "name": "ui-morphism-core", "version": "^0.1.0" }
+  ],
+  "metadata": {
+    "sourceDoc": "docs/05-minimalism.md",
+    "docSection": "13",
+    "lastResearched": "2026-08-08",
+    "statusIn2026": "mainstream",
+    "a11yRisk": "medium",
+    "perfCost": "low"
+  }
+}

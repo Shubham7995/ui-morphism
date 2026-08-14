@@ -3,7 +3,7 @@
   "name": "glassmorphism-ui",
   "displayName": "Glassmorphism UI",
   "version": "0.1.0",
-  "description": "Frosted-glass surfaces. Emits the five-rung backdrop-blur elevation ladder with a matching opaque mirror, rewrites target components with the @supports fallback and the four accessibility escape hatches baked in, and measures every text pair against the worst-case composited backdrop rather than the declared background-color.",
+  "description": "Frosted-glass surfaces — the translucent-depth language in which the backdrop is BLURRED AND NOTHING ELSE, never geometrically warped and never behind a perspective camera. Emits the five-rung backdrop-blur elevation ladder with a matching opaque mirror, rewrites target components with the @supports fallback and the four accessibility escape hatches baked in, and measures every text pair against the worst-case composited backdrop rather than the declared background-color. A refracting backdrop is liquid-glass-ui; panels at translateZ under a camera are spatial-ui.",
   "author": {
     "name": "UI Morphism",
     "url": "https://github.com/Shubham7995/ui-morphism"

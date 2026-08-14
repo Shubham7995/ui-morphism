@@ -1,0 +1,297 @@
+/* ---------------------------------------------------------------------------
+ * Skeuomorphism — Tailwind v4 @theme mirror of assets/tokens.css.
+ *
+ * Source of truth: docs/01-skeuomorphism.md §5, "Tailwind CSS v4". Values match
+ * assets/tokens.css (docs §4) exactly; only the custom-property names change,
+ * because Tailwind v4 derives utilities from namespaced theme variables. No
+ * plugin is required: multi-layer box-shadow, inset, gradients and SVG data
+ * URIs are all expressible with @theme plus arbitrary values.
+ *
+ * Three invariants:
+ *   1. @theme is never nested inside @media, @layer or any other at-rule. A
+ *      @theme block inside @media is not processed by Tailwind v4 and the whole
+ *      override silently vanishes, so the dark values below are plain
+ *      custom-property redeclarations inside @layer theme.
+ *   2. The dark values are declared TWICE, under the guarded media query and
+ *      under :root[data-theme="dark"], so a system preference and an explicit
+ *      toggle both win. The .dark branch after them is Tailwind's own class hook
+ *      and rides alongside; it is not a substitute for either, because a
+ *      class-only theme never responds to the OS setting.
+ *   3. The four shadow ATOMS are the only shadow values written out. Every
+ *      compound — raised, pressed, float — is composed from them with var(), so
+ *      the four numbers doc §4 states live in exactly one place per theme and
+ *      the dark flip happens once. Retyping the expanded four-layer stack into
+ *      each theme block is how one layer's alpha ends up disagreeing with the
+ *      other three, which is the failure that reads as "the light moved".
+ *
+ * The grain data URI below is one of the three copies doc §4 names — this
+ * @utility, the --sk-noise declaration in assets/tokens.css, and the NOISE
+ * constant in doc §5's React component. baseFrequency 0.9, numOctaves 2 and the
+ * 160px tile are baked into the string and cannot be custom properties; edit all
+ * three or none.
+ * ------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+@theme {
+  /* ---- ground and material surfaces -> bg-*, text-*, border-* ---- */
+  --color-sk-bg:            #d8cfbe;
+  --color-sk-surface-hi:    #f7f2ea;
+  --color-sk-surface:       #e8e0d2;
+  --color-sk-surface-lo:    #d9cfbc;
+  --color-sk-well:          #cfc4ae;
+
+  /* ---- lines. -border is decorative (1.76:1) and is never a control edge;
+     -border-strong is the control boundary. ---- */
+  --color-sk-border:        #b8a98e;
+  --color-sk-border-strong: #7a6a4e;
+
+  /* ---- ink ---- */
+  --color-sk-ink:           #4a3f2d;
+  --color-sk-ink-muted:     #6b5c44;
+  --color-sk-ink-inverse:   #f7f2ea;
+  --color-sk-accent:        #5d4a36;
+  --color-sk-danger:        #8f2f21;
+
+  /* ---- the specular hotspot colour, for radial-gradient arbitrary values ---- */
+  --color-sk-specular:      rgba(255,255,255,.45);
+
+  /* ---- radii -> rounded-sk-sm / rounded-sk / rounded-sk-lg / rounded-sk-pill.
+     Radius is a material statement here, not a brand token: 4px machined metal,
+     10px moulded plastic, 16px soft goods. ---- */
+  --radius-sk-sm:   4px;
+  --radius-sk:     10px;
+  --radius-sk-lg:  16px;
+  --radius-sk-pill: 999px;
+
+  /* ---- the four shadow atoms, one light source, top-lit ---- */
+  --shadow-sk-contact:      0 1px 2px rgba(0,0,0,.25);
+  --shadow-sk-ambient:      0 4px 10px rgba(0,0,0,.18);
+  --shadow-sk-bevel-top:    inset 0 1px 0 rgba(255,255,255,.80);
+  --shadow-sk-bevel-bottom: inset 0 -2px 3px rgba(0,0,0,.12);
+  --shadow-sk-press-inner:  inset 0 2px 5px rgba(0,0,0,.25);
+  --shadow-sk-press-inner-2: inset 0 1px 1px rgba(0,0,0,.20);
+
+  /* ---- the elevation compounds -> shadow-sk-well / -chip / -raised / -float.
+     These are docs §4's --sk-elev-0 … --sk-elev-3 under Tailwind names. ---- */
+  --shadow-sk-well:    inset 0 2px 4px rgba(0,0,0,.22), inset 0 -1px 0 rgba(255,255,255,.55);
+  --shadow-sk-chip:    var(--shadow-sk-contact), var(--shadow-sk-bevel-top);
+  --shadow-sk-raised:  var(--shadow-sk-contact), var(--shadow-sk-ambient),
+                       var(--shadow-sk-bevel-top), var(--shadow-sk-bevel-bottom);
+  --shadow-sk-float:   0 2px 3px rgba(0,0,0,.28), 0 10px 24px rgba(0,0,0,.22),
+                       var(--shadow-sk-bevel-top), var(--shadow-sk-bevel-bottom);
+  --shadow-sk-pressed: var(--shadow-sk-press-inner), var(--shadow-sk-press-inner-2);
+
+  /* ---- the focus ring: additive, never a replacement for the stack. Compose
+     it as `shadow-[var(--shadow-sk-raised),var(--shadow-sk-focus)]`. ---- */
+  --shadow-sk-focus: 0 0 0 2px var(--color-sk-bg), 0 0 0 4px #2b6cb0;
+
+  /* ---- type -> font-sk, text-sk-* ---- */
+  --font-sk: ui-sans-serif, -apple-system, "Segoe UI", Inter, system-ui, sans-serif;
+
+  --text-sk-xs:   12px;
+  --text-sk-sm:   14px;
+  --text-sk-base: 16px;
+  --text-sk-lg:   18px;
+  --text-sk-xl:   24px;
+  --text-sk-2xl:  32px;
+  --text-sk-3xl:  44px;
+
+  --leading-sk-tight: 1.15;
+  --leading-sk-body:  1.5;
+  --tracking-sk-label: .06em;
+
+  /* ---- space -> p-sk-1 … p-sk-7 ---- */
+  --spacing-sk-1: 4px;
+  --spacing-sk-2: 8px;
+  --spacing-sk-3: 12px;
+  --spacing-sk-4: 16px;
+  --spacing-sk-5: 24px;
+  --spacing-sk-6: 32px;
+  --spacing-sk-7: 48px;
+
+  /* ---- easings -> ease-sk-press / -release / -standard ---- */
+  --ease-sk-press:    cubic-bezier(.2, 0, 0, 1);
+  --ease-sk-release:  cubic-bezier(.34, 1.4, .64, 1);
+  --ease-sk-standard: cubic-bezier(.4, 0, .2, 1);
+}
+
+/* Utilities Tailwind cannot express ergonomically. */
+@utility sk-face {
+  background-image: linear-gradient(
+    to bottom,
+    var(--color-sk-surface-hi) 0%,
+    var(--color-sk-surface) 45%,
+    var(--color-sk-surface-lo) 100%
+  );
+}
+
+/* One static utility that owns its own pseudo-element. Do not try to pair a
+   `content`-bearing @utility with the `before:` variant — Tailwind injects its
+   own `content: var(--tw-content)` into `before:`, so the pairing is undefined.
+   Declare the ::before inside the utility instead.
+
+   One grain layer per scroll container, on the chassis: twenty components each
+   with their own ::before means twenty extra paint rectangles. */
+@utility sk-grain {
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: .05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 160px 160px;
+  }
+
+  @media (prefers-color-scheme: dark) { &::before { opacity: .07; } }
+  @media (prefers-contrast: more)     { &::before { opacity: 0; } }
+  /* forced-colors forces background-image: none — except for url() images, so
+     the grain SURVIVES the mode and can wreck legibility. Hide it explicitly. */
+  @media (forced-colors: active)      { &::before { display: none; } }
+}
+
+/* ---------------------------------------------------------------------------
+ * Theme switching. `@theme` must sit at the top level of the stylesheet, and a
+ * `@theme` nested inside `@media` is not processed by Tailwind v4, so the dark
+ * values are plain custom-property redeclarations inside @layer theme — they
+ * are the same variables the utilities above already reference.
+ * ------------------------------------------------------------------------- */
+
+@layer theme {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --color-sk-bg:            #17140f;
+      --color-sk-surface-hi:    #3a342a;
+      --color-sk-surface:       #2e2920;
+      --color-sk-surface-lo:    #23201a;
+      --color-sk-well:          #141109;
+      --color-sk-border:        #4a4335;
+      --color-sk-border-strong: #8a7a5e;
+      --color-sk-ink:           #ede4d2;
+      --color-sk-ink-muted:     #c3b79f;
+      --color-sk-ink-inverse:   #17140f;
+      --color-sk-accent:        #c9a24a;
+      --color-sk-danger:        #e0705e;
+      --color-sk-specular:      rgba(255,255,255,.28);
+
+      --shadow-sk-contact:      0 1px 2px rgba(0,0,0,.55);
+      --shadow-sk-ambient:      0 6px 14px rgba(0,0,0,.45);
+      --shadow-sk-bevel-top:    inset 0 1px 0 rgba(255,255,255,.14);
+      --shadow-sk-bevel-bottom: inset 0 -2px 3px rgba(0,0,0,.40);
+      --shadow-sk-press-inner:  inset 0 2px 6px rgba(0,0,0,.60);
+      --shadow-sk-press-inner-2: inset 0 1px 1px rgba(0,0,0,.45);
+      --shadow-sk-well:    inset 0 2px 5px rgba(0,0,0,.65), inset 0 -1px 0 rgba(255,255,255,.10);
+      --shadow-sk-float:   0 2px 4px rgba(0,0,0,.6), 0 12px 28px rgba(0,0,0,.5),
+                           var(--shadow-sk-bevel-top), var(--shadow-sk-bevel-bottom);
+      --shadow-sk-focus: 0 0 0 2px var(--color-sk-bg), 0 0 0 4px #7cb0ff;
+    }
+  }
+
+  /* Explicit opt-in, so a toggle beats the media query in both directions. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --color-sk-bg:            #17140f;
+    --color-sk-surface-hi:    #3a342a;
+    --color-sk-surface:       #2e2920;
+    --color-sk-surface-lo:    #23201a;
+    --color-sk-well:          #141109;
+    --color-sk-border:        #4a4335;
+    --color-sk-border-strong: #8a7a5e;
+    --color-sk-ink:           #ede4d2;
+    --color-sk-ink-muted:     #c3b79f;
+    --color-sk-ink-inverse:   #17140f;
+    --color-sk-accent:        #c9a24a;
+    --color-sk-danger:        #e0705e;
+    --color-sk-specular:      rgba(255,255,255,.28);
+
+    --shadow-sk-contact:      0 1px 2px rgba(0,0,0,.55);
+    --shadow-sk-ambient:      0 6px 14px rgba(0,0,0,.45);
+    --shadow-sk-bevel-top:    inset 0 1px 0 rgba(255,255,255,.14);
+    --shadow-sk-bevel-bottom: inset 0 -2px 3px rgba(0,0,0,.40);
+    --shadow-sk-press-inner:  inset 0 2px 6px rgba(0,0,0,.60);
+    --shadow-sk-press-inner-2: inset 0 1px 1px rgba(0,0,0,.45);
+    --shadow-sk-well:    inset 0 2px 5px rgba(0,0,0,.65), inset 0 -1px 0 rgba(255,255,255,.10);
+    --shadow-sk-float:   0 2px 4px rgba(0,0,0,.6), 0 12px 28px rgba(0,0,0,.5),
+                         var(--shadow-sk-bevel-top), var(--shadow-sk-bevel-bottom);
+    --shadow-sk-focus: 0 0 0 2px var(--color-sk-bg), 0 0 0 4px #7cb0ff;
+  }
+}
+
+/* Tailwind's class variant, for projects that toggle dark mode with a class. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  color-scheme: dark;
+  --color-sk-bg:            #17140f;
+  --color-sk-surface-hi:    #3a342a;
+  --color-sk-surface:       #2e2920;
+  --color-sk-surface-lo:    #23201a;
+  --color-sk-well:          #141109;
+  --color-sk-border:        #4a4335;
+  --color-sk-border-strong: #8a7a5e;
+  --color-sk-ink:           #ede4d2;
+  --color-sk-ink-muted:     #c3b79f;
+  --color-sk-ink-inverse:   #17140f;
+  --color-sk-accent:        #c9a24a;
+  --color-sk-danger:        #e0705e;
+  --color-sk-specular:      rgba(255,255,255,.28);
+
+  --shadow-sk-contact:      0 1px 2px rgba(0,0,0,.55);
+  --shadow-sk-ambient:      0 6px 14px rgba(0,0,0,.45);
+  --shadow-sk-bevel-top:    inset 0 1px 0 rgba(255,255,255,.14);
+  --shadow-sk-bevel-bottom: inset 0 -2px 3px rgba(0,0,0,.40);
+  --shadow-sk-press-inner:  inset 0 2px 6px rgba(0,0,0,.60);
+  --shadow-sk-press-inner-2: inset 0 1px 1px rgba(0,0,0,.45);
+  --shadow-sk-well:    inset 0 2px 5px rgba(0,0,0,.65), inset 0 -1px 0 rgba(255,255,255,.10);
+  --shadow-sk-float:   0 2px 4px rgba(0,0,0,.6), 0 12px 28px rgba(0,0,0,.5),
+                       var(--shadow-sk-bevel-top), var(--shadow-sk-bevel-bottom);
+  --shadow-sk-focus: 0 0 0 2px var(--color-sk-bg), 0 0 0 4px #7cb0ff;
+}
+
+/* ---------------------------------------------------------------------------
+ * Tokens with no Tailwind namespace: the letterpress text-shadows, the grain
+ * opacity, the durations, the hairline and the focus width. They stay plain
+ * custom properties under their docs §4 names and are consumed with var().
+ * ------------------------------------------------------------------------- */
+
+:root {
+  --sk-emboss:  0 1px 0 rgba(255,255,255,.70);
+  --sk-deboss:  0 -1px 0 rgba(0,0,0,.35);
+  --sk-noise-opacity: .05;
+
+  --sk-hairline:   1px;
+  --sk-focus-width: 2px;
+  --sk-target-min: 44px;
+
+  --sk-dur-press:   90ms;
+  --sk-dur-hover:  140ms;
+  --sk-dur-release: 220ms;
+  --sk-dur-panel:  260ms;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sk-emboss:  0 1px 0 rgba(255,255,255,.10);
+    --sk-deboss:  0 -1px 0 rgba(0,0,0,.60);
+    --sk-noise-opacity: .07;
+  }
+}
+
+:root[data-theme="dark"] {
+  --sk-emboss:  0 1px 0 rgba(255,255,255,.10);
+  --sk-deboss:  0 -1px 0 rgba(0,0,0,.60);
+  --sk-noise-opacity: .07;
+}
+
+.dark {
+  --sk-emboss:  0 1px 0 rgba(255,255,255,.10);
+  --sk-deboss:  0 -1px 0 rgba(0,0,0,.60);
+  --sk-noise-opacity: .07;
+}

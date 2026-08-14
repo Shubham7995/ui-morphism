@@ -1,0 +1,210 @@
+/* ---------------------------------------------------------------------------
+ * Minimalism — Tailwind v4 @theme mirror of assets/tokens.css.
+ *
+ * Source of truth: docs/05-minimalism.md §5, "Tailwind CSS v4". Every VALUE
+ * here is a value assets/tokens.css (docs §4) declares; only the custom-property
+ * names change, because Tailwind v4 derives utilities from namespaced theme
+ * variables. If a value here and a value in tokens.css disagree, this file is
+ * wrong.
+ *
+ * Three invariants, all enforced by ui-morphism-core:token-emit:
+ *   1. @theme is never nested inside @media, @layer, or any other at-rule.
+ *   2. Theme switching happens outside @theme, on ordinary selectors — which is
+ *      why the dark blocks below sit on their own.
+ *   3. The dark values are declared TWICE, under the guarded media query and
+ *      under :root[data-theme="dark"], so a system preference and an explicit
+ *      toggle both win in both directions. That is the same shape emit.mjs
+ *      produces for --format=css and --format=theme alike.
+ *
+ * Four deliberate departures from the doc §5 listing, each so that this file
+ * mirrors tokens.css rather than paraphrasing it:
+ *
+ *   * `--color-line` is `rgb(0 0 0 / 0.08)` and its dark twin
+ *     `rgb(255 255 255 / 0.10)`, the exact --min-border-subtle values, rather
+ *     than the `oklch(0 0 0 / 0.08)` spelling §5 uses. Same intent, and the
+ *     mirror is only a mirror if the values are the same values.
+ *   * `--font-sans` / `--font-mono` carry tokens.css's full fallback stacks,
+ *     not §5's shortened ones.
+ *   * `--spacing` is `4px`, the --min-space-1 value, rather than `0.25rem`.
+ *     Both regenerate the same numeric scale from a single 4px unit.
+ *   * §5's paired `--text-*--line-height` values are not mirrored, because they
+ *     are per-size ratios that §4 does not declare. The three line heights §4
+ *     does declare are emitted as `--leading-*` instead, so `leading-normal`
+ *     is the 1.5 body value and nothing invents a fourth number.
+ *
+ * `--color-*: initial` and `--shadow-*: initial` clear Tailwind's default
+ * palette and six-step shadow scale, per §5. That reset also removes
+ * `transparent` and `currentColor` as theme colours, and they are deliberately
+ * not re-added — every literal in this file must be one tokens.css declares.
+ * Reach for them as arbitrary values (`bg-[transparent]`,
+ * `border-[currentColor]`) or re-declare them in your own project layer.
+ * ------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+@theme {
+  /* Nuke Tailwind's default 22-hue palette — minimalism ships one accent. */
+  --color-*: initial;
+
+  /* ---- surfaces ---- */
+  --color-canvas: #ffffff;
+  --color-subtle: #fafafa;
+  --color-surface: #ffffff;
+  --color-surface-2: #f5f5f5;
+  --color-surface-hover: #f0f0f0;
+  --color-white: #ffffff;
+
+  /* ---- boundaries. `line` is decorative; `line-strong` is the control
+     boundary and the only one a control may rely on. ---- */
+  --color-line: rgb(0 0 0 / 0.08);
+  --color-line-strong: #8f8f8f;
+
+  /* ---- text ---- */
+  --color-ink: #0a0a0a;
+  --color-ink-2: #525252;
+  --color-ink-3: #737373;
+  --color-ink-disabled: #a3a3a3;
+
+  /* ---- exactly one accent, plus the one semantic hue ---- */
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-active: #1e40af;
+  --color-accent-fg: #ffffff;
+  --color-accent-subtle: #eff6ff;
+  --color-danger: #dc2626;
+  --color-danger-fg: #ffffff;
+
+  /* ---- focus ---- */
+  --color-focus: #2563eb;
+
+  /* 4px base unit drives every p-*, gap-*, w-*, h-* utility */
+  --spacing: 4px;
+
+  --font-sans: Inter, "Geist Sans", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, monospace;
+
+  /* Nine steps, ratio 1.200 */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+
+  --leading-tight: 1.2;
+  --leading-snug: 1.4;
+  --leading-normal: 1.5;
+
+  --tracking-tight: -0.011em;
+  --tracking-display: -0.02em;
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* Two elevation steps only, plus the named zero rung */
+  --shadow-*: initial;
+  --shadow-flat: none;
+  --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.04);
+  --shadow-overlay: 0 4px 12px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
+
+  /* The anti-glassmorphism guarantee, declared rather than omitted */
+  --blur-none: 0px;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  --container-measure: 65ch;
+
+  /* Control sizing and the SC 2.5.8 floor. `min-h-control-lg` is the resting
+     size; `min-w-target-min` is the floor an icon-only control may not go
+     under. Never write the floor as a literal. */
+  --spacing-control-sm: 32px;
+  --spacing-control-md: 36px;
+  --spacing-control-lg: 40px;
+  --spacing-target-min: 24px;
+
+  /* Durations have no utility namespace in v4; these emit as plain custom
+     properties and are consumed as `duration-(--duration-base)`. */
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+}
+
+/* Dark mode, in ui-morphism-core's emission shape. The media-query branch is
+   written so an explicit light choice still wins, and the attribute branch is
+   duplicated so a toggle wins in both directions. Both sit OUTSIDE @theme,
+   because @theme may never be nested inside an at-rule and theme switching is
+   an ordinary-selector concern. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@layer base {
+  :root { color-scheme: light dark; }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --color-canvas: #0a0a0a;
+      --color-subtle: #131313;
+      --color-surface: #161616;
+      --color-surface-2: #1e1e1e;
+      --color-surface-hover: #242424;
+      --color-line: rgb(255 255 255 / 0.10);
+      --color-line-strong: #7a7a7a;
+      --color-ink: #fafafa;
+      --color-ink-2: #b4b4b4;
+      --color-ink-3: #8f8f8f;
+      --color-ink-disabled: #6b6b6b;
+      --color-accent: #60a5fa;
+      --color-accent-hover: #93c5fd;
+      --color-accent-active: #bfdbfe;
+      --color-accent-fg: #0a0a0a;
+      --color-accent-subtle: #101c2e;
+      --color-danger: #f87171;
+      --color-danger-fg: #0a0a0a;
+      --color-focus: #93c5fd;
+      --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.40);
+      --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.50), 0 1px 2px rgb(0 0 0 / 0.40);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --color-canvas: #0a0a0a;
+    --color-subtle: #131313;
+    --color-surface: #161616;
+    --color-surface-2: #1e1e1e;
+    --color-surface-hover: #242424;
+    --color-line: rgb(255 255 255 / 0.10);
+    --color-line-strong: #7a7a7a;
+    --color-ink: #fafafa;
+    --color-ink-2: #b4b4b4;
+    --color-ink-3: #8f8f8f;
+    --color-ink-disabled: #6b6b6b;
+    --color-accent: #60a5fa;
+    --color-accent-hover: #93c5fd;
+    --color-accent-active: #bfdbfe;
+    --color-accent-fg: #0a0a0a;
+    --color-accent-subtle: #101c2e;
+    --color-danger: #f87171;
+    --color-danger-fg: #0a0a0a;
+    --color-focus: #93c5fd;
+    --shadow-raised: 0 1px 2px rgb(0 0 0 / 0.40);
+    --shadow-overlay: 0 8px 24px rgb(0 0 0 / 0.50), 0 1px 2px rgb(0 0 0 / 0.40);
+  }
+
+  body {
+    background-color: var(--color-subtle);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+  }
+}

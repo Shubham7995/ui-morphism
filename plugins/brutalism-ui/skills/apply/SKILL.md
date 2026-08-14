@@ -1,24 +1,23 @@
 ---
 name: apply
 description: >-
-  Use when the user NAMES the style — neubrutalism, neo-brutalism, brutalist UI — or
-  describes its concrete moves: hard 2-5px ink borders, zero-blur offset shadows such as
-  "4px 4px 0 #000", flat saturated fills on a cream ground, sticker tilt, or hover that
-  translates an element into its own shadow. Also for a named reference (Gumroad,
-  neobrutalism.com, ekmas), or for deriving a neubrutalist token layer from a brand
-  palette and retuning it by intensity 0-100. ui-morphism is
-  descriptive and plural — one named language with
-  measured tokens and a stated when-not-to-use — not a design-quality tool. Do NOT use for
-  open-ended quality work: "make it look good", "make it modern", "polish this", "clean
-  this up", "improve the design", "make it less AI-generated", taste or visual-craft
-  critique, de-slopping, or animation and micro-interaction craft. A general design, taste
-  or animation skill answers those better and should win them. Do not use for the sibling
-  languages either: translucent or backdrop-blurred panels (glassmorphism-ui), tile-span
-  layout (bento-grid-ui). Nor for soft extrusion, clay, material texture, collage, quiet
-  subtraction, Liquid Glass or spatial depth — separate visual languages, documented in
-  docs/01 through docs/10, with plugins planned but not yet built. This style is
-  defined by the absence of blur: if the request wants blur it is not this skill. To
-  review without editing, use brutalism-ui:audit.
+  Use when the user NAMES the style — neubrutalism, neo-brutalism, brutalist UI — or describes
+  its concrete moves: hard 2-5px ink borders, zero-blur offset shadows like "4px 4px 0 #000",
+  flat saturated fills on a cream ground, sticker tilt, or hover that translates an element
+  into its shadow. Also for a named reference (Gumroad, neobrutalism.com, ekmas), or deriving
+  a token layer from a brand palette, retuned by intensity 0-100. THE TEST against the other
+  flat-and-stark language: this one ADDS weight — thick borders, hard offset shadows, loud
+  colour, chunky type. A request to strip ornament, quieten the palette or reduce to hairlines
+  is minimalism-ui — equally flat, the opposite instruction. Defined by the absence of blur:
+  wanting blur rules this skill out. ui-morphism is descriptive and plural: one named
+  language, measured tokens, a stated when-not-to-use — not a design-quality tool. Do NOT use
+  for open-ended quality work — "make it look good", "make it modern", "polish this", "clean
+  this up", "make it less AI-generated", taste or visual-craft critique, de-slopping,
+  animation craft, or a general accessibility sweep. Dedicated design, taste, animation and
+  a11y tools answer those better and should win them. Nor for the other named languages:
+  skeuomorphism-ui, neumorphism-ui, glassmorphism-ui, claymorphism-ui, maximalism-ui,
+  liquid-glass-ui, bento-grid-ui, spatial-ui. To review without editing, use
+  brutalism-ui:audit.
 argument-hint: "[scope glob] [--intensity=0-100] [--scope=marketing|product|both] [--theme=light|dark|both] [--density=compact|default|roomy] [--motion=on|minimal]"
 allowed-tools:
   - Read

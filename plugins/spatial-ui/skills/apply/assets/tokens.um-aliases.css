@@ -1,0 +1,160 @@
+/* ---------------------------------------------------------------------------
+ * Spatial UI — `--um-spatial-*` grammar bridge.
+ *
+ * assets/tokens.css carries the style's own `--sp-*` names verbatim from
+ * docs/10-spatial-ui.md §4. ui-morphism-core:token-emit speaks the shared
+ * grammar `--um-<style>-<group>[-<variant>]` defined in
+ * docs/00-comparison-matrix.md §7. This file is the mapping between them.
+ *
+ * Direction: `--um-spatial-*` reads from `--sp-*`, not the reverse, so the
+ * verbatim §4 block stays the single place a value is written. Load
+ * tokens.css first, then this file. Both themes work with no duplication here,
+ * because every alias is a var() reference and inherits whichever theme block
+ * in tokens.css is active — including the reduced-transparency, reduced-motion
+ * and forced-colors overrides, which sit after the theme blocks in tokens.css
+ * and therefore win in both.
+ *
+ * THE ONE GROUP THIS STYLE FILLS THAT NOBODY ELSE DOES: `elev`. The shared
+ * vocabulary defines `elev-0` … `elev-5` as depth LEVEL, semantic rather than
+ * visual, and says it "maps to a shadow step in flat styles and to a translateZ
+ * step in spatial-ui". This is that style. `--um-spatial-elev-N` is a distance
+ * on the z axis, not a shadow; the shadow that accompanies it is
+ * `--um-spatial-shadow-N`, and the counter-scale that keeps the panel's
+ * apparent size constant at that distance is `--sp-k-N`. All three move
+ * together or the apparent-size invariant breaks.
+ *
+ * Groups deliberately NOT populated for this style:
+ *   accent        — the palette is an environment, three vibrancy tiers of ink
+ *                   and a focus colour. docs §3 and §4 name no action hue: the
+ *                   whole point of a low-chroma room is that depth does the
+ *                   ranking and colour does not compete with it. A host app's
+ *                   brand accent rides on top; this style does not supply one.
+ *   danger        — same reason. Error semantics come from the host system.
+ *   noise         — no grain layer. The material here is blur plus saturation
+ *                   plus a specular rim, not a filmic texture.
+ *   font          — docs §4 states weights, sizes and tracking, and no family
+ *                   stacks. Inventing three would be inventing a typeface
+ *                   opinion the research does not have.
+ *   leading       — §5 sets line-height 1.55 on one recipe class rather than as
+ *                   a token; it is not part of the §4 set.
+ *   shadow-inset  — this style has no inset shadows. Depth is in front of the
+ *                   surface, never carved into it; that is neumorphism.
+ *   shadow-press  — docs §6's pressed state is a z change (n -> n-1, floor 0)
+ *                   plus a 40% tighter contact shadow, not a separate stacked
+ *                   shadow token.
+ *
+ * Tokens with no home in the closed group vocabulary (§7.3), which therefore
+ * keep their `--sp-*` names and are consumed directly:
+ *   --sp-perspective / --sp-perspective-origin
+ *                       the camera. The vocabulary has no camera group because
+ *                       nine of the ten styles have no camera.
+ *   --sp-comfort-width / --sp-comfort-width-desk
+ *                       the 41 degree cone at 500mm and at 600mm. A max-width
+ *                       derived from a field of view is not a `space` step.
+ *   --sp-z-push         the -125px pushback docs §6 applies to the content
+ *                       panel behind an open dialog. It is a negative depth and
+ *                       the `elev` ladder ascends, so it is not `elev--1`.
+ *   --sp-k-1 … --sp-k-5 the counter-scale ladder. Emitted as literals and
+ *                       re-derived whenever the ladder or the camera moves.
+ *   --sp-ink-3          vibrancy tier 3. The vocabulary carries `ink` and
+ *                       `ink-muted`; visionOS ships three tiers and the third
+ *                       is a real, used step, so it keeps its own name.
+ *   --sp-panel-opaque   the reduce-transparency / forced-colors mirror. Not a
+ *                       `surface-N`, which ascends: it is the same surface with
+ *                       the translucency taken out.
+ *   --sp-target-gaze / --sp-target-floor
+ *                       60px gaze and the 24px SC 2.5.8 floor. The vocabulary
+ *                       has one `target-min`; this style has three sizes and
+ *                       core's group-vocabulary.md records that the pointer
+ *                       value is the one that resolves to `target-min`.
+ *   --sp-orbiter-offset the 20px clearance between a panel edge and its
+ *                       orbiter. A clearance, not a spacing step.
+ *   --sp-parallax-translate / --sp-parallax-tilt
+ *                       amplitudes, in px and deg. The vocabulary has no
+ *                       amplitude group.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- ground and planes ---- */
+  --um-spatial-bg:                 var(--sp-env);
+  --um-spatial-surface-1:          var(--sp-panel);
+  --um-spatial-surface-2:          var(--sp-panel-legible);
+
+  /* ---- foreground: vibrancy tiers 1 and 2. Tier 3 keeps --sp-ink-3. ---- */
+  --um-spatial-ink:                var(--sp-ink-1);
+  --um-spatial-ink-muted:          var(--sp-ink-2);
+
+  /* ---- boundaries ----
+     `border` is the 1px hairline, and it is decorative: docs §7 measures it at
+     1.29:1 over a white panel and says so in as many words. `border-strong` is
+     the control boundary and must clear 3:1. Doc §7 gives the alpha that does
+     it over a LIGHT panel — 0.45, at 3.05:1, where 0.42 reaches only 2.79:1 and
+     fails — and states no dark counterpart. Rather than invent one, both themes
+     resolve border-strong to the tier-2 ink, which is a real token in both and
+     is re-checked in both by ui-morphism-core:a11y-validate. Where the light
+     alpha is wanted specifically, doc §7 has it. */
+  --um-spatial-border:             var(--sp-hairline);
+  --um-spatial-border-strong:      var(--sp-ink-2);
+
+  /* ---- geometry ---- */
+  --um-spatial-radius-sm:          var(--sp-radius-control);
+  --um-spatial-radius-md:          var(--sp-radius-card);
+  --um-spatial-radius-lg:          var(--sp-radius-panel);
+  --um-spatial-radius-pill:        var(--sp-radius-capsule);
+
+  /* ---- depth level: a translateZ distance, per the vocabulary's own note ---- */
+  --um-spatial-elev-0:             var(--sp-z-0);
+  --um-spatial-elev-1:             var(--sp-z-1);
+  --um-spatial-elev-2:             var(--sp-z-2);
+  --um-spatial-elev-3:             var(--sp-z-3);
+  --um-spatial-elev-4:             var(--sp-z-4);
+  --um-spatial-elev-5:             var(--sp-z-5);
+
+  /* ---- the shadow pair that accompanies each depth level. Contact plus
+     ambient, always both: a single shadow reads as flat-design elevation. ---- */
+  --um-spatial-shadow-1:           var(--sp-shadow-1);
+  --um-spatial-shadow-2:           var(--sp-shadow-2);
+  --um-spatial-shadow-3:           var(--sp-shadow-3);
+  --um-spatial-shadow-4:           var(--sp-shadow-4);
+  --um-spatial-shadow-5:           var(--sp-shadow-5);
+
+  /* ---- material ---- */
+  --um-spatial-blur:               var(--sp-blur);
+  --um-spatial-blur-strong:        var(--sp-blur-strong);
+  --um-spatial-saturate:           var(--sp-saturate);
+
+  /* ---- space. Docs §4 states four named spacings rather than an eight-step
+     ramp, so three steps are populated and the rest are absent on purpose.
+     --sp-orbiter-offset is a clearance and keeps its own name. ---- */
+  --um-spatial-space-1:            var(--sp-gap-list);
+  --um-spatial-space-2:            var(--sp-gap-target);
+  --um-spatial-space-4:            var(--sp-gap-stack);
+
+  /* ---- type. One step bolder than a flat scale, and never below 14px. ---- */
+  --um-spatial-text-xs:            var(--sp-font-min);
+  --um-spatial-text-base:          var(--sp-text-body);
+  --um-spatial-text-lg:            var(--sp-text-title);
+  --um-spatial-weight-body:        var(--sp-weight-body);
+  --um-spatial-weight-title:       var(--sp-weight-title);
+  --um-spatial-tracking-body:      var(--sp-tracking);
+
+  /* ---- motion. `enter` overshoots slightly because real objects settle;
+     `exit` does not, because a panel leaving should read as intentional. ---- */
+  --um-spatial-dur-fast:           var(--sp-dur-hover);
+  --um-spatial-dur-base:           var(--sp-dur-depth);
+  --um-spatial-dur-slow:           var(--sp-dur-panel);
+  --um-spatial-ease-standard:      var(--sp-ease-depth);
+  --um-spatial-ease-enter:         var(--sp-ease-settle);
+  --um-spatial-ease-exit:          var(--sp-ease-depth);
+
+  /* ---- focus. An outline, never a box-shadow: forced-colors deletes a shadow
+     and leaves the control with no visible focus at all. The colour and both
+     measurements are docs §5's focus-visible rule on .sp-btn. ---- */
+  --um-spatial-focus-color:        #0a63f8;
+  --um-spatial-focus-width:        3px;
+  --um-spatial-focus-offset:       3px;
+
+  /* ---- targets. The pointer size is `target-min`; the 60px gaze size and the
+     24px SC 2.5.8 floor keep their --sp- names and are both load-bearing. ---- */
+  --um-spatial-target-min:         var(--sp-target-pointer);
+}

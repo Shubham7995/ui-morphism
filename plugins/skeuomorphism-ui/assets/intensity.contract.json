@@ -1,0 +1,86 @@
+{
+  "style": "skeuomorphism",
+  "default": 60,
+  "sourceDoc": "docs/01-skeuomorphism.md",
+  "docSection": "13",
+  "baselineAtZero": "A bordered, unornamented, fully usable control: the mid-stop face colour as a flat fill, the 1px --sk-border-strong material edge, --sk-ink at body-copy grade, the additive focus ring and the 44px target, with no shadow stack, no gradient, no grain, no specular hotspot and no press travel. Doc §8's degradation ladder ends exactly here and calls it a perfectly respectable place to land — flat 2.0 / semi-flat, which doc 05 owns as an alias.",
+  "knobs": {
+    "shadowDepth": {
+      "anchors": [[0, 0], [100, 1]],
+      "note": "Doc §13: a 0-1 multiplier on all four layers. At 0 there are no shadows; at 100 the stack is doc §4's literal values — contact 0 1px 2px/.25, ambient 0 4px 10px/.18, bevel .80, lip .12. Linear because doc §5's React component is linear: it derives k = intensity/100 and multiplies every offset, blur and alpha by it, so the straight line is the doc's own curve rather than a choice made here. Default 60 resolves to 0.60."
+    },
+    "gradientSpread": {
+      "unit": "%",
+      "anchors": [[0, 0], [60, 15], [100, 24]],
+      "note": "Doc §13: luminance between the top and bottom stop of the 3-stop face. 0 is a flat fill; 24% is polished metal only; the default is 15%, which is also the spread doc §4's --sk-surface-hi / --sk-surface-lo pair already carries, so intensity 60 reproduces the shipped token values exactly. Above 18% starts looking like a 2009 web button — a warning, not a clamp. Piecewise-linear through the stated default because a straight line 0 to 24 would put intensity 60 at 14.4%."
+    },
+    "grainOpacity": {
+      "anchors": [[0, 0], [60, 0.05], [100, 0.08]],
+      "darkAnchors": [[0, 0], [60, 0.07], [100, 0.08]],
+      "note": "Doc §13: 0 to 0.08, hard-capped at 0.08 — the skill will not emit higher. Doc §4 tables the default as 0.05 light and 0.07 dark, so the light and dark ramps are anchored separately on the same 0 and the same 0.08 ceiling; dark surfaces need slightly more grain to read at all. Doc §3: above 0.10 it stops reading as grain and starts reading as dirt. This knob rewrites --sk-noise-opacity and nothing else. GRAIN FREQUENCY IS NOT A KNOB AND NOT A TOKEN — see the note on --sk-noise in ../skills/apply/assets/tokens.css."
+    },
+    "materialFidelity": {
+      "anchors": [[0, 0], [0.9, 0], [1, 1], [24.9, 1], [25, 2], [74.9, 2], [75, 3], [100, 3]],
+      "note": "Doc §13: 0 = colour only, 1 = + gradient, 2 = + grain, 3 = + specular hotspot and edge highlight. An integer count of decorative layers, so it is a stepped ladder rather than a line: a plateau with a 0.1-wide ramp below each boundary, exactly the shape docs/MARKETPLACE.md §7.2 specifies for a stepped knob, so no integer intensity lands inside a ramp. The 25 boundary is the one doc §13 already states — it is where shadowDepth reaches 0.25 and the press travel stops being suppressed. Doc §13 calls this knob the real performance lever, because it decides how many paint rectangles exist rather than how strong each one is."
+    },
+    "travel": {
+      "unit": "px",
+      "anchors": [[0, 0], [60, 1], [100, 2]],
+      "emitAs": "integer px — round the resolved value at emit time",
+      "note": "Doc §13: press displacement, 0 to 2px, default 1px. 2px only for large hardware metaphors 64px tall or more, which is the contextClamp below. The contract carries the unrounded curve so the monotonicity sweep reads the line the doc states; the skill rounds when it writes --sk-press-travel. COUPLED TO shadowDepth: doc §4 and §13 suppress travel to 0 below shadowDepth 0.25, so a 1px jump never happens without shadow support. That floor is applied after rounding and is independent of this curve."
+    }
+  },
+  "clamps": {
+    "shadowDepth": { "min": 0, "max": 1 },
+    "gradientSpread": { "min": 0, "max": 24 },
+    "grainOpacity": { "min": 0, "max": 0.08 },
+    "materialFidelity": { "min": 0, "max": 3 },
+    "travel": { "min": 0, "max": 2 }
+  },
+  "contextCaps": [
+    {
+      "when": { "surface": "running-text" },
+      "cap": 0,
+      "reason": "Doc §13 anti-pattern: skeuomorphic treatment is refused on body-copy backgrounds and on any element holding more than roughly 120 characters of running text. Doc §9 puts content-first reading products on the avoid list because texture behind body copy costs comprehension and hurts 1.4.3. The intensity-0 rung is the bordered, unornamented, fully legible container, so the cap resolves to that rather than to a separate code path. The skill still reports the refusal."
+    },
+    {
+      "when": { "surface": "data-table" },
+      "cap": 0,
+      "reason": "Doc §13 anti-pattern names table rows alongside body-copy backgrounds; doc §9 puts dense, data-heavy enterprise UI — tables, admin consoles, dashboards, analytics — on the avoid list, because every bevel is visual noise competing with the data. Chrome around the table can carry the style; the rows cannot."
+    }
+  ],
+  "contextClamps": [
+    {
+      "when": { "perfTarget": "low-end" },
+      "clamps": { "materialFidelity": { "max": 1 } },
+      "reason": "Doc §8 degradation ladder, steps 1 and 3: drop the grain layer first, then the specular and edge-highlight layer, leaving colour plus the gradient and the 1px top bevel — 70% of the read at 20% of the paint. Doc §9 names ultra-low-end targets with heavy scroll as the exact profile that stutters: many grain layers plus many shadow stacks."
+    },
+    {
+      "when": { "prefersContrast": "more" },
+      "clamps": { "grainOpacity": { "max": 0 }, "gradientSpread": { "max": 6 } },
+      "reason": "Doc §7: under prefers-contrast: more, drop the grain to 0, darken ink and borders, and flatten the gradient spread to about 6%. These are the numbers the emitted @media block carries, so they live here rather than being retyped into the stylesheet."
+    },
+    {
+      "when": { "controlHeight": "under-64" },
+      "clamps": { "travel": { "max": 1 } },
+      "reason": "Doc §13 travel knob: 2px is for large hardware metaphors 64px tall or more. On an ordinary 44px control a 2px drop reads as a glitch rather than as a press."
+    }
+  ],
+  "deviation": "MARKETPLACE.md §7.2 rule 5 gives sibling styles a numeric intensity cap — maximalism, brutalism, liquid-glass and spatial-ui all cap at 45. Doc 01 §13 names no such number for skeuomorphism. The two caps above therefore resolve to 0, which is the doc's own answer for both surfaces (refuse the ornament, emit the plain bordered control), and every other doc-stated context limit is expressed at the knob level under contextClamps, which core's resolver does not consume. The skill applies contextClamps itself after resolution and reports each one on the same audit line as a resolved cap. Recorded here because a derivation the doc does not state must be visible.",
+  "clampsNotExpressibleHere": {
+    "lightDirection": "one overhead source across every emitted component; recessed containers are the only inversion",
+    "shadowLayersPerRaisedSurface": "exactly 4 at elevation 2 — contact, ambient, inset top bevel, inset bottom lip; never a single shadow presented as this style",
+    "grainLayersPerScrollContainer": "<= 1, on the outermost chassis, never one per component",
+    "grainFrequency": "fractalNoise, baseFrequency 0.9, numOctaves 2, stitchTiles stitch, 160px tile — baked into the --sk-noise data URI in three places and edited there, never a custom property",
+    "borderStrong": "every control carries a real 1px --sk-border-strong edge; a bevel highlight is never the boundary",
+    "specularHotspot": "curved parts only — knobs, toggles, pill switches. Flat rectangles do not get one",
+    "animatedBoxShadow": "never; cross-fade two pseudo-elements carrying static shadows instead",
+    "focusIndicator": "additive to the resolved stack, >= 2px, never a replacement for it",
+    "targetMin": ">= 44px (--sk-target-min), never below the 24x24 SC 2.5.8 floor",
+    "textMeasuredAgainst": "the darkest gradient stop the text can sit on, never the average or the top stop",
+    "decorativeImageBytes": "<= 60KB per route; no raster texture > 40KB; no text baked into a texture",
+    "emittedCss": "<= 8KB gzipped for tokens plus the component layer",
+    "hybridBackdropBlur": "<= 12px radius and <= 2 backdrop-filtered elements per viewport, and only in the glass-above-material hybrid doc §12 sanctions",
+    "note": "These constrain the emitted sheet and the composition rather than the value of a knob, so ../skills/apply/scripts/skeuo-scan.mjs and ui-morphism-core:a11y-validate enforce them. Recorded here so the clamp table reads as the complete list."
+  }
+}

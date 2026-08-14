@@ -1,23 +1,23 @@
 ---
 name: apply
 description: >-
-  Use when the user NAMES the style — glassmorphism, frosted glass, acrylic — or describes
-  its concrete moves: backdrop-blur, translucent panels, a frosted navbar, modal, popover,
-  command palette or dock, or porting Apple Material or Fluent Acrylic to the web. Also
-  for the mechanics only this style has: the `@supports` opaque fallback, the
-  `-webkit-backdrop-filter` twin, `prefers-reduced-transparency` handling, and the
-  mesh-gradient ground glass depends on. ui-morphism is descriptive and plural — one named language with measured tokens
-  and a stated when-not-to-use — not a design-quality tool. Do NOT use for open-ended
-  quality work: "make it look good", "make it modern", "polish this", "clean this up",
-  "improve the design", "make it less AI-generated", taste or visual-craft critique,
-  de-slopping, or animation and micro-interaction craft. A general design, taste or
-  animation skill answers those better and should win them. Do not use for the sibling
-  languages either: hard-bordered zero-blur surfaces (brutalism-ui), tile-span layout
-  (bento-grid-ui). Nor for Apple Liquid Glass refraction and iOS 26 specular chrome,
-  same-hue soft extrusion, puffy pastel clay, depth ladders and parallax, or stripping
-  decoration out — separate visual languages, documented in docs/08, docs/02, docs/04,
-  docs/10 and docs/05, with plugins planned but not yet built.
-  To review an implementation without changing it, use glassmorphism-ui:audit.
+  Use when the user NAMES the style — glassmorphism, frosted glass, acrylic — or describes its
+  concrete moves: backdrop-blur, translucent panels, a frosted navbar, modal, popover, command
+  palette, or porting Apple Material or Fluent Acrylic to the web. Also for mechanics only
+  this style has: the `@supports` opaque fallback, the `-webkit-backdrop-filter` twin,
+  `prefers-reduced-transparency`, and the mesh-gradient ground it needs. THE TEST against the
+  two translucent-depth siblings: here the backdrop is BLURRED AND NOTHING ELSE — never
+  geometrically warped, and nothing sits at translateZ under a perspective camera. A backdrop
+  that refracts or lenses is liquid-glass-ui; panels on a depth ladder with parallax are
+  spatial-ui. Depth is a five-rung blur/alpha stack, not geometry. ui-morphism is descriptive
+  and plural: one named language, measured tokens, a stated when-not-to-use — not a
+  design-quality tool. Do NOT use for open-ended quality work — "make it look good", "make it
+  modern", "polish this", "clean this up", "make it less AI-generated", taste or visual-craft
+  critique, de-slopping, animation craft, or a general accessibility sweep. Dedicated design,
+  taste, animation and a11y tools answer those better and should win them. Nor for the other
+  named languages: skeuomorphism-ui, neumorphism-ui, claymorphism-ui, minimalism-ui,
+  maximalism-ui, brutalism-ui, bento-grid-ui. To review without editing, use
+  glassmorphism-ui:audit.
 argument-hint: "[scope glob] [--tone=light|dark|auto] [--scope=chrome|overlays|cards|all] [--intensity=0-100] [--perf-target=desktop|mobile|low-end]"
 allowed-tools:
   - Read

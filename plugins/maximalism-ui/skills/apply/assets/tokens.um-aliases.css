@@ -1,0 +1,187 @@
+/* ---------------------------------------------------------------------------
+ * Maximalism — `--um-maximalism-*` grammar bridge.
+ *
+ * assets/tokens.css carries the style's own `--max-*` names verbatim from
+ * docs/06-maximalism.md §4. ui-morphism-core:token-emit speaks the shared
+ * grammar `--um-<style>-<group>[-<variant>]` defined in
+ * docs/00-comparison-matrix.md §7. This file is the mapping between them.
+ *
+ * Direction: `--um-maximalism-*` reads from `--max-*`, not the reverse, so the
+ * verbatim §4 block stays the single place a value is written. Load tokens.css
+ * first, then this file. Both themes work with no duplication here, because
+ * every alias is a var() reference and inherits whichever theme block in
+ * tokens.css is active — which is exactly what the role bindings need, since
+ * `--max-text-on-paper` and `--max-text-on-ink` are rebound under dark and an
+ * alias must follow them rather than freeze a light-mode answer.
+ *
+ * Groups this style populates: bg, surface, ink, border, accent, radius,
+ * shadow, blur, noise, space, font, text, leading, tracking, dur, ease, focus,
+ * target.
+ *
+ * Groups deliberately NOT populated, with the doc's reason:
+ *
+ *   elev          — §3: elevation here is a hard offset with zero blur, and the
+ *                   shadow ladder is that offset. A parallel depth ramp would be
+ *                   a second name for one thing, which is how a scale drifts.
+ *                   The style's real depth device is the layer stack, and §4
+ *                   states in as many words that the layer budget is not a token.
+ *   saturate      — there is no `backdrop-filter` in this style. `--max-boost`
+ *                   is a `filter` applied to imagery, and §4 is explicit that it
+ *                   is never applied to text, so it is not a backdrop
+ *                   saturation and keeps its own name.
+ *   danger        — §4 declares no destructive hue. The palette is expressive,
+ *                   not semantic. Binding one of the six accents to `danger`
+ *                   would put a colour into an error state that §7 has not
+ *                   measured for that use — orange is 2.70:1 on paper and fails
+ *                   even the 3:1 non-text bar.
+ *   weight        — §4 declares no weight tokens; weight lives in the family
+ *                   stack, and a display face is chosen, not dialled.
+ *   ink-inverse   — the inverse foreground here is ground-dependent AND
+ *                   theme-dependent, which is exactly what
+ *                   `--max-text-on-paper` and `--max-text-on-ink` express. One
+ *                   `ink-inverse` would be a wrong answer on half the palette,
+ *                   and which half flips between light and dark.
+ *   accent-subtle — §3: flat saturated fills at chroma 0.18-0.30. There is no
+ *                   desaturated tint of an accent in this style.
+ *
+ * Tokens with no home in the closed group vocabulary (§7.3), which therefore
+ * keep their `--max-*` names and are consumed directly:
+ *   --max-text-on-paper / --max-text-on-ink / --max-accent-safe
+ *                       the role bindings. The vocabulary has one action hue
+ *                       and its foreground; this style has a rule about WHICH
+ *                       accent is legal as text on WHICH ground, and that rule
+ *                       flips between themes. `accent-fg` cannot express it and
+ *                       should not grow to. These three are the tokens a
+ *                       component reaches for, and they are the reason the
+ *                       palette is safe to hand to an author.
+ *   --max-magenta … --max-orange
+ *                       the six-hue palette. The closed list carries one accent
+ *                       plus a subtle tint; a deliberately clashing six-hue ramp
+ *                       with no emphasis ordering between its members is a fact
+ *                       about this style, not a shared concept. Every one of the
+ *                       six is contrast-checked against its ground whether or
+ *                       not it carries a `--um-*` name; the alias is a naming
+ *                       convenience, not the thing that makes a colour safe.
+ *   --max-violet-deep / --max-cobalt-deep
+ *                       the dark-mode deep ramp. Only these two carry text on
+ *                       the cream surface that `--max-ink` becomes in dark.
+ *   --max-r-0 / --max-r-blob
+ *                       the hard 0 and the eight-value elliptical sticker
+ *                       shape. Neither is a rung on an ascending ladder, and
+ *                       putting them on one would imply an ordering they do not
+ *                       have — mixing radii inside one composition is the point.
+ *   --max-stroke-1 / -2 / -3
+ *                       three simultaneous stroke WIDTHS in one composition.
+ *                       `border` and `border-strong` are colours in the shared
+ *                       grammar; the widths stay here.
+ *   --max-tilt-s / -m / -l
+ *                       rotation. The vocabulary has no rotation group, and
+ *                       anti-grid placement is this style's alone.
+ *   --max-grain / --max-boost / --max-lift
+ *                       the grain image itself, the imagery filter, and the
+ *                       hover translate.
+ *   --max-dur-marquee   the 24s ambient cycle. `dur` closes at fast/base/slow,
+ *                       and an ambient loop is not a transition duration.
+ *   --max-focus-ring / --max-focus-outer
+ *                       the composite outline shorthand and the outer halo
+ *                       colour. `focus-color` takes the INNER ring; most styles
+ *                       have one ring and this one needs two.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- ground and planes ---- */
+  --um-maximalism-bg:               var(--max-paper);
+  --um-maximalism-surface-1:        var(--max-surface);
+  --um-maximalism-surface-2:        var(--max-surface-2);
+
+  /* ---- foreground ---- */
+  --um-maximalism-ink:              var(--max-ink);
+  --um-maximalism-ink-muted:        var(--max-muted);
+
+  /* ---- boundaries. `border` is the decorative stroke colour and
+     `border-strong` is the control boundary; in this style they are the same
+     ink, because every container carries a real border and forced-colors
+     deletes the shadow that would otherwise stand in for one. ---- */
+  --um-maximalism-border:           var(--max-ink);
+  --um-maximalism-border-strong:    var(--max-ink);
+
+  /* ---- action hue. The bare `accent` is the one accent §4 binds as safe on
+     the ground in BOTH themes; `accent-fg` is the ink that sits on it. The
+     other five hues keep their `--max-*` names. ---- */
+  --um-maximalism-accent:           var(--max-accent-safe);
+  --um-maximalism-accent-fg:        var(--max-ink);
+
+  /* ---- geometry ---- */
+  --um-maximalism-radius-sm:        var(--max-r-1);
+  --um-maximalism-radius-md:        var(--max-r-2);
+  --um-maximalism-radius-lg:        var(--max-r-3);
+  --um-maximalism-radius-pill:      var(--max-r-pill);
+
+  /* ---- shadows. Zero blur throughout; the ladder is press / hard / stack,
+     which is three of the vocabulary's five rungs. Steps 4 and 5 are
+     deliberately absent rather than invented — §4 ships three. ---- */
+  --um-maximalism-shadow-1:         var(--max-shadow-press);
+  --um-maximalism-shadow-2:         var(--max-shadow-hard);
+  --um-maximalism-shadow-3:         var(--max-shadow-stack);
+  --um-maximalism-shadow-press:     var(--max-shadow-press);
+
+  /* ---- blur. The only blur in the style is the behind-content halo, and §4
+     is explicit that it never goes over text. ---- */
+  --um-maximalism-blur:             var(--max-blur-halo);
+
+  /* ---- grain. `noise-freq` has no token of its own: the baseFrequency 0.8 /
+     numOctaves 3 pair is baked into the `--max-grain` data URI in §4, and
+     splitting it out would create a number no stylesheet reads. ---- */
+  --um-maximalism-noise-opacity:    var(--max-grain-opacity);
+
+  /* ---- space ---- */
+  --um-maximalism-space-1:          var(--max-s-1);
+  --um-maximalism-space-2:          var(--max-s-2);
+  --um-maximalism-space-3:          var(--max-s-3);
+  --um-maximalism-space-4:          var(--max-s-4);
+  --um-maximalism-space-5:          var(--max-s-5);
+  --um-maximalism-space-6:          var(--max-s-6);
+  --um-maximalism-space-7:          var(--max-s-7);
+
+  /* ---- type. Four families is the ceiling and all four ship; the kicker face
+     has no home in the closed list — `font` is body/display/mono — so it keeps
+     its own `--max-font-kicker` name and is consumed directly. ---- */
+  --um-maximalism-font-body:        var(--max-font-body);
+  --um-maximalism-font-display:     var(--max-font-display);
+  --um-maximalism-font-mono:        var(--max-font-mono);
+
+  --um-maximalism-text-xs:          var(--max-t-cap);
+  --um-maximalism-text-sm:          var(--max-t-sm);
+  --um-maximalism-text-base:        var(--max-t-base);
+  --um-maximalism-text-lg:          var(--max-t-lg);
+  --um-maximalism-text-xl:          var(--max-t-xl);
+  --um-maximalism-text-2xl:         var(--max-t-2xl);
+  --um-maximalism-text-3xl:         var(--max-t-3xl);
+
+  --um-maximalism-leading-display:  var(--max-leading-display);
+  --um-maximalism-leading-body:     var(--max-leading-body);
+
+  --um-maximalism-tracking-display: var(--max-track-display);
+  --um-maximalism-tracking-kicker:  var(--max-track-kicker);
+
+  /* ---- motion. `slow` is the 420ms entrance; the 24s marquee is not a
+     transition duration and keeps its own name. ---- */
+  --um-maximalism-dur-fast:         var(--max-dur-tap);
+  --um-maximalism-dur-base:         var(--max-dur-hover);
+  --um-maximalism-dur-slow:         var(--max-dur-enter);
+  --um-maximalism-ease-standard:    var(--max-ease-snap);
+  --um-maximalism-ease-enter:       var(--max-ease-out);
+  --um-maximalism-ease-exit:        var(--max-ease-out);
+
+  /* ---- focus. `focus-color` is the INNER ring. The outer ink halo is drawn as
+     a box-shadow and keeps `--max-focus-outer`, because an element gets one
+     outline and the shared grammar models one ring. ---- */
+  --um-maximalism-focus-color:      var(--max-focus-inner);
+  --um-maximalism-focus-width:      var(--max-focus-w);
+  --um-maximalism-focus-offset:     var(--max-focus-offset);
+
+  /* ---- targets. 44px, not the 24px SC 2.5.8 floor: the hit test runs against
+     the transformed box, and the hard offset shadow inflates the apparent one,
+     so the area a user can reliably hit is smaller than the area they see. ---- */
+  --um-maximalism-target-min:       var(--max-target-min);
+}

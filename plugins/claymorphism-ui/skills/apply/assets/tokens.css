@@ -1,0 +1,218 @@
+/* ---------------------------------------------------------------------------
+ * Claymorphism token layer.
+ *
+ * Source of truth: docs/04-claymorphism.md §4, "Anatomy & Design Tokens". The
+ * declarations below are reproduced verbatim from that block; the only addition
+ * is this header. Do not edit values here — edit the doc, then re-copy.
+ *
+ * The load-bearing difference from neumorphism lives in this file: a clay
+ * surface carries its OWN colour (--clay-surface, --clay-lavender … ) instead
+ * of inheriting --clay-bg, and it gets a real outer drop shadow on top of the
+ * two insets. That is what restores the contrast neumorphism loses, and it is
+ * why every pastel here clears 8:1 against --clay-ink.
+ *
+ * Four shadow atoms compose four elevations, in paint order — first layer on
+ * top: rim (specular edge), sheen (top highlight), shade (bottom shade), drop
+ * (the float). --clay-drop-4 is drawn at exactly --clay-blur-max, so the §8
+ * perf budget is the value rather than a comment about it.
+ *
+ * These are the doc's canonical reference values, not the resolution of any one
+ * intensity. Intensity rewrites a small set of them on the style root rather
+ * than here — see ../references/tokens.md §4 for the resolved table and
+ * ../../../assets/intensity.contract.json for the curves core resolves.
+ * Nothing in this file computes a contrast ratio; every figure quoted in a
+ * comment is the doc's, and ui-morphism-core:a11y-validate is what decides
+ * pass or fail.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* --- ground --- */
+  --clay-bg:            #F4F1FB;
+  --clay-bg-alt:        #EDE7FF;
+  --clay-surface:       #FFFFFF;
+
+  /* --- clay surfaces --- */
+  --clay-lavender:      #C7B9FF;
+  --clay-sky:           #9FD8F5;
+  --clay-mint:          #8FE3B8;
+  --clay-butter:        #FFD9A0;
+  --clay-coral:         #FFB3A7;
+
+  /* --- actions & text --- */
+  --clay-primary:       #5B3AE0;
+  --clay-primary-ink:   #FFFFFF;
+  --clay-danger:        #C7442C;
+  --clay-danger-ink:    #FFFFFF;
+  --clay-ink:           #241F3A;
+  --clay-ink-muted:     #4A4363;
+  --clay-ink-on-clay:   #241F3A;
+
+  /* --- shadow hue: keep in sync with the dominant surface --- */
+  --clay-shadow-h:      258;
+  --clay-shadow-s:      60%;
+  --clay-shadow-l:      45%;
+
+  /* --- radii --- */
+  --clay-r-chip:        999px;
+  --clay-r-btn:         20px;
+  --clay-r-input:       18px;
+  --clay-r-card:        32px;
+  --clay-r-modal:       40px;
+
+  /* --- borders ---
+     Clay's edge is the shadow, so the stroke is zero-width. It is still a token
+     because forced-colors has to put a real border back, and that value is
+     needed in two separate blocks in §5 — declaring it once is what stops the
+     `2px solid ButtonText` literal from being written out twice. */
+  --clay-border:        0 solid transparent;
+  --clay-border-hc:     2px solid ButtonText;
+
+  /* --- blur ceiling & backdrop ---
+     --clay-blur-max is the per-layer perf budget argued in §8, and --clay-drop-4
+     is drawn at exactly that ceiling, so the budget is the value rather than a
+     comment about it. --clay-backdrop stays at blur(0) because clay is opaque;
+     apply it as `backdrop-filter: var(--clay-backdrop)` and raise it only on the
+     glass-hybrid overlays described in §12. */
+  --clay-blur-max:      68px;
+  --clay-backdrop:      blur(0);
+
+  /* --- shadow atoms --- */
+  --clay-rim:    inset 0 1px 1px 0 hsl(0 0% 100% / .35);
+  --clay-sheen:  inset 0 10px 18px -6px hsl(0 0% 100% / .62);
+  --clay-shade:  inset 0 -10px 18px -6px hsl(var(--clay-shadow-h) 45% 30% / .32);
+  --clay-drop-1: 0 8px  16px -6px  hsl(var(--clay-shadow-h) var(--clay-shadow-s) var(--clay-shadow-l) / .28);
+  --clay-drop-2: 0 14px 26px -8px  hsl(var(--clay-shadow-h) var(--clay-shadow-s) var(--clay-shadow-l) / .30);
+  --clay-drop-3: 0 24px 44px -12px hsl(var(--clay-shadow-h) var(--clay-shadow-s) var(--clay-shadow-l) / .32);
+  --clay-drop-4: 0 38px var(--clay-blur-max) -16px hsl(var(--clay-shadow-h) var(--clay-shadow-s) var(--clay-shadow-l) / .35);
+
+  /* --- composed elevations (paint order: first layer on top) --- */
+  --clay-1: var(--clay-rim), var(--clay-sheen), var(--clay-shade), var(--clay-drop-1);
+  --clay-2: var(--clay-rim), var(--clay-sheen), var(--clay-shade), var(--clay-drop-2);
+  --clay-3: var(--clay-rim), var(--clay-sheen), var(--clay-shade), var(--clay-drop-3);
+  --clay-4: var(--clay-rim), var(--clay-sheen), var(--clay-shade), var(--clay-drop-4);
+  --clay-pressed:
+    inset 0 6px 12px -4px hsl(var(--clay-shadow-h) 45% 25% / .38),
+    inset 0 -3px 8px -4px hsl(0 0% 100% / .30),
+    0 4px 8px -4px hsl(var(--clay-shadow-h) var(--clay-shadow-s) var(--clay-shadow-l) / .24);
+
+  /* --- typography --- */
+  --clay-font: "Nunito", "Plus Jakarta Sans", ui-rounded, system-ui, sans-serif;
+  --clay-fs-xs:  0.8125rem;  /* 13px */
+  --clay-fs-sm:  0.9375rem;  /* 15px */
+  --clay-fs-md:  1.0625rem;  /* 17px */
+  --clay-fs-lg:  1.25rem;    /* 20px */
+  --clay-fs-xl:  1.5625rem;  /* 25px */
+  --clay-fs-2xl: 1.9375rem;  /* 31px */
+  --clay-fs-3xl: 2.4375rem;  /* 39px */
+  --clay-lh-body: 1.55;
+  --clay-lh-display: 1.18;
+
+  /* --- spacing --- */
+  --clay-sp-1: 4px;  --clay-sp-2: 8px;  --clay-sp-3: 12px; --clay-sp-4: 16px;
+  --clay-sp-5: 20px; --clay-sp-6: 24px; --clay-sp-8: 32px; --clay-sp-10: 40px;
+  --clay-sp-14: 56px;
+  --clay-gap: 24px;
+
+  /* --- motion --- */
+  --clay-dur-press:   90ms;
+  --clay-dur-release: 260ms;
+  --clay-dur-hover:   180ms;
+  --clay-ease-out:    cubic-bezier(.2, .8, .2, 1);
+  --clay-ease-squish: cubic-bezier(.34, 1.56, .64, 1);
+
+  /* --- focus --- */
+  --clay-focus-color: #5B3AE0;
+  --clay-focus-width: 3px;
+  --clay-focus-offset: 3px;
+
+  /* --- hit targets --- */
+  --clay-target-min:  48px;   /* SC 2.5.8 floor is 24px; 48 also clears 2.5.5
+                                 AAA and survives the press scale(.97) */
+}
+
+/* Light values live on bare `:root` above. The dark set is written twice —
+   once guarded so it cannot beat an explicit `data-theme="light"`, once under
+   `:root[data-theme="dark"]` so a manual toggle beats the OS preference. Both
+   lists must stay identical; that is the whole point of the pattern, and it is
+   the same shape used in docs 01, 02, 05, 06, 07, 08, 09 and 10.
+   `@custom-media` or a Sass mixin is the sane way to avoid the duplication in
+   a real codebase; it is spelled out here so the rule is legible. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --clay-bg:          #221D2E;
+    --clay-bg-alt:      #2A2438;
+    --clay-surface:     #2F2942;
+
+    /* Dark clay is desaturated and darkened, not just alpha-reduced. */
+    --clay-lavender:    #4A3E7A;
+    --clay-sky:         #2C5670;
+    --clay-mint:        #2A5B45;
+    --clay-butter:      #5C4726;
+    --clay-coral:       #6A3730;
+
+    --clay-primary:     #A78BFA;
+    --clay-primary-ink: #221D2E;   /* 6.01:1 */
+    --clay-danger:      #F09182;
+    --clay-danger-ink:  #221D2E;
+    --clay-ink:         #F2EFFA;   /* 14.42:1 on --clay-bg */
+    --clay-ink-muted:   #B9B2CC;
+    --clay-ink-on-clay: #F2EFFA;   /* 8.18:1 on dark lavender */
+
+    /* The sheen must drop hard or dark clay looks chalky. */
+    --clay-rim:    inset 0 1px 1px 0 hsl(0 0% 100% / .10);
+    --clay-sheen:  inset 0 10px 18px -6px hsl(258 40% 80% / .14);
+    --clay-shade:  inset 0 -10px 18px -6px hsl(258 60% 6% / .55);
+
+    --clay-shadow-h: 258;
+    --clay-shadow-s: 45%;
+    --clay-shadow-l: 8%;
+    --clay-drop-1: 0 8px  16px -6px  hsl(258 45% 4% / .55);
+    --clay-drop-2: 0 14px 26px -8px  hsl(258 45% 4% / .58);
+    --clay-drop-3: 0 24px 44px -12px hsl(258 45% 4% / .62);
+    --clay-drop-4: 0 38px var(--clay-blur-max) -16px hsl(258 45% 4% / .68);
+
+    --clay-focus-color: #C7B9FF;
+  }
+}
+
+/* Explicit opt-in override, so a toggle beats the media query both ways.
+   This block redefines the full token list, not just `color-scheme`. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --clay-bg:          #221D2E;
+  --clay-bg-alt:      #2A2438;
+  --clay-surface:     #2F2942;
+
+  --clay-lavender:    #4A3E7A;
+  --clay-sky:         #2C5670;
+  --clay-mint:        #2A5B45;
+  --clay-butter:      #5C4726;
+  --clay-coral:       #6A3730;
+
+  --clay-primary:     #A78BFA;
+  --clay-primary-ink: #221D2E;   /* 6.01:1 */
+  --clay-danger:      #F09182;
+  --clay-danger-ink:  #221D2E;
+  --clay-ink:         #F2EFFA;   /* 14.42:1 on --clay-bg */
+  --clay-ink-muted:   #B9B2CC;
+  --clay-ink-on-clay: #F2EFFA;   /* 8.18:1 on dark lavender */
+
+  --clay-rim:    inset 0 1px 1px 0 hsl(0 0% 100% / .10);
+  --clay-sheen:  inset 0 10px 18px -6px hsl(258 40% 80% / .14);
+  --clay-shade:  inset 0 -10px 18px -6px hsl(258 60% 6% / .55);
+
+  --clay-shadow-h: 258;
+  --clay-shadow-s: 45%;
+  --clay-shadow-l: 8%;
+  --clay-drop-1: 0 8px  16px -6px  hsl(258 45% 4% / .55);
+  --clay-drop-2: 0 14px 26px -8px  hsl(258 45% 4% / .58);
+  --clay-drop-3: 0 24px 44px -12px hsl(258 45% 4% / .62);
+  --clay-drop-4: 0 38px var(--clay-blur-max) -16px hsl(258 45% 4% / .68);
+
+  --clay-focus-color: #C7B9FF;
+}
+
+:root[data-theme="light"] { color-scheme: light; }

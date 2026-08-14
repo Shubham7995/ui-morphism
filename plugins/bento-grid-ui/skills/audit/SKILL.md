@@ -1,24 +1,22 @@
 ---
 name: audit
 description: >-
-  Use to check a UI that ALREADY uses a bento or varied-span tile grid against this
-  pattern's own invariants, when the user names it or describes its concrete moves and
-  wants a review rather than a change. The invariants it owns: the reading-flow guard — DOM
-  order versus visual order, `grid-auto-flow: dense` or `order` over focusable tiles, an
-  SC 1.3.2 conformance failure; one heading and
-  zero-or-one links per tile, and the two-links-under-an-overlay trap; the
-  dominant tile's share and the distinct-span count; interactive-border
-  alpha against the 3:1 crossing; scrim strength over imagery; fixed `grid-auto-rows`
-  clipping text at 200% zoom; single-column collapse at 320px; and the tile-image byte
-  budget. Writes a report only; never edits — use bento-grid-ui:apply to change anything.
-  This is NOT a general design, taste, visual-craft or AI-slop audit,
-  and not a general accessibility, layout or responsive-design sweep: it will not answer
-  "is my design good", "critique this UI", "find the AI tells", "review my animations" or
-  "audit my site's accessibility". Dedicated design-quality, de-slopping, animation and
-  a11y tools answer those better and should win them. Do not use for frosted panels
-  (glassmorphism-ui:audit) or hard-bordered restyling (brutalism-ui:audit). Liquid Glass
-  refraction, soft extrusion and depth ladders are separate visual languages, documented
-  in docs/08, docs/02 and docs/10, with plugins planned but not yet built.
+  Use to check a UI that ALREADY uses a bento or varied-span tile grid against this pattern's
+  own invariants, when the user names it and wants a review rather than a change. The
+  invariants it owns: the reading-flow guard — DOM order versus visual order, `grid-auto-flow:
+  dense` or `order` over focusable tiles, an SC 1.3.2 failure; one heading and zero-or-one
+  links per tile, and the two-links-under-an-overlay trap; the dominant tile's share and the
+  distinct-span count; interactive-border alpha against the 3:1 crossing; scrim strength over
+  imagery; fixed `grid-auto-rows` clipping text at 200% zoom; single-column collapse at 320px;
+  and the tile-image byte budget. It audits LAYOUT ONLY and says nothing about surface
+  treatment. Writes a report; never edits — use bento-grid-ui:apply to change anything. This
+  is NOT a general design, taste, visual-craft or AI-slop audit, and not a general
+  accessibility sweep: it will not answer "is my design good", "critique this UI", "find the
+  AI tells" or "audit my site's accessibility". Dedicated design-quality, de-slopping,
+  animation and a11y tools answer those better and should win them. To audit the surfaces
+  inside the tiles use the style plugin by name: skeuomorphism-ui:audit, neumorphism-ui:audit,
+  glassmorphism-ui:audit, claymorphism-ui:audit, minimalism-ui:audit, maximalism-ui:audit,
+  brutalism-ui:audit, liquid-glass-ui:audit, spatial-ui:audit.
 argument-hint: "[scope glob] [--budget-images=600KB] [--sticky-header=88px]"
 allowed-tools:
   - Read

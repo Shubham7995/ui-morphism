@@ -567,7 +567,7 @@ struct Stage: View {
 `.regularMaterial` → 2–3, `.thickMaterial` → 4, `.bar` → toolbars and tab bars. All are
 iOS 15+ / macOS 12+. On iOS 26 and later, `.glassEffect(_:in:)`, `GlassEffectContainer`
 and `glassEffectID(_:in:)` supersede these for chrome — that is Liquid Glass territory
-(`docs/08-liquid-glass.md`; no plugin for it yet), not here. Use `Material` for content surfaces and
+(`liquid-glass-ui`, `docs/08-liquid-glass.md`), not here. Use `Material` for content surfaces and
 `glassEffect` for floating controls.
 
 ---

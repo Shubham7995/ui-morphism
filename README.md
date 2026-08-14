@@ -18,16 +18,16 @@ explains what they mean and adds the difficulty column.
 
 | # | Style | The defining move | Status 2026 | A11y risk | Perf cost | Plugin |
 |---|---|---|---|---|---|---|
-| 01 | [Skeuomorphism](./docs/01-skeuomorphism.md) | Borrowed physical texture and lighting — one light source, four shadow layers | revival | Medium | Medium | `skeuomorphism-ui` — planned |
-| 02 | [Neumorphism](./docs/02-neumorphism.md) | Same-hue surface extruded by two opposing shadows; structurally unable to reach 3:1 | accent-only | High | Medium | `neumorphism-ui` — planned |
-| 03 | [Glassmorphism](./docs/03-glassmorphism.md) | Semi-transparent panel that blurs and re-saturates its backdrop, edged with a hairline border | mainstream | High | Medium | **`glassmorphism-ui` — built** |
-| 04 | [Claymorphism](./docs/04-claymorphism.md) | Fat radii, pastel fill, an inflated dome of inset light and shade floating above the page | niche | Medium | Medium | `claymorphism-ui` — planned |
-| 05 | [Minimalism](./docs/05-minimalism.md) | Subtraction with compensation — buy back structure with whitespace, type scale, one accent | mainstream | Medium | Low | `minimalism-ui` — planned |
-| 06 | [Maximalism](./docs/06-maximalism.md) | Three or more overlapping loud planes, held in check by a hard layer budget | mainstream | High | High | `maximalism-ui` — planned |
-| 07 | [Brutalism & Neubrutalism](./docs/07-brutalism.md) | Hard 2–4px borders and zero-blur offset shadows on flat saturated fills | mainstream | Medium | Low | **`brutalism-ui` — built** |
-| 08 | [Liquid Glass](./docs/08-liquid-glass.md) | Apple's system material — refracts the backdrop through a lensed edge; glassmorphism plus displacement | dominant | High | High | `liquid-glass-ui` — planned |
-| 09 | [Bento Grid](./docs/09-bento-grid.md) | Size-as-hierarchy inside a locked gutter: variable tile spans, invariant gap | mainstream | Medium | Low | **`bento-grid-ui` — built** |
-| 10 | [Spatial UI](./docs/10-spatial-ui.md) | Panels at measured depths, counter-scaled so angular size holds constant | emerging | High | Medium | `spatial-ui` — planned |
+| 01 | [Skeuomorphism](./docs/01-skeuomorphism.md) | Borrowed physical texture and lighting — one light source, four shadow layers | revival | Medium | Medium | **`skeuomorphism-ui`** |
+| 02 | [Neumorphism](./docs/02-neumorphism.md) | Same-hue surface extruded by two opposing shadows; structurally unable to reach 3:1 | accent-only | High | Medium | **`neumorphism-ui`** |
+| 03 | [Glassmorphism](./docs/03-glassmorphism.md) | Semi-transparent panel that blurs and re-saturates its backdrop, edged with a hairline border | mainstream | High | Medium | **`glassmorphism-ui`** |
+| 04 | [Claymorphism](./docs/04-claymorphism.md) | Fat radii, pastel fill, an inflated dome of inset light and shade floating above the page | niche | Medium | Medium | **`claymorphism-ui`** |
+| 05 | [Minimalism](./docs/05-minimalism.md) | Subtraction with compensation — buy back structure with whitespace, type scale, one accent | mainstream | Medium | Low | **`minimalism-ui`** |
+| 06 | [Maximalism](./docs/06-maximalism.md) | Three or more overlapping loud planes, held in check by a hard layer budget | mainstream | High | High | **`maximalism-ui`** |
+| 07 | [Brutalism & Neubrutalism](./docs/07-brutalism.md) | Hard 2–4px borders and zero-blur offset shadows on flat saturated fills | mainstream | Medium | Low | **`brutalism-ui`** |
+| 08 | [Liquid Glass](./docs/08-liquid-glass.md) | Apple's system material — refracts the backdrop through a lensed edge; glassmorphism plus displacement | dominant | High | High | **`liquid-glass-ui`** |
+| 09 | [Bento Grid](./docs/09-bento-grid.md) | Size-as-hierarchy inside a locked gutter: variable tile spans, invariant gap | mainstream | Medium | Low | **`bento-grid-ui`** |
+| 10 | [Spatial UI](./docs/10-spatial-ui.md) | Panels at measured depths, counter-scaled so angular size holds constant | emerging | High | Medium | **`spatial-ui`** |
 
 Three companion docs sit alongside them: [00-comparison-matrix.md](./docs/00-comparison-matrix.md) flattens
 all ten into comparable rows, [MARKETPLACE.md](./docs/MARKETPLACE.md) is the plugin build plan, and
@@ -35,25 +35,29 @@ all ten into comparable rows, [MARKETPLACE.md](./docs/MARKETPLACE.md) is the plu
 
 ---
 
-## Built versus planned
+## The complete set
 
-All ten style docs are complete. **Four plugins exist**: `ui-morphism-core` and the three style plugins
-chosen in [MARKETPLACE.md §8](./docs/MARKETPLACE.md) because they exercise three genuinely different
-transformation classes — `brutalism-ui` (cheap surface restyle), `glassmorphism-ui` (expensive surface
-restyle, and the style where naive output is actively wrong), `bento-grid-ui` (layout and markup rather
-than surfaces).
+All ten style docs are complete and **all eleven plugins exist** — `ui-morphism-core` plus one plugin per
+style — so `marketplace.json` lists eleven entries and every one of them resolves to a directory on disk.
+There is no roadmap column left: [MARKETPLACE.md §8](./docs/MARKETPLACE.md) records the order they were
+built in and why, which is still the best short account of what each one exercises, but it is now history
+rather than a plan.
 
-The other seven are planned and unbuilt. They are deliberately **not** listed in `marketplace.json`: a
-catalog entry is an install offer, and an entry pointing at a directory that does not exist fails at
-install time with a bare `Source path does not exist` error. The roadmap lives here and in
-MARKETPLACE.md §8; the catalog stays installable.
+A catalog entry is an install offer, and an entry pointing at a directory that does not exist fails at
+install time with a bare `Source path does not exist`. That constraint is what kept the catalog at four
+entries while seven plugins were unbuilt; it is satisfied by construction now, and `check-plugins.sh`
+check 6 re-asserts it on every run rather than trusting it.
 
 ```text
-.claude-plugin/marketplace.json   the catalog — four entries today
+.claude-plugin/marketplace.json   the catalog — eleven entries, one per plugin
 check-plugins.sh                  the plugin gate — tests, manifests, stylesheets, contracts, skills
 docs/                             the research — source of truth, and its own two CI scripts
-plugins/                          ui-morphism-core, brutalism-ui, glassmorphism-ui, bento-grid-ui
+plugins/                          ui-morphism-core + ten style plugins, 23 skills, 15 test files
 ```
+
+`PLUGIN_COUNT` in `check-plugins.sh` is 11 and still load-bearing in the other direction: a twelfth
+directory under `plugins/` — a scratch copy, a half-started style with no doc behind it — fails the
+preflight rather than riding along.
 
 ---
 
@@ -76,7 +80,7 @@ Installing any style plugin pulls in `ui-morphism-core` automatically — it is 
 `dependencies`, and Claude Code enables a plugin required by an active one. Skills are namespaced by
 plugin, so they invoke as `/brutalism-ui:apply`, `/glassmorphism-ui:audit`, and so on.
 
-Before publishing, run the gate — it validates the catalog and all four plugin manifests, and twelve
+Before publishing, run the gate — it validates the catalog and all eleven plugin manifests, and twelve
 other things besides:
 
 ```
@@ -116,6 +120,37 @@ auditor cannot see from CSS text — and hands "audit my site's accessibility" t
 browser. `ui-morphism-core:detect-stack` has nothing to contribute unless a ui-morphism style has
 already been named, and says so.
 
+### Routing: three clusters where the languages read alike
+
+Ten descriptions competing for the same request is the failure mode that costs most, and it is not evenly
+distributed. Seven of the ten are separated by their own names. Three clusters are not, because a user who
+does not already know the vocabulary describes all the members of a cluster the same way. Each cluster is
+therefore split by one physical question, stated in capitals in every description in it, in both the
+`apply` and the `audit` skill:
+
+| Cluster | The question | Routes to |
+|---|---|---|
+| Soft and physical | Does the surface imitate a named material? | yes → `skeuomorphism-ui` |
+| | Is it the same colour as the page ground? | yes → `neumorphism-ui` |
+| | Does it carry its own pastel fill, inflated at a large radius? | yes → `claymorphism-ui` |
+| Translucent layered depth | Is the backdrop blurred and nothing else? | yes → `glassmorphism-ui` |
+| | Is the backdrop geometrically displaced — refracted, lensed? | yes → `liquid-glass-ui` |
+| | Is there a `perspective` camera with elements at measured `translateZ`? | yes → `spatial-ui` |
+| Flat and stark | Does the request SUBTRACT — hairlines, near-zero elevation, one accent? | yes → `minimalism-ui` |
+| | Does it ADD weight — 2–5px ink borders, hard offset shadows, loud fills? | yes → `brutalism-ui` |
+
+Two name collisions are called out explicitly rather than left to chance, because they are genuine
+synonyms pointing opposite ways: **"neo-skeuomorphism" is `skeuomorphism-ui`; "new skeuomorphism" is
+`neumorphism-ui`.** Both descriptions say so.
+
+Outside the clusters the discriminators are one line each: `maximalism-ui` stacks layers where
+`brutalism-ui` is one bordered plane, and `bento-grid-ui` restructures markup and layout rather than
+restyling surfaces, so it composes with any of the ten rather than competing with them.
+
+None of this is gated. `check-plugins.sh` check 9 asserts every description is under budget and still
+carries its deference clause; nothing here can tell you a description routes correctly, and the routing
+above is a design claim, not a measured one.
+
 The negative triggers therefore run in two directions: away from the nine sibling languages, and away
 from general design-quality, taste, de-slopping, animation-craft, accessibility-sweep and
 project-survey work. That clause sits at the end of every skill description, which is exactly where a
@@ -133,7 +168,7 @@ emission shape, host-framework detection and its output contract, the WCAG 2.2 c
 validator, the intensity 0–100 contract with its clamp and context-cap mechanism, and the shared
 audit-report template. Each style plugin owns only what makes it that style: token *values*, which groups
 it populates, component anatomy, its intensity-to-knob curves and clamp values, and its own anti-pattern
-refusal list. The trade is real — a bug in core's `contrast.mjs` breaks all four plugins at once — but the
+refusal list. The trade is real — a bug in core's `contrast.mjs` breaks all ten style plugins at once — but the
 alternative is ten independent implementations of WCAG contrast maths, and duplicating taste is fine while
 duplicating maths is not. The full division of labour is in
 [MARKETPLACE.md §7](./docs/MARKETPLACE.md).
@@ -158,8 +193,9 @@ plugin manifest with `claude plugin validate --strict`; holds each
 `plugins/<style>/skills/apply/assets/tokens.css` against its owning doc's §4 CSS block
 declaration-for-declaration in both directions, and the Tailwind `@theme` mirror, the `--um-*` bridge
 and `glass.layer.css` against that `tokens.css` and the doc; holds every
-`assets/intensity.contract.json` against its owning doc's §13 — the default intensity, both endpoints
-of every knob, and every context cap against a committed registry; resolves every marketplace `source`
+`assets/intensity.contract.json` against its owning doc's §13 — the default intensity, the knob set in
+both directions, both endpoints of every knob to whatever depth the doc's own table shape supports, and
+every context cap against a committed registry; resolves every marketplace `source`
 to a directory carrying a `.claude-plugin/plugin.json` and checks its name equals the entry name;
 parses every `SKILL.md` frontmatter, rejects a space-separated `allowed-tools` scalar, prints every
 description length against the 1,450-character budget and asserts the deference clause is still in it;
@@ -193,8 +229,9 @@ here can tell you that a description actually loses the requests it means to los
 
 The script's own header carries the current list of what it does **not** gate — `glass.layer.css`'s
 ordinary declarations, the plugin READMEs, whether an `allowed-tools` entry names a tool that exists,
-the arithmetic (as opposed to the provenance) of a contrast figure restated in a reference file, and
-the one intensity cap in the set whose number appears in no doc. Read it before trusting
+the arithmetic (as opposed to the provenance) of a contrast figure restated in a reference file, the one
+intensity cap in the set whose number appears in no doc, and the two contracts whose knob endpoints their
+docs state as prose rather than as values. Read it before trusting
 `All plugin checks passed.` Every defect that gate now catches got in through a class nobody had
 written down, so the list is part of the deliverable and not a footnote to it.
 

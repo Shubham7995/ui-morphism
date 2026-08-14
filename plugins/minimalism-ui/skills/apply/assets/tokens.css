@@ -1,0 +1,199 @@
+/* ---------------------------------------------------------------------------
+ * Minimalism token layer.
+ *
+ * Source of truth: docs/05-minimalism.md §4, "Ready-to-paste CSS custom
+ * properties". The declarations below are reproduced verbatim from that block;
+ * the only addition is this header. Do not edit values here — edit the doc,
+ * then re-copy.
+ *
+ * The `--min-` prefix is collision avoidance, not decoration. Doc §4 is
+ * explicit: minimalism is the one style in this set whose natural names
+ * (`--surface-1`, `--accent`, `--text-muted`) are also the names a host
+ * application has most likely already taken. Do not strip the prefix and do not
+ * introduce a second, unprefixed dialect.
+ *
+ * Three values in here are load-bearing and are the ones a well-meaning edit
+ * breaks first:
+ *
+ *   --min-text-muted     #737373 is the lightest grey doc §7 permits for body
+ *                        text on white. Every lighter grey in the #888-#AAA
+ *                        band that a designer calls "secondary" is a defect.
+ *   --min-border-strong  #8F8F8F is the control boundary. --min-border-subtle
+ *                        (rgb(0 0 0 / 0.08)) is decorative and must never be
+ *                        the only thing that says where a control begins.
+ *   --min-backdrop-blur  0px, declared rather than omitted. Declaring the zero
+ *                        is the contract that separates this style from
+ *                        glassmorphism.
+ *
+ * Every ratio quoted anywhere in this plugin is docs/05-minimalism.md's, and
+ * every pair goes to ui-morphism-core:a11y-validate before it ships. Nothing in
+ * this plugin computes one.
+ *
+ * These are the doc's canonical reference values, not the resolution of any one
+ * intensity. Intensity moves what the skill EMITS around them — how many shadow
+ * rungs it is allowed to use, how far the between-group spacing ramp is scaled,
+ * which type ratio it generates, how much affordance it restores — on the root
+ * element rather than here. See ../references/tokens.md §4 and
+ * ../../../assets/intensity.contract.json.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Neutrals & surfaces ---- */
+  --min-bg-canvas: #ffffff;
+  --min-bg-subtle: #fafafa;
+  --min-surface-1: #ffffff;
+  --min-surface-2: #f5f5f5;
+  --min-surface-hover: #f0f0f0;
+
+  /* ---- Borders ---- */
+  --min-border-subtle: rgb(0 0 0 / 0.08);
+  --min-border-strong: #8f8f8f;
+  --min-border-width: 1px;
+
+  /* ---- Text ---- */
+  --min-text-primary: #0a0a0a;
+  --min-text-secondary: #525252;
+  --min-text-muted: #737373;
+  --min-text-disabled: #a3a3a3;
+
+  /* ---- Accent (exactly one) ---- */
+  --min-accent: #2563eb;
+  --min-accent-hover: #1d4ed8;
+  --min-accent-active: #1e40af;
+  --min-accent-fg: #ffffff;
+  --min-accent-subtle: #eff6ff;
+
+  /* ---- Semantic (second hue only) ---- */
+  --min-danger: #dc2626;
+  --min-danger-fg: #ffffff;
+
+  /* ---- Focus ---- */
+  --min-focus-ring: #2563eb;
+  --min-focus-ring-width: 2px;
+  --min-focus-ring-offset: 2px;
+
+  /* ---- Radius ---- */
+  --min-radius-sm: 4px;
+  --min-radius-md: 8px;
+  --min-radius-lg: 12px;
+  --min-radius-full: 9999px;
+
+  /* ---- Elevation: three steps, no more ---- */
+  --min-shadow-0: none;
+  --min-shadow-1: 0 1px 2px rgb(0 0 0 / 0.04);
+  --min-shadow-2: 0 4px 12px rgb(0 0 0 / 0.06), 0 1px 2px rgb(0 0 0 / 0.04);
+
+  /* ---- Typography ---- */
+  --min-font-sans: Inter, "Geist Sans", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --min-font-mono: "Geist Mono", ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, monospace;
+
+  --min-text-xs: 0.75rem;    /* 12px */
+  --min-text-sm: 0.875rem;   /* 14px */
+  --min-text-base: 1rem;     /* 16px */
+  --min-text-lg: 1.125rem;   /* 18px */
+  --min-text-xl: 1.25rem;    /* 20px */
+  --min-text-2xl: 1.5rem;    /* 24px */
+  --min-text-3xl: 1.875rem;  /* 30px */
+  --min-text-4xl: 2.25rem;   /* 36px */
+  --min-text-5xl: 3rem;      /* 48px */
+
+  --min-leading-tight: 1.2;
+  --min-leading-snug: 1.4;
+  --min-leading-normal: 1.5;
+  --min-tracking-tight: -0.011em;
+  --min-tracking-display: -0.02em;
+  --min-weight-normal: 400;
+  --min-weight-medium: 500;
+  --min-weight-semibold: 600;
+  --min-measure: 65ch;
+
+  /* ---- Spacing: 4px base ---- */
+  --min-space-1: 4px;
+  --min-space-2: 8px;
+  --min-space-3: 12px;
+  --min-space-4: 16px;
+  --min-space-6: 24px;
+  --min-space-8: 32px;
+  --min-space-12: 48px;
+  --min-space-16: 64px;
+  --min-space-24: 96px;
+
+  /* ---- Control sizing ---- */
+  --min-control-sm: 32px;
+  --min-control-md: 36px;
+  --min-control-lg: 40px;
+  --min-target-min: 24px; /* WCAG 2.2 SC 2.5.8 floor */
+
+  /* ---- Motion ---- */
+  --min-dur-instant: 100ms;
+  --min-dur-fast: 150ms;
+  --min-dur-base: 200ms;
+  --min-dur-slow: 300ms;
+  --min-ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --min-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* ---- Explicitly zero: the anti-glassmorphism guarantee ---- */
+  --min-backdrop-blur: 0px;
+  --min-backdrop-saturate: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --min-bg-canvas: #0a0a0a;
+    --min-bg-subtle: #131313;
+    --min-surface-1: #161616;
+    --min-surface-2: #1e1e1e;
+    --min-surface-hover: #242424;
+
+    --min-border-subtle: rgb(255 255 255 / 0.10);
+    --min-border-strong: #7a7a7a;
+
+    --min-text-primary: #fafafa;
+    --min-text-secondary: #b4b4b4;
+    --min-text-muted: #8f8f8f;
+    --min-text-disabled: #6b6b6b;
+
+    --min-accent: #60a5fa;
+    --min-accent-hover: #93c5fd;
+    --min-accent-active: #bfdbfe;
+    --min-accent-fg: #0a0a0a;
+    --min-accent-subtle: #101c2e;
+
+    --min-danger: #f87171;
+    --min-danger-fg: #0a0a0a;
+
+    --min-focus-ring: #93c5fd;
+
+    --min-shadow-1: 0 1px 2px rgb(0 0 0 / 0.40);
+    --min-shadow-2: 0 8px 24px rgb(0 0 0 / 0.50), 0 1px 2px rgb(0 0 0 / 0.40);
+  }
+}
+
+/* Explicit class/attribute override so a toggle beats the media query both ways */
+:root[data-theme="dark"] {
+  --min-bg-canvas: #0a0a0a;
+  --min-bg-subtle: #131313;
+  --min-surface-1: #161616;
+  --min-surface-2: #1e1e1e;
+  --min-surface-hover: #242424;
+  --min-border-subtle: rgb(255 255 255 / 0.10);
+  --min-border-strong: #7a7a7a;
+  --min-text-primary: #fafafa;
+  --min-text-secondary: #b4b4b4;
+  --min-text-muted: #8f8f8f;
+  --min-text-disabled: #6b6b6b;
+  --min-accent: #60a5fa;
+  --min-accent-hover: #93c5fd;
+  --min-accent-active: #bfdbfe;
+  --min-accent-fg: #0a0a0a;
+  --min-accent-subtle: #101c2e;
+  --min-danger: #f87171;
+  --min-danger-fg: #0a0a0a;
+  --min-focus-ring: #93c5fd;
+  --min-shadow-1: 0 1px 2px rgb(0 0 0 / 0.40);
+  --min-shadow-2: 0 8px 24px rgb(0 0 0 / 0.50), 0 1px 2px rgb(0 0 0 / 0.40);
+}

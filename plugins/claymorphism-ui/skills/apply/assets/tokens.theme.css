@@ -1,0 +1,183 @@
+/* ---------------------------------------------------------------------------
+ * Claymorphism — Tailwind v4 @theme mirror of assets/tokens.css.
+ *
+ * Source of truth: docs/04-claymorphism.md §5, "Tailwind CSS v4". Values match
+ * assets/tokens.css (docs §4) exactly; only the custom-property names change,
+ * because Tailwind v4 derives utilities from namespaced theme variables.
+ *
+ * Three invariants, all enforced by ui-morphism-core:token-emit:
+ *   1. @theme is never nested inside @media, @layer, or any other at-rule.
+ *   2. Theme switching happens outside @theme, on ordinary selectors — which is
+ *      why the dark blocks below sit on their own.
+ *   3. The dark values are declared TWICE, under the guarded media query and
+ *      under :root[data-theme="dark"], so a system preference and an explicit
+ *      toggle both win in both directions.
+ *
+ * No plugin is required, and the old one is not an option: doc §5 records that
+ * `tailwindcss-claymorphism` (v0.11.1, 29 Oct 2022) peers on `tailwindcss
+ * ^3.1.6` and never gained v4 support. @theme generates shadow-*, rounded-*
+ * and font-* from custom properties directly.
+ *
+ * WHY THE SHADOW RUNGS ARE var() REFERENCES RATHER THAN LONGHAND. Doc §5's
+ * @theme block writes each rung out as four literal shadow layers, and doc §5
+ * also tells you to ship the §4 :root block alongside app.css anyway, because
+ * --clay-border-hc is a plain custom property with no Tailwind namespace. Once
+ * tokens.css is loaded there is nothing left for the longhand to buy, and there
+ * is something for it to cost: the four atoms would then be written twice, and
+ * doc §5's own note about --clay-border-hc says exactly what happens next —
+ * "two hand-written copies of the same literal is exactly how they drift
+ * apart". Referencing the atoms also carries the dark theme for free, which the
+ * doc's literal @theme block does not do at all: its rungs are the light-mode
+ * values and nothing re-derives them under a dark selector. Same values, one
+ * place they are written.
+ *
+ * Load order: assets/tokens.css first, then this file.
+ * ------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+@theme {
+  /* colours -> bg-*, text-*, border-* */
+  --color-clay-bg:        #F4F1FB;
+  --color-clay-bg-alt:    #EDE7FF;
+  --color-clay-surface:   #FFFFFF;
+  --color-clay-lavender:  #C7B9FF;
+  --color-clay-sky:       #9FD8F5;
+  --color-clay-mint:      #8FE3B8;
+  --color-clay-butter:    #FFD9A0;
+  --color-clay-coral:     #FFB3A7;
+  --color-clay-primary:   #5B3AE0;
+  --color-clay-danger:    #C7442C;
+  --color-clay-ink:       #241F3A;
+  --color-clay-ink-muted: #4A4363;
+  --color-clay-ink-on-clay: #241F3A;
+
+  /* radii -> rounded-clay-* */
+  --radius-clay-chip:  999px;
+  --radius-clay-btn:   20px;
+  --radius-clay-input: 18px;
+  --radius-clay-card:  32px;
+  --radius-clay-modal: 40px;
+
+  /* type -> font-clay, text-clay-* */
+  --font-clay: "Nunito", "Plus Jakarta Sans", ui-rounded, system-ui, sans-serif;
+
+  --text-clay-xs:  0.8125rem;
+  --text-clay-sm:  0.9375rem;
+  --text-clay-md:  1.0625rem;
+  --text-clay-lg:  1.25rem;
+  --text-clay-xl:  1.5625rem;
+  --text-clay-2xl: 1.9375rem;
+  --text-clay-3xl: 2.4375rem;
+
+  /* motion -> ease-clay, ease-clay-squish, duration-* */
+  --ease-clay:        var(--clay-ease-out);
+  --ease-clay-squish: var(--clay-ease-squish);
+
+  /* the four-layer stack -> shadow-clay-1 … shadow-clay-4, shadow-clay-pressed.
+     Each is rim, sheen, shade, drop in paint order — first layer on top. */
+  --shadow-clay-1:       var(--clay-1);
+  --shadow-clay-2:       var(--clay-2);
+  --shadow-clay-3:       var(--clay-3);
+  --shadow-clay-4:       var(--clay-4);
+  --shadow-clay-pressed: var(--clay-pressed);
+}
+
+/* ---------------------------------------------------------------------------
+ * Theme switching. Outside @theme, on ordinary selectors, because @theme may
+ * not be nested. Values are doc §4's dark block, unchanged, and the list is
+ * complete: a partial override is what leaves a light pastel carrying dark ink
+ * on a dark ground. The shadow rungs need no dark entry here because they
+ * resolve through --clay-1 … --clay-4, which tokens.css already re-derives
+ * under both dark selectors with the sheen dropped to 0.14 and the shade
+ * raised to 0.55.
+ * ------------------------------------------------------------------------- */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-clay-bg:        #221D2E;
+    --color-clay-bg-alt:    #2A2438;
+    --color-clay-surface:   #2F2942;
+    --color-clay-lavender:  #4A3E7A;
+    --color-clay-sky:       #2C5670;
+    --color-clay-mint:      #2A5B45;
+    --color-clay-butter:    #5C4726;
+    --color-clay-coral:     #6A3730;
+    --color-clay-primary:   #A78BFA;
+    --color-clay-danger:    #F09182;
+    --color-clay-ink:       #F2EFFA;
+    --color-clay-ink-muted: #B9B2CC;
+    --color-clay-ink-on-clay: #F2EFFA;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-clay-bg:        #221D2E;
+  --color-clay-bg-alt:    #2A2438;
+  --color-clay-surface:   #2F2942;
+  --color-clay-lavender:  #4A3E7A;
+  --color-clay-sky:       #2C5670;
+  --color-clay-mint:      #2A5B45;
+  --color-clay-butter:    #5C4726;
+  --color-clay-coral:     #6A3730;
+  --color-clay-primary:   #A78BFA;
+  --color-clay-danger:    #F09182;
+  --color-clay-ink:       #F2EFFA;
+  --color-clay-ink-muted: #B9B2CC;
+  --color-clay-ink-on-clay: #F2EFFA;
+}
+
+/* Tailwind's class variant, for projects that toggle dark mode with a class.
+   It rides alongside the two blocks above rather than replacing them: a
+   class-only theme never responds to the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-clay-bg:        #221D2E;
+  --color-clay-bg-alt:    #2A2438;
+  --color-clay-surface:   #2F2942;
+  --color-clay-lavender:  #4A3E7A;
+  --color-clay-sky:       #2C5670;
+  --color-clay-mint:      #2A5B45;
+  --color-clay-butter:    #5C4726;
+  --color-clay-coral:     #6A3730;
+  --color-clay-primary:   #A78BFA;
+  --color-clay-danger:    #F09182;
+  --color-clay-ink:       #F2EFFA;
+  --color-clay-ink-muted: #B9B2CC;
+  --color-clay-ink-on-clay: #F2EFFA;
+}
+
+/* ---------------------------------------------------------------------------
+ * Tokens with no Tailwind namespace (00-comparison-matrix.md §7.4 Rule 4: the
+ * focus and target groups map to no utility namespace, and clay's shadow-hue
+ * channels are three numbers rather than a colour). They stay plain custom
+ * properties and are consumed with var(). Every value here is tokens.css's.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  --clay-theme-focus-color:  var(--clay-focus-color);
+  --clay-theme-focus-width:  var(--clay-focus-width);
+  --clay-theme-focus-offset: var(--clay-focus-offset);
+  --clay-theme-target-min:   var(--clay-target-min);
+  --clay-theme-gap:          var(--clay-gap);
+  --clay-theme-blur-max:     var(--clay-blur-max);
+  --clay-theme-backdrop:     var(--clay-backdrop);
+}
+
+/* ---------------------------------------------------------------------------
+ * Forced-colors escape hatch, from doc §5's Tailwind block. The border comes
+ * from --clay-border-hc — a plain custom property, not a @theme entry — so
+ * tokens.css must be loaded alongside this file. That is what keeps this
+ * border identical to the vanilla one instead of a second copy of the same
+ * literal. Note what is deliberately absent: no `forced-color-adjust`. Doc §5
+ * and §7 argue that clay does not opt out of the forced palette, and `auto` is
+ * the initial value, so declaring it would be dead code.
+ * ------------------------------------------------------------------------- */
+
+@media (forced-colors: active) {
+  .clay-card, .clay-button {
+    box-shadow: none;
+    border: var(--clay-border-hc);
+  }
+}

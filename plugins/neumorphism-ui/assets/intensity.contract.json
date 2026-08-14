@@ -1,0 +1,95 @@
+{
+  "style": "neumorphism",
+  "default": 45,
+  "sourceDoc": "docs/02-neumorphism.md",
+  "docSection": "13",
+  "baselineAtZero": "A flat, bordered, fully usable control on a mid-tone surface: the --nm-hairline boundary at 3.20:1 light and 3.31:1 dark, body ink at 9.59:1, a 3px accent focus outline at 3px offset, and a 44px target. No extrusion at all — shadowDelta sits at its invisibility floor and coverage at 0.05, so the shadow pair is decoration that has been turned off rather than structure that has been removed. Doc §12 names minimalism as this style's default host and doc §13's clean-neumorphism variant keeps the hairline and the accent as the state carriers, so the zero rung is the shipping configuration with the extrusion dialled out, not an absence.",
+  "knobs": {
+    "shadowDelta": {
+      "unit": "OKLCH L offset",
+      "anchors": [[0, 0.03], [45, 0.075], [100, 0.14]],
+      "darkAnchors": [[0, 0.03], [45, 0.107], [100, 0.20]],
+      "note": "Doc §13: 0.03 min, 0.075 default, 0.14 light / 0.20 dark max. This is --nm-delta from §4's perceptual derivation — an additive OKLCH lightness offset, applied asymmetrically as +0.8 x delta for the highlight and -1.4 x delta for the shadow in light mode, inverted to 1.4 / 0.8 in dark. Below 0.03 the extrusion is invisible; above the max it stops being same-hue and reads as a bordered card. The dark ramp is the same curve scaled to §13's own dark ceiling, because §4 states the multiplicative model collapses on dark bases: #2a2e39 x 0.15 moves red by six levels."
+    },
+    "distance": {
+      "unit": "px",
+      "anchors": [[0, 2], [45, 5], [100, 20]],
+      "emitAs": "integer px — round the resolved value at emit time, then derive blur as exactly 2 x distance",
+      "note": "Doc §13: 2 min, 5 default (the sm rung), 20 max (neumorphism.io's initial value, page-scale slabs only). Scales the whole §4 ramp proportionally: xs / sm / md / lg / xl are 3 / 5 / 8 / 14 / 20 at the default, and the knob moves the sm rung with the others following their §4 proportions. Above 12 at sm the shadow is bigger than the control. Blur is never a knob: it is 2 x distance at every rung, and the pressed rungs are 0.6 x the raised distance, both applied at emit time."
+    },
+    "radius": {
+      "unit": "px",
+      "anchors": [[0, 6], [45, 14], [70, 24], [90, 36], [99.9, 36], [100, 999]],
+      "note": "Doc §13: 6 min, 14 default, 999 (pill) max. The ramp walks §4's own four radius rungs — 14 control, 24 card, 36 slab, 999 pill — rather than interpolating between 14 and 999, because 999 is a snap and not a size: neumorphism.io's radius slider snaps to 50% at its maximum (doc §11), so the pill sits at exactly 100 behind a plateau. Under 6 the shadow pair reads as a rendering artefact."
+    },
+    "hairlineOpacity": {
+      "unit": "alpha",
+      "anchors": [[0, 0.55], [45, 1.0], [100, 1.0]],
+      "note": "Doc §13: floor 0.55, default 1.0, max 1.0 — 'the lowest value that still resolves >= 3:1 after alpha compositing. The skill will not expose 0.' It rises with intensity because the hairline's job gets harder as the extrusion gets louder: at intensity 0 there is no shadow, so the boundary is drawn against a flat static surface, while from the default up the adjacent colour is a blurred gradient running from the dark shadow to the light rim and the boundary needs full strength to stay legible. The value at 0 is the doc's floor and nothing may go below it. It is also not a licence: whatever opacity resolves, the COMPOSITED hairline goes to ui-morphism-core:a11y-validate against the actual surface, and if the composite does not clear 3:1 the skill raises the opacity or darkens --nm-hairline and records the correction. Doc §7 is explicit that no shadow gets to 3:1; a hairline that composites below it is the same failure wearing a border."
+    },
+    "coverage": {
+      "unit": "fraction of interactive elements treated",
+      "anchors": [[0, 0.05], [45, 0.35], [100, 1.0]],
+      "note": "Doc §13: 0.05 min, 0.35 default, 1.0 max — 'the single most important knob for whether the result ships. Above ~0.6 hierarchy collapses.' Doc §13 step 8 scopes the skill to a control allowlist by default and requires an explicit opt-in for whole-page application. Coverage 1.0 is reachable only with that opt-in, and doc §13 anti-pattern 11 refuses it outright on a route carrying a <table>, a virtualised list, or more than 24 interactive elements."
+    }
+  },
+  "clamps": {
+    "shadowDelta": { "min": 0.03, "max": 0.14, "maxDark": 0.20 },
+    "distance": { "min": 2, "max": 20 },
+    "radius": { "min": 6, "max": 999 },
+    "hairlineOpacity": { "min": 0.55, "max": 1.0 },
+    "coverage": { "min": 0.05, "max": 1.0 }
+  },
+  "contextCaps": [
+    {
+      "when": { "contentDensity": "dense" },
+      "cap": 0,
+      "reason": "Doc §9: admin consoles, analytics dashboards with tables, CRMs, email clients and IDEs lose 30-50% of their information density to this style's padding and shadow gaps, and it is listed under 'do not use it when'. Doc §13 anti-pattern 11 refuses whole-page neumorphism on a route containing a <table>, a virtualised list, or more than 24 interactive elements. The cap resolves such a route to the intensity-0 rung — the hairline-bounded, accent-carrying, fully accessible control set with no extrusion — which is a real interface rather than a refusal to act, and the skill says which route hit the cap and why."
+    }
+  ],
+  "contextClamps": [
+    {
+      "when": { "theme": "dark" },
+      "clamp": { "shadowDelta": { "max": 0.20 } },
+      "reason": "Doc §13 Max column: 0.14 light / 0.20 dark. Applied after resolution, on the dark ramp only."
+    },
+    {
+      "when": { "surface": "list-or-grid-item" },
+      "clamp": { "distance": { "max": 8 } },
+      "reason": "Doc §8 budget: blur on list/grid items <= 16px, and blur is 2 x distance, so the distance ceiling is 8px. Independent of intensity."
+    },
+    {
+      "when": { "surface": "inside-scroller" },
+      "clamp": { "distance": { "max": 12 } },
+      "reason": "Doc §8 budget: max blur 40px, <= 24px on any element inside a scroller. Inset shadows on scrolling containers re-rasterise on every scroll offset change, so this ceiling is a paint budget rather than an aesthetic one."
+    },
+    {
+      "when": { "scope": "controls" },
+      "clamp": { "coverage": { "max": 0.35 } },
+      "reason": "Doc §13 inputs: scope defaults to controls+cards; scope: controls is the narrower request and holds coverage at the default rather than letting intensity raise it."
+    },
+    {
+      "when": { "a11yMode": "strict" },
+      "clamp": { "hairlineOpacity": { "min": 1.0 } },
+      "reason": "Doc §13: a11yMode strict 'refuses any output that fails 1.4.11'. Strict is the default. Rather than refuse a run over an alpha value, the strict path pins the hairline to full opacity and lets the user dial it back explicitly in a11yMode: standard, where the composited result is still validated and still clamped if it fails."
+    }
+  ],
+  "clampsNotExpressibleHere": {
+    "shadowBlur": "exactly 2 x distance at every rung; doc §13 anti-pattern 9 refuses and clamps any blur/distance ratio outside [1.5, 3.0]",
+    "shadowSpread": "exactly 0, always — doc §4: spread grows the shadow's own silhouette away from the element, which breaks the same-hue illusion at any non-zero value, so the composed shadows omit the component rather than route a zero through a property someone could override",
+    "pressedRatio": "0.6 x the outer distance, applied by hand when authoring --nm-pressed-sm and --nm-pressed-md — doc §4: CSS cannot round a calc() to the whole pixels this effect needs",
+    "shadowLayersPerElement": "2, and 4 only for the pseudo-element cross-fade in doc §6",
+    "blurCeiling": "40px absolute, <= 24px inside a scroller, <= 16px on list/grid items",
+    "boundary": "every interactive element carries a non-shadow boundary at >= 3:1 — a border, an accent fill or a text label. Doc §7: there is no combination of blur, distance or luminance delta that gets a same-hue shadow to 3:1 while still looking neumorphic",
+    "focus": "outline >= 3px at >= 3px offset, never box-shadow, and an outline-color: Highlight override inside forced-colors",
+    "targetMin": "--nm-target-min 44px, hard floor 24x24 CSS px (SC 2.5.8), measured on the border box and not the shadow halo",
+    "sameHue": "the element's background token equals its computed parent's, to within dL <= 0.02 OKLCH",
+    "lightSource": "one global value for the whole document; doc §13 anti-pattern 8 refuses mixed diagonals",
+    "siblingGap": "2 x distance + blur / 2 between extruded siblings — 16px at sm, 24px at md",
+    "inkFloor": "no text token below 4.5:1; doc §13 anti-pattern 12 refuses pale ink chosen to match the shadows and re-solves the token",
+    "elementsPerRoute": "warn above 12 neumorphic elements in the initial viewport, fail above 24",
+    "surfaceChroma": "<= 0.03 OKLCH light, <= 0.035 dark, on --nm-base-c only; accents are exempt",
+    "darkModeDelta": "doc §13 validation 10 asserts the dark-mode luminance delta is at least 2x the light-mode delta. That assertion is about the MULTIPLICATIVE derivation, not the additive shadowDelta knob above: doc §5's builder ships scale = 3.0 for dark against 1.0 for light, and doc §10 asks for roughly 0.40-0.50 multiplicative in dark against 0.15 in light. The additive knob's own ceilings are §13's 0.14 and 0.20, whose ratio is smaller by construction, and conflating the two models is how a dark theme ends up with an invisible extrusion.",
+    "note": "These constrain the emitted CSS rather than the value of a knob, so scripts/neu-scan.mjs and ui-morphism-core:a11y-validate enforce them. Recorded here so the clamp table reads as the complete list."
+  }
+}

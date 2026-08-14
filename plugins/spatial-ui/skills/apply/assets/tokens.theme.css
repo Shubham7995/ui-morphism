@@ -1,0 +1,188 @@
+/* ---------------------------------------------------------------------------
+ * Spatial UI — Tailwind v4 @theme mirror of assets/tokens.css.
+ *
+ * Source of truth: docs/10-spatial-ui.md §5, "Tailwind CSS v4". Values match
+ * assets/tokens.css (docs §4) exactly; only the custom-property names change,
+ * because Tailwind v4 derives utilities from namespaced theme variables.
+ *
+ * Three invariants, all enforced by ui-morphism-core:token-emit:
+ *   1. @theme is never nested inside @media, @layer, or any other at-rule.
+ *   2. Theme switching happens outside @theme, on ordinary selectors — which is
+ *      why the dark blocks below sit on their own.
+ *   3. The dark values are declared TWICE, under the guarded media query and
+ *      under :root[data-theme="dark"], so a system preference and an explicit
+ *      toggle both win in both directions.
+ *
+ * No plugin is required. `perspective-*`, `transform-3d`, `translate-z-*`,
+ * `rotate-x-*` and `backface-*` ship in Tailwind v4 core, so the whole depth
+ * ladder is expressible in utilities.
+ *
+ * Two naming traps doc §5 calls out and this file exists to avoid:
+ *   * The depth ladder is registered under --spacing-sp-z0 … --spacing-sp-z5,
+ *     so the generated utilities are translate-z-sp-z0 … translate-z-sp-z5. The
+ *     key name is what appears in the utility; naming them --spacing-sp-1 … -5
+ *     would silently generate a different set.
+ *   * `max-*` in v4 is reserved for breakpoint and container-query negation, so
+ *     `max-pointer-coarse:` does not compile at all and the 60px gaze-target
+ *     upsize — this style's headline accessibility rule — would never apply.
+ *     Use `pointer-coarse:` for the upsize and `not-pointer-coarse:` when the
+ *     negation is genuinely what you want.
+ *
+ * The depth utilities themselves are NOT here. `@utility sp-depth-*` and
+ * `@utility sp-glass` carry a per-element local (`--_z`) and an @supports
+ * ladder rather than a token value, so they belong in the emitted stylesheet,
+ * not in the token mirror. Their listings are in ../references/recipes.md §3.
+ * ------------------------------------------------------------------------- */
+
+@import "tailwindcss";
+
+@theme {
+  /* ---- camera -> perspective-stage, [perspective-origin:…] ---- */
+  --perspective-stage: 1200px;
+
+  /* ---- comfort cone -> max-w-sp-comfort / max-w-sp-comfort-desk ---- */
+  --container-sp-comfort: 1413px;
+  --container-sp-comfort-desk: 1693px;
+
+  /* ---- depth ladder -> translate-z-sp-z0 … translate-z-sp-z5 ---- */
+  --spacing-sp-z0: 0.1px;
+  --spacing-sp-z1: 16px;
+  --spacing-sp-z2: 24px;
+  --spacing-sp-z3: 32px;
+  --spacing-sp-z4: 40px;
+  --spacing-sp-z5: 56px;
+
+  /* ---- spacing -> gap-sp-list, gap-sp-target, gap-sp-stack, -bottom-sp-orbiter ---- */
+  --spacing-sp-list: 4px;
+  --spacing-sp-target: 8px;
+  --spacing-sp-stack: 16px;
+  --spacing-sp-orbiter: 20px;
+
+  /* ---- targets -> min-h-sp-pointer / min-h-sp-gaze / min-h-sp-floor ---- */
+  --spacing-sp-gaze: 60px;
+  --spacing-sp-pointer: 44px;
+  --spacing-sp-floor: 24px;
+
+  /* ---- radii -> rounded-sp-panel / -card / -control / -capsule ---- */
+  --radius-sp-panel: 32px;
+  --radius-sp-card: 20px;
+  --radius-sp-control: 14px;
+  --radius-sp-capsule: 999px;
+
+  /* ---- colours -> bg-sp-*, text-sp-*, border-sp-* ---- */
+  --color-sp-env: #e8eaf0;
+  --color-sp-env-2: #dfe2ea;
+  --color-sp-panel: rgb(255 255 255 / 0.72);
+  --color-sp-panel-legible: rgb(255 255 255 / 0.92);
+  --color-sp-panel-opaque: #f7f8fb;
+  --color-sp-hairline: rgb(16 16 20 / 0.12);
+  --color-sp-specular: rgb(255 255 255 / 0.65);
+  --color-sp-ink-1: #101014;
+  --color-sp-ink-2: #43464f;
+  --color-sp-ink-3: #6b6f7b;
+
+  /* ---- shadows -> shadow-sp-1 … shadow-sp-5, one contact + one ambient ---- */
+  --shadow-sp-1: 0 2px 6px -2px rgb(12 14 22 / 0.18), 0 8px 20px -8px rgb(12 14 22 / 0.22);
+  --shadow-sp-2: 0 4px 10px -3px rgb(12 14 22 / 0.20), 0 14px 32px -12px rgb(12 14 22 / 0.26);
+  --shadow-sp-3: 0 6px 14px -4px rgb(12 14 22 / 0.22), 0 22px 48px -18px rgb(12 14 22 / 0.30);
+  --shadow-sp-4: 0 9px 20px -6px rgb(12 14 22 / 0.24), 0 34px 70px -24px rgb(12 14 22 / 0.36);
+  --shadow-sp-5: 0 12px 28px -8px rgb(12 14 22 / 0.26), 0 48px 96px -32px rgb(12 14 22 / 0.42);
+
+  /* ---- type -> text-sp-min / text-sp-body / text-sp-title, tracking-sp ---- */
+  --text-sp-min: 14px;
+  --text-sp-body: 17px;
+  --text-sp-title: 22px;
+  --tracking-sp: 0.01em;
+
+  /* ---- motion -> duration-sp-hover / -depth / -panel, ease-sp-depth / -settle ---- */
+  --ease-sp-depth: cubic-bezier(0.2, 0, 0, 1);
+  --ease-sp-settle: cubic-bezier(0.34, 1.32, 0.64, 1);
+}
+
+/* Dark mode, in ui-morphism-core's emission shape. The media-query branch is
+   written so an explicit light choice still wins, and the attribute branch is
+   duplicated so a toggle wins in both directions. The .dark class branch is
+   Tailwind's own variant hook and rides alongside them; it is not a substitute
+   for either, because a class-only theme never responds to the OS setting.
+   The shadows swap the tinted ink for pure black at roughly twice the alpha:
+   a tinted shadow is invisible on a #0b0c10 room. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-sp-env: #0b0c10;
+    --color-sp-env-2: #131620;
+    --color-sp-panel: rgb(22 24 30 / 0.72);
+    --color-sp-panel-legible: rgb(22 24 30 / 0.90);
+    --color-sp-panel-opaque: #15171d;
+    --color-sp-hairline: rgb(255 255 255 / 0.16);
+    --color-sp-specular: rgb(255 255 255 / 0.28);
+    --color-sp-ink-1: #f5f6fa;
+    --color-sp-ink-2: #b9bdc9;
+    --color-sp-ink-3: #868b98;
+    --shadow-sp-1: 0 2px 6px -2px rgb(0 0 0 / 0.42), 0 8px 20px -8px rgb(0 0 0 / 0.48);
+    --shadow-sp-2: 0 4px 10px -3px rgb(0 0 0 / 0.46), 0 14px 32px -12px rgb(0 0 0 / 0.52);
+    --shadow-sp-3: 0 6px 14px -4px rgb(0 0 0 / 0.50), 0 22px 48px -18px rgb(0 0 0 / 0.56);
+    --shadow-sp-4: 0 9px 20px -6px rgb(0 0 0 / 0.54), 0 34px 70px -24px rgb(0 0 0 / 0.60);
+    --shadow-sp-5: 0 12px 28px -8px rgb(0 0 0 / 0.58), 0 48px 96px -32px rgb(0 0 0 / 0.66);
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-sp-env: #0b0c10;
+  --color-sp-env-2: #131620;
+  --color-sp-panel: rgb(22 24 30 / 0.72);
+  --color-sp-panel-legible: rgb(22 24 30 / 0.90);
+  --color-sp-panel-opaque: #15171d;
+  --color-sp-hairline: rgb(255 255 255 / 0.16);
+  --color-sp-specular: rgb(255 255 255 / 0.28);
+  --color-sp-ink-1: #f5f6fa;
+  --color-sp-ink-2: #b9bdc9;
+  --color-sp-ink-3: #868b98;
+  --shadow-sp-1: 0 2px 6px -2px rgb(0 0 0 / 0.42), 0 8px 20px -8px rgb(0 0 0 / 0.48);
+  --shadow-sp-2: 0 4px 10px -3px rgb(0 0 0 / 0.46), 0 14px 32px -12px rgb(0 0 0 / 0.52);
+  --shadow-sp-3: 0 6px 14px -4px rgb(0 0 0 / 0.50), 0 22px 48px -18px rgb(0 0 0 / 0.56);
+  --shadow-sp-4: 0 9px 20px -6px rgb(0 0 0 / 0.54), 0 34px 70px -24px rgb(0 0 0 / 0.60);
+  --shadow-sp-5: 0 12px 28px -8px rgb(0 0 0 / 0.58), 0 48px 96px -32px rgb(0 0 0 / 0.66);
+}
+
+/* Tailwind's class variant, for projects that toggle dark mode with a class. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark {
+  --color-sp-env: #0b0c10;
+  --color-sp-env-2: #131620;
+  --color-sp-panel: rgb(22 24 30 / 0.72);
+  --color-sp-panel-legible: rgb(22 24 30 / 0.90);
+  --color-sp-panel-opaque: #15171d;
+  --color-sp-hairline: rgb(255 255 255 / 0.16);
+  --color-sp-specular: rgb(255 255 255 / 0.28);
+  --color-sp-ink-1: #f5f6fa;
+  --color-sp-ink-2: #b9bdc9;
+  --color-sp-ink-3: #868b98;
+}
+
+/* The preference queries, applied to the theme variables rather than to a
+   utility, so every generated utility inherits them. `@theme` may not be
+   nested in an at-rule, so these are plain redeclarations inside @layer theme,
+   ordered after the theme blocks above so they win in both themes. */
+@layer theme {
+  @media (prefers-reduced-transparency: reduce) {
+    :root {
+      --color-sp-panel: var(--color-sp-panel-opaque);
+      --color-sp-panel-legible: var(--color-sp-panel-opaque);
+    }
+  }
+
+  @media (forced-colors: active) {
+    :root {
+      --color-sp-panel: Canvas;
+      --color-sp-panel-legible: Canvas;
+      --color-sp-panel-opaque: Canvas;
+      --color-sp-hairline: CanvasText;
+      --shadow-sp-1: none;
+      --shadow-sp-2: none;
+      --shadow-sp-3: none;
+      --shadow-sp-4: none;
+      --shadow-sp-5: none;
+    }
+  }
+}

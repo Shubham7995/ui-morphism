@@ -1,0 +1,178 @@
+/* ---------------------------------------------------------------------------
+ * Minimalism — `--um-minimalism-*` grammar bridge.
+ *
+ * assets/tokens.css carries the style's own `--min-*` names verbatim from
+ * docs/05-minimalism.md §4. ui-morphism-core:token-emit speaks the shared
+ * grammar `--um-<style>-<group>[-<variant>]` defined in
+ * docs/00-comparison-matrix.md §7, whose closed group vocabulary is restated in
+ * ui-morphism-core's skills/token-emit/references/group-vocabulary.md.
+ *
+ * Direction: `--um-minimalism-*` reads from `--min-*`, never the reverse, so the
+ * verbatim §4 block stays the single place a value is written. Load tokens.css
+ * first, then this file. Both themes work with no duplication here, because
+ * every alias is a var() reference and inherits whichever theme block in
+ * tokens.css is active.
+ *
+ * Groups this style populates that most do not:
+ *   elev      — populated, unlike brutalism. Doc §4 gives elevation three steps,
+ *               `0, 1, 2`, and names the zero rung: "Elevation 0 is a real,
+ *               named rung." The elev ladder and the shadow ladder are the same
+ *               three values here, and that is the point — a style with three
+ *               rungs total can afford to say both, and the intensity knob
+ *               `decorationBudget` counts rungs, so the semantic name is what it
+ *               moves.
+ *   blur      — populated with an explicit `0px`, and `saturate` with `1`.
+ *               Doc §4: "Deliberate: zero backdrop-filter is what separates this
+ *               style from glassmorphism." Declaring the zero is the contract.
+ *   accent-subtle — populated. Doc §4 ships `--min-accent-subtle` as a
+ *               selected-row and tinted-badge GROUND only. It is never a text
+ *               colour and never a border.
+ *
+ * Groups deliberately NOT populated, with the doc's reason:
+ *   noise     — no grain layer exists in this style. §3 and §8: a minimal
+ *               surface is a solid background-color plus a 1px border, and the
+ *               absence of a texture pass is half of why the style is cheap.
+ *   surface-3 / surface-4 — §4 ships two planes plus a hover step. A third and
+ *               fourth plane is how a monochrome system starts encoding
+ *               hierarchy in luminance it cannot spare.
+ *   ease-enter — §4 declares `standard` and `exit` only. There is no separate
+ *               entrance curve; `standard` is it.
+ *
+ * Tokens with no home in the closed group vocabulary (§7.3), which therefore
+ * keep their `--min-*` names and are consumed directly:
+ *   --min-surface-hover  the row/list-item hover step. Not a `surface-N`, which
+ *                        ascends by elevation, and not `bg`.
+ *   --min-text-secondary the 7.81:1 secondary rung. The `ink` group is
+ *                        (bare) / `muted` / `inverse`, three rungs, and this
+ *                        style ships four foreground greys; `ink-muted` takes
+ *                        --min-text-muted because that is the one the
+ *                        vocabulary constrains (still >= 4.5:1, and #737373 is
+ *                        4.74:1 on white).
+ *   --min-text-disabled  exempt from 1.4.3 and must never encode information
+ *                        alone, so it is deliberately not reachable under a
+ *                        grammar name that reads like ordinary text.
+ *   --min-shadow-0       the named zero rung. The vocabulary's shadow ladder
+ *                        starts at 1; `elev-0` below carries the semantics.
+ *   --min-dur-instant    100ms. The `dur` group is `fast` / `base` / `slow` and
+ *                        this style ships four durations; §6 gives instant its
+ *                        own job — colour-only feedback on a control the
+ *                        pointer is already over.
+ *   --min-text-4xl / -5xl  the two display rungs. The vocabulary's text ladder
+ *                        is seven rungs, `xs` through `3xl`; §3 confines 36-48px
+ *                        to marketing hero sections and never to product chrome,
+ *                        so the two rungs that live outside the ladder are also
+ *                        the two the style restricts.
+ *   --min-space-24       96px, the ninth rung of a nine-rung ramp against an
+ *                        eight-rung vocabulary. It is the section rhythm's top
+ *                        value and the one `whitespaceMultiplier` scales
+ *                        furthest.
+ *   --min-control-sm / -md / -lg  control heights. `target-min` is a floor, not
+ *                        a size; the resting size comes from these.
+ *   --min-measure        65ch. Bringhurst's 45-75 CPL, expressed in ch so it
+ *                        grows with text at 200% zoom.
+ *   --min-border-width   1px, and never scaled: §4 says the hairline is the
+ *                        style.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- ground and planes ---- */
+  --um-minimalism-bg:              var(--min-bg-subtle);
+  --um-minimalism-surface-1:       var(--min-surface-1);
+  --um-minimalism-surface-2:       var(--min-surface-2);
+
+  /* ---- foreground ---- */
+  --um-minimalism-ink:             var(--min-text-primary);
+  --um-minimalism-ink-muted:       var(--min-text-muted);
+  --um-minimalism-ink-inverse:     var(--min-accent-fg);
+
+  /* ---- boundaries. These two are NOT interchangeable and the difference is
+     this style's most-audited failure. `border` is decorative — a separator
+     between two rows — and sits at 1.2:1. `border-strong` is the control
+     boundary and clears 3:1. A control whose only affordance is its boundary
+     takes `border-strong`, in both themes. ---- */
+  --um-minimalism-border:          var(--min-border-subtle);
+  --um-minimalism-border-strong:   var(--min-border-strong);
+
+  /* ---- action hues. Exactly one accent, exactly one semantic. A third hue is
+     where minimal systems die (§10). ---- */
+  --um-minimalism-accent:          var(--min-accent);
+  --um-minimalism-accent-fg:       var(--min-accent-fg);
+  --um-minimalism-accent-subtle:   var(--min-accent-subtle);
+  --um-minimalism-danger:          var(--min-danger);
+
+  /* ---- geometry. Radius never varies by component type within one system
+     (§3); `pill` is for pills and avatars only. ---- */
+  --um-minimalism-radius-sm:       var(--min-radius-sm);
+  --um-minimalism-radius-md:       var(--min-radius-md);
+  --um-minimalism-radius-lg:       var(--min-radius-lg);
+  --um-minimalism-radius-pill:     var(--min-radius-full);
+
+  /* ---- elevation, semantic. Three rungs and no more: flat, raised, overlay.
+     `elev-0` is a real rung, not the absence of one. ---- */
+  --um-minimalism-elev-0:          var(--min-shadow-0);
+  --um-minimalism-elev-1:          var(--min-shadow-1);
+  --um-minimalism-elev-2:          var(--min-shadow-2);
+
+  /* ---- the same three rungs as ready-to-use box-shadow values. `press` is
+     not a shadow in this style: §6 presses with a background step, never with
+     depth, so it is deliberately absent. ---- */
+  --um-minimalism-shadow-1:        var(--min-shadow-1);
+  --um-minimalism-shadow-2:        var(--min-shadow-2);
+
+  /* ---- the contract: the backdrop is untouched, and declaring it is the
+     point ---- */
+  --um-minimalism-blur:            var(--min-backdrop-blur);
+  --um-minimalism-saturate:        var(--min-backdrop-saturate);
+
+  /* ---- space. 4px base. The 4:1 ratio between within-group (space-2) and
+     between-group (space-8) spacing is what produces perceived grouping
+     without dividers (§3). ---- */
+  --um-minimalism-space-1:         var(--min-space-1);
+  --um-minimalism-space-2:         var(--min-space-2);
+  --um-minimalism-space-3:         var(--min-space-3);
+  --um-minimalism-space-4:         var(--min-space-4);
+  --um-minimalism-space-5:         var(--min-space-6);
+  --um-minimalism-space-6:         var(--min-space-8);
+  --um-minimalism-space-7:         var(--min-space-12);
+  --um-minimalism-space-8:         var(--min-space-16);
+
+  /* ---- type. One family, plus mono for code and numerics. No display face:
+     the sans IS the display face at a larger rung. ---- */
+  --um-minimalism-font-body:       var(--min-font-sans);
+  --um-minimalism-font-display:    var(--min-font-sans);
+  --um-minimalism-font-mono:       var(--min-font-mono);
+
+  --um-minimalism-text-xs:         var(--min-text-xs);
+  --um-minimalism-text-sm:         var(--min-text-sm);
+  --um-minimalism-text-base:       var(--min-text-base);
+  --um-minimalism-text-lg:         var(--min-text-lg);
+  --um-minimalism-text-xl:         var(--min-text-xl);
+  --um-minimalism-text-2xl:        var(--min-text-2xl);
+  --um-minimalism-text-3xl:        var(--min-text-3xl);
+
+  --um-minimalism-weight-normal:   var(--min-weight-normal);
+  --um-minimalism-weight-medium:   var(--min-weight-medium);
+  --um-minimalism-weight-semibold: var(--min-weight-semibold);
+
+  --um-minimalism-leading-tight:   var(--min-leading-tight);
+  --um-minimalism-leading-snug:    var(--min-leading-snug);
+  --um-minimalism-leading-normal:  var(--min-leading-normal);
+
+  --um-minimalism-tracking-tight:  var(--min-tracking-tight);
+  --um-minimalism-tracking-display: var(--min-tracking-display);
+
+  /* ---- motion. Nothing in this style exceeds 300ms (§6). ---- */
+  --um-minimalism-dur-fast:        var(--min-dur-fast);
+  --um-minimalism-dur-base:        var(--min-dur-base);
+  --um-minimalism-dur-slow:        var(--min-dur-slow);
+  --um-minimalism-ease-standard:   var(--min-ease-standard);
+  --um-minimalism-ease-exit:       var(--min-ease-exit);
+
+  /* ---- focus and targets. focus-* is required in all ten styles and is an
+     `outline`, never a `box-shadow`. `target-min` is the SC 2.5.8 floor and is
+     never overridden downward; the resting size is --min-control-lg. ---- */
+  --um-minimalism-focus-color:     var(--min-focus-ring);
+  --um-minimalism-focus-width:     var(--min-focus-ring-width);
+  --um-minimalism-focus-offset:    var(--min-focus-ring-offset);
+  --um-minimalism-target-min:      var(--min-target-min);
+}

@@ -1,24 +1,22 @@
 ---
 name: audit
 description: >-
-  Use to check a UI that is ALREADY neubrutalist against this style's own invariants, when
-  the user names the style or its concrete moves — hard ink borders, zero-blur offset
-  shadows — and wants a review rather than a change. The invariants
-  it owns: the dark-mode border flip (black on a dark surface is 1.56:1
-  and fails 1.4.11), every shadowed element also carrying a real border because
-  forced-colors nulls `box-shadow`, no non-zero shadow blur or `backdrop-filter` anywhere,
-  a focus outline distinguishable from the resting offset shadow, tilt never wrapping a
-  focusable descendant, and the zero-JS / 8KB emitted-CSS budget. Also for re-checking
-  output from brutalism-ui:apply. Writes a report; never edits — use brutalism-ui:apply to
-  change the interface. This is NOT a general design, taste, visual-craft or AI-slop
-  audit, and it is not a general accessibility sweep: it will not answer "is my design
-  good", "critique this UI", "find the AI tells", "review my animations" or "audit my
-  site's accessibility". Dedicated design-quality, de-slopping, animation and a11y tools
-  answer those better and should win them. Do not use on translucent or backdrop-blurred
-  surfaces (glassmorphism-ui:audit) or tile-span grid layout (bento-grid-ui:audit).
-  Same-hue soft extrusion, puffy pastel clay and Apple Liquid Glass are separate visual
-  languages, documented in docs/02, docs/04 and docs/08, with plugins planned but not yet
-  built.
+  Use to check a UI that is ALREADY neubrutalist — hard 2-5px ink borders and zero-blur offset
+  shadows, weight ADDED rather than stripped — against this style's own invariants, when the
+  user names it and wants a review rather than a change. The invariants it owns: the dark-mode
+  border flip (black on a dark surface is 1.56:1 and fails 1.4.11), every shadowed element
+  also carrying a real border because forced-colors nulls `box-shadow`, no non-zero shadow
+  blur or `backdrop-filter` anywhere, a focus outline distinguishable from the resting offset
+  shadow, tilt never wrapping a focusable descendant, and the zero-JS / 8KB emitted-CSS
+  budget. Writes a report; never edits — use brutalism-ui:apply to change anything. This is
+  NOT a general design, taste, visual-craft or AI-slop audit, and not a general accessibility
+  sweep: it will not answer "is my design good", "critique this UI", "find the AI tells" or
+  "audit my site's accessibility". Dedicated design-quality, de-slopping, animation and a11y
+  tools answer those better and should win them. A flat UI that SUBTRACTS — hairlines,
+  near-zero elevation, one accent — is minimalism-ui:audit; one stacking loud layers over a
+  patterned ground is maximalism-ui:audit. Not for skeuomorphism-ui:audit,
+  neumorphism-ui:audit, glassmorphism-ui:audit, claymorphism-ui:audit, liquid-glass-ui:audit,
+  bento-grid-ui:audit, spatial-ui:audit.
 argument-hint: "[scope glob] [--theme=light|dark|both] [--format=markdown|json]"
 allowed-tools:
   - Read

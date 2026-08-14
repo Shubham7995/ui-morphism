@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "ui-morphism",
-  "description": "Named UI style languages as executable skills — each with measured token values, a performance budget and an explicit when-not-to-use. Descriptive and plural, not a design-quality tool: every skill fires on a named style or a concretely described one, never on \"make it look good\". Four plugins today — ui-morphism-core plus brutalism-ui, glassmorphism-ui and bento-grid-ui; seven further styles are researched in docs/ and not yet built.",
+  "description": "Named UI style languages as executable skills — each with measured token values, a performance budget and an explicit when-not-to-use. Descriptive and plural, not a design-quality tool: every skill fires on a named style or a concretely described one, never on \"make it look good\". Eleven plugins: ui-morphism-core plus the ten styles researched in docs/ — skeuomorphism, neumorphism, glassmorphism, claymorphism, minimalism, maximalism, brutalism, liquid glass, bento grid and spatial UI. Each style names the neighbours it is confused with and hands them over by plugin name, so a request routes to exactly one.",
   "version": "0.1.0",
   "owner": {
     "name": "UI Morphism",
@@ -12,7 +12,7 @@
       "name": "ui-morphism-core",
       "source": "./plugins/ui-morphism-core",
       "displayName": "UI Morphism Core",
-      "description": "Shared foundation for the ui-morphism style skills: host-framework detection, the --um-<style>-<group>-<variant> token grammar and its emitters, the WCAG 2.2 contrast and CSS accessibility validator, the intensity 0-100 contract with its clamp and context-cap mechanisms, and the common audit-report format. Installed automatically as a dependency of any style plugin. Not a design skill: it decides nothing about how a UI should look.",
+      "description": "Shared foundation for the ten ui-morphism style plugins: host-framework detection, the --um-<style>-<group>-<variant> token grammar and its emitters, the WCAG 2.2 contrast and CSS accessibility validator, the intensity 0-100 contract with its clamp and context-cap mechanisms, and the common audit-report format. The alpha-compositing and luminance arithmetic lives here and nowhere else — one implementation, ten callers. Installed automatically as a dependency of any style plugin. Not a design skill: it decides nothing about how a UI should look.",
       "version": "0.1.0",
       "author": {
         "name": "UI Morphism",
@@ -24,6 +24,7 @@
         "design-tokens",
         "accessibility",
         "wcag",
+        "contrast",
         "tailwind",
         "css",
         "validator"
@@ -31,24 +32,48 @@
       "category": "design-system"
     },
     {
-      "name": "brutalism-ui",
-      "source": "./plugins/brutalism-ui",
-      "displayName": "Brutalism & Neubrutalism UI",
-      "description": "One named visual language, applied on request: neubrutalism. Hard 2-5px ink borders, zero-blur offset shadows, flat saturated fills, chunky display type, and the hover-into-its-own-shadow interaction, with measured token values and an explicit when-not-to-use. Fires on the named style, not on general design-quality requests.",
+      "name": "skeuomorphism-ui",
+      "source": "./plugins/skeuomorphism-ui",
+      "displayName": "Skeuomorphism UI",
+      "description": "One named visual language, applied on request: skeuomorphism. The soft-and-physical language in which the surface IMITATES A NAMED MATERIAL — leather, brushed metal, wood, felt, rubber — with a four-layer shadow stack under one overhead light, a three-stop face gradient, a hairline material border, letterpress type and a single inline-SVG grain layer on the chassis. A soft surface imitating nothing is neumorphism-ui (same colour as the page ground) or claymorphism-ui (inflated pastel). \"Neo-skeuomorphism\" is this plugin; \"new skeuomorphism\" is neumorphism-ui. Fires on the named style, not on general design-quality requests.",
       "version": "0.1.0",
       "author": {
         "name": "UI Morphism",
         "url": "https://github.com/Shubham7995/ui-morphism"
       },
-      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/07-brutalism.md",
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/01-skeuomorphism.md",
       "license": "MIT",
       "keywords": [
-        "brutalism",
-        "neubrutalism",
-        "neobrutalism",
-        "hard-shadow",
-        "sticker-ui",
-        "anti-design"
+        "skeuomorphism",
+        "neo-skeuomorphism",
+        "material-realism",
+        "bevel",
+        "letterpress",
+        "texture",
+        "design-tokens"
+      ],
+      "category": "ui-style"
+    },
+    {
+      "name": "neumorphism-ui",
+      "source": "./plugins/neumorphism-ui",
+      "displayName": "Neumorphism & Soft UI",
+      "description": "One named visual language, applied on request: neumorphism, also called soft UI or new skeuomorphism. The soft-and-physical language in which the surface is THE SAME COLOUR AS THE PAGE GROUND, extruded or pressed in by a mirrored dual shadow at blur = 2 x distance, with no texture and no material. Ships the clean-neumorphism variant, because a same-hue pair measures 1.2:1 to 1.7:1 and can never be a control's boundary — a real 3:1 hairline carries it instead, and a forced-colors block restores what box-shadow deletion removes. A surface with its own pastel fill is claymorphism-ui; one imitating a material is skeuomorphism-ui. Fires on the named style, not on general design-quality requests.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/02-neumorphism.md",
+      "license": "MIT",
+      "keywords": [
+        "neumorphism",
+        "neomorphism",
+        "soft-ui",
+        "new-skeuomorphism",
+        "extruded",
+        "inner-shadow",
+        "design-tokens"
       ],
       "category": "ui-style"
     },
@@ -56,7 +81,7 @@
       "name": "glassmorphism-ui",
       "source": "./plugins/glassmorphism-ui",
       "displayName": "Glassmorphism UI",
-      "description": "One named visual language, applied on request: glassmorphism. Backdrop-blur navbars, cards, modals and command palettes, with the @supports opaque fallback, the -webkit- twin, the four accessibility escape hatches and worst-case composited contrast measured at both extremes of the ground. Fires on the named style, not on general design-quality requests.",
+      "description": "One named visual language, applied on request: glassmorphism. The translucent-depth language in which the backdrop is BLURRED AND NOTHING ELSE — never geometrically warped, and never behind a perspective camera. Backdrop-blur navbars, cards, modals and command palettes, with the @supports opaque fallback, the -webkit- twin, the four accessibility escape hatches and worst-case composited contrast measured at both extremes of the ground. A backdrop that refracts or lenses is liquid-glass-ui; panels at measured translateZ under a camera are spatial-ui. Fires on the named style, not on general design-quality requests.",
       "version": "0.1.0",
       "author": {
         "name": "UI Morphism",
@@ -70,7 +95,126 @@
         "frosted",
         "acrylic",
         "translucent",
-        "blur"
+        "blur",
+        "design-tokens",
+        "accessibility"
+      ],
+      "category": "ui-style"
+    },
+    {
+      "name": "claymorphism-ui",
+      "source": "./plugins/claymorphism-ui",
+      "displayName": "Claymorphism UI",
+      "description": "One named visual language, applied on request: claymorphism. The soft-and-physical language in which the surface carries ITS OWN PASTEL FILL, distinct from the page ground, inflated at a 24-40px radius, with no texture and no material. The four-layer rim / sheen / shade / drop stack whose shadow atoms are hue-derived from each surface's own fill, a squish press, a reduced treatment on static panels so affordance survives, and the inverted recipe for inputs. A surface matching the page ground is neumorphism-ui; one imitating a material is skeuomorphism-ui. Fires on the named style, not on general design-quality requests.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/04-claymorphism.md",
+      "license": "MIT",
+      "keywords": [
+        "claymorphism",
+        "clay-ui",
+        "soft-3d",
+        "puffy-ui",
+        "inset-shadow",
+        "pastel",
+        "design-tokens"
+      ],
+      "category": "ui-style"
+    },
+    {
+      "name": "minimalism-ui",
+      "source": "./plugins/minimalism-ui",
+      "displayName": "Minimalism & Flat UI",
+      "description": "One named visual language, applied on request: minimalism — Swiss, Linear-like, Vercel-like, quiet UI. The flat-and-stark language that SUBTRACTS: a neutral ramp plus one accent, three named shadow rungs, radius, spacing, type and motion quantised onto the doc's ramps, hairline borders and near-zero elevation. Then the compensating pass that puts the deleted affordance back — filled primary buttons, 3:1 control boundaries, hover underlines, focus rings and 24px target floors. A request to ADD weight — 2-5px ink borders, hard offset shadows, saturated fills — is brutalism-ui, equally flat and the opposite instruction. Fires on the named style, not on general design-quality requests.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/05-minimalism.md",
+      "license": "MIT",
+      "keywords": [
+        "minimalism",
+        "minimal-ui",
+        "flat-design",
+        "swiss-style",
+        "quiet-ui",
+        "calm-interface",
+        "design-tokens"
+      ],
+      "category": "ui-style"
+    },
+    {
+      "name": "maximalism-ui",
+      "source": "./plugins/maximalism-ui",
+      "displayName": "Maximalism UI",
+      "description": "One named visual language, applied on request: maximalism, also called dopamine design or anti-design collage. Loud is necessary but not sufficient — this language STACKS LAYERS: at most three of them (patterned ground, grain, one ornament) over an opaque content plane, with role-bound accents that swap ramps between light and dark, oversized display type on a four-family budget, zero-blur chromatic shadows and a Calm mode toggle for WCAG 2.2.2. One saturated bordered plane with no layer stack is brutalism-ui. Fires on the named style, not on general design-quality requests.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/06-maximalism.md",
+      "license": "MIT",
+      "keywords": [
+        "maximalism",
+        "dopamine-design",
+        "collage",
+        "bold-typography",
+        "anti-design",
+        "brand",
+        "design-tokens"
+      ],
+      "category": "ui-style"
+    },
+    {
+      "name": "brutalism-ui",
+      "source": "./plugins/brutalism-ui",
+      "displayName": "Brutalism & Neubrutalism UI",
+      "description": "One named visual language, applied on request: neubrutalism. The flat-and-stark language that ADDS weight — hard 2-5px ink borders, a six-step zero-blur offset-shadow scale, flat saturated fills, chunky display type, and the hover-into-its-own-shadow interaction — with the dark-mode border flip that keeps it above 1.4.11. Defined by the absence of blur. A request to strip ornament, quieten the palette or reduce to hairlines is minimalism-ui, equally flat and the opposite instruction; one stacking loud layers over a patterned ground is maximalism-ui. Fires on the named style, not on general design-quality requests.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/07-brutalism.md",
+      "license": "MIT",
+      "keywords": [
+        "brutalism",
+        "neubrutalism",
+        "neobrutalism",
+        "hard-shadow",
+        "sticker-ui",
+        "anti-design",
+        "design-tokens"
+      ],
+      "category": "ui-style"
+    },
+    {
+      "name": "liquid-glass-ui",
+      "source": "./plugins/liquid-glass-ui",
+      "displayName": "Apple Liquid Glass UI",
+      "description": "One named visual language, applied on request: Apple's Liquid Glass, on the web and on Apple platforms. The translucent-depth language in which the backdrop is GEOMETRICALLY DISPLACED, not merely blurred: a squircle-profile displacement map inlined as a data URI, a specular arc that tracks the pointer, the three-tier @supports ladder (SVG refraction, blur-only, opaque), the fill-alpha floor that keeps text legible over a backdrop you do not control, an outright refusal of nested glass because the material cannot sample itself, and the SwiftUI path where the OS renders it for you. Blur with no displacement is glassmorphism-ui; panels at translateZ under a camera are spatial-ui. Fires on the named style, not on general design-quality requests.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/08-liquid-glass.md",
+      "license": "MIT",
+      "keywords": [
+        "liquid-glass",
+        "ios-26",
+        "refraction",
+        "displacement-map",
+        "specular",
+        "backdrop-filter",
+        "swiftui",
+        "design-tokens",
+        "accessibility"
       ],
       "category": "ui-style"
     },
@@ -78,7 +222,7 @@
       "name": "bento-grid-ui",
       "source": "./plugins/bento-grid-ui",
       "displayName": "Bento Grid UI",
-      "description": "One named layout pattern, applied on request: the bento grid. Asymmetric modular tiles where size encodes importance on a locked gutter — feature sections, dashboards, portfolio indexes — with spans assigned by content weight, DOM order held equal to reading order, and a per-tile audit. Fires on the named pattern, not on general layout or design-quality requests.",
+      "description": "One named layout pattern, applied on request: the bento grid. The only plugin in this marketplace that restructures MARKUP AND LAYOUT rather than restyling surfaces, so it composes with any of the ten style languages rather than competing with them. Asymmetric modular tiles where size encodes importance on a locked gutter — feature sections, dashboards, portfolio indexes — with spans assigned by content weight, DOM order held equal to reading order, and a per-tile audit. Fires on the named pattern, not on general layout or design-quality requests.",
       "version": "0.1.0",
       "author": {
         "name": "UI Morphism",
@@ -92,7 +236,32 @@
         "layout",
         "feature-section",
         "dashboard",
-        "css-grid"
+        "css-grid",
+        "design-tokens"
+      ],
+      "category": "ui-style"
+    },
+    {
+      "name": "spatial-ui",
+      "source": "./plugins/spatial-ui",
+      "displayName": "Spatial UI",
+      "description": "One named visual language, applied on request: spatial UI, in both dialects — native XR and the flat-screen depth idiom most teams actually ship. The translucent-depth language in which depth is GEOMETRY, not material: a six-step translateZ ladder with the counter-scale that holds apparent size constant, exactly one camera on one stage element, toolbars converted to orbiters, reduced-motion-guarded pointer parallax, and a non-drag alternative on every movable or resizable panel for SC 2.5.7. Translucent panels with no camera are glassmorphism-ui (blurred backdrop) or liquid-glass-ui (refracting backdrop). Fires on the named style, not on general design-quality requests.",
+      "version": "0.1.0",
+      "author": {
+        "name": "UI Morphism",
+        "url": "https://github.com/Shubham7995/ui-morphism"
+      },
+      "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/10-spatial-ui.md",
+      "license": "MIT",
+      "keywords": [
+        "spatial",
+        "spatial-computing",
+        "visionos",
+        "android-xr",
+        "depth",
+        "parallax",
+        "perspective",
+        "design-tokens"
       ],
       "category": "ui-style"
     }

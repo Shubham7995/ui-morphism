@@ -1,0 +1,109 @@
+{
+  "style": "maximalism",
+  "default": 60,
+  "sourceDoc": "docs/06-maximalism.md",
+  "docSection": "13",
+  "baselineAtZero": "One opaque content plane on the flat paper ground: a real border at --max-stroke-1, a mixed-radius surface, a single 2px ink offset shadow, the display/body type pair at rest, the double focus ring and the 44px target minimum. No pattern, no grain, no ornament, no tilt, no ambient motion. Doc §12 names minimalism as the cheapest substrate under this style and doc §2 records that a two-plane composition reads as decorated minimalism; intensity 0 is exactly that composition, and it is a shippable brand card rather than an absence.",
+  "knobs": {
+    "layerCount": {
+      "unit": "loud layers",
+      "anchors": [
+        [0, 1], [49.9, 1],
+        [50, 2], [74.9, 2],
+        [75, 3], [100, 3]
+      ],
+      "emitAs": "integer count — the budget the composition may spend, not a CSS value",
+      "note": "Doc §13 gives 1 (flat surface only) to 3 (ground + grain + ornament), hard-capped at 3 regardless of intensity. A loud layer is any of the eight things doc §6 lists: patterned ground, chromatic stacked shadow, rotated element, marquee, blend-mode overlay, oversized display type, sticker cluster, animated ornament. The ladder is stepped because the value is a count. The 50 boundary is the doc's own interior threshold: §5's React loudLayers guard counts `intensity >= 50` as a layer in its own right, and it is the only intermediate layer-count anchor the doc states. The 75 boundary follows from the same ladder having three rungs. The context cap at 45 therefore lands on exactly one loud layer, which is what §13 asks of `surfaceType: app-accent`."
+    },
+    "chromaSpread": {
+      "unit": "accents",
+      "anchors": [
+        [0, 1], [19.9, 1],
+        [20, 2], [39.9, 2],
+        [40, 3], [59.9, 3],
+        [60, 4], [79.9, 4],
+        [80, 5], [99.9, 5],
+        [100, 6]
+      ],
+      "emitAs": "integer count of accents admitted to the emitted palette",
+      "pairedRamp": "chroma",
+      "note": "Doc §13 gives 1 accent at OKLCH chroma 0.10 to 6 accents at chroma 0.30. The knob's value is the accent count; the chroma it pairs with is the `chroma` entry under pairedRamps below, which the skill resolves and core does not read. The plateaus are 20 wide so each integer count owns a band, and the default 60 lands on 4 accents at chroma 0.22 — inside doc §3's stated 4-to-7 hues at chroma 0.18-0.30. Admitting an accent to the palette is not permission to use it as text: doc §4's role bindings decide that, per ground, per theme."
+    },
+    "shadowStack": {
+      "unit": "px",
+      "anchors": [[0, 2], [100, 12]],
+      "emitAs": "integer px — round the resolved value at emit time; it is the deepest offset in the stack",
+      "note": "Doc §13: `2px 2px 0` single ink to `4/8/12px` three-colour chromatic. The knob carries the deepest offset, which is the one number the two endpoints share a scale on, and it reproduces §5's React curve exactly (round(2 + 10t), 8px at the default 60). Below the point where the composition can afford the chromatic stack as one of its loud layers, emit the single ink shadow at that offset; at or above it, emit round(d/3) magenta, round(2d/3) cyan, d ink, which is §5's own derivation. Blur is 0 in every case — that is the signature, not a knob."
+    },
+    "tiltRange": {
+      "unit": "deg",
+      "anchors": [[0, 0], [100, 5]],
+      "emitAs": "magnitude ceiling in deg; the sign comes from --max-tilt-s / -m / -l",
+      "note": "Doc §13: 0deg to ±5deg, applied to cards, stickers and marquees. The resolved value is a ceiling on |rotation| for every rotated element, decorative ones included — stricter than §5's React `stickerRot`, which reaches 5.6deg at the default 60 while the §13 table stops at 5. §13 is the contract and the tighter number is the one that ships. The reason is not tidiness: SC 2.5.8 is measured on the transformed box, so every extra degree costs hit area, and scripts/max-scan.mjs re-measures the box after rotation rather than trusting the declared size."
+    },
+    "motionLoad": {
+      "unit": "ambient loops",
+      "anchors": [
+        [0, 0], [33.9, 0],
+        [34, 1], [66.9, 1],
+        [67, 2], [89.9, 2],
+        [90, 3], [100, 3]
+      ],
+      "emitAs": "integer count of infinite/ambient animations the scene may run",
+      "note": "Doc §13: 0 ambient animations with 120ms state transitions only, to 3 ambient loops plus the 24s marquee and scroll-linked rotation. State transitions are never a knob — they are feedback and they survive at every value, including 0. The count is forced to 0 at runtime under `prefers-reduced-motion: reduce` and under Calm mode, which is doc §6's rule and not an intensity question. Every non-zero value obliges a CalmToggle and a visible pause control: SC 2.2.2 is Level A."
+    }
+  },
+  "pairedRamps": {
+    "chroma": {
+      "pairedWith": "chromaSpread",
+      "unit": "OKLCH C",
+      "anchors": [[0, 0.1], [100, 0.3]],
+      "note": "Doc §13's chromaSpread cell states two quantities — how many accents, and at what chroma. The count is the knob; this is the chroma each admitted accent is scaled to, with OKLCH L and H held so the hue and lightness of the brand colour survive. Core's resolver reads `knobs`, not this block, so the skill resolves it and reports it on the same audit line. Every scaled accent goes to ui-morphism-core:a11y-validate before it ships; nothing here decides whether a colour is legible."
+    }
+  },
+  "clamps": {
+    "layerCount": { "min": 1, "max": 3 },
+    "chromaSpread": { "min": 1, "max": 6 },
+    "shadowStack": { "min": 2, "max": 12 },
+    "tiltRange": { "min": 0, "max": 5 },
+    "motionLoad": { "min": 0, "max": 3 }
+  },
+  "contextCaps": [
+    {
+      "when": { "surfaceType": "app-accent" },
+      "cap": 45,
+      "reason": "Doc §13 inputs table: `app-accent` hard-caps intensity at 45 and forbids marquees and patterned grounds on data surfaces. Doc §9 is the argument — maximalism reads as chaos on a task-oriented app, and survives there only as one loud surface at a time. The cap lands on layerCount 1, and the two knob clamps under contextClamps remove the marquee and the ground explicitly rather than leaving them to the arithmetic."
+    }
+  ],
+  "contextClamps": [
+    {
+      "when": { "surfaceType": "app-accent" },
+      "clamps": { "layerCount": { "max": 1 }, "motionLoad": { "max": 0 } },
+      "reason": "Doc §13: `app-accent` forbids marquees and patterned grounds on data surfaces. The cap alone resolves to one layer and one ambient loop; these two clamps state the prohibition rather than inferring it, so a later change to the ladder cannot quietly reintroduce a marquee on a table."
+    },
+    {
+      "when": { "motionPolicy": "state-only" },
+      "clamps": { "motionLoad": { "max": 0 } },
+      "reason": "Doc §13 inputs table: `state-only` omits all ambient and infinite animation from the output. State transitions — 120ms tap, 220ms hover, 420ms enter — are unaffected, because doc §6's rule is stop everything ambient and infinite, keep everything that reports state."
+    },
+    {
+      "when": { "motionPolicy": "none" },
+      "clamps": { "motionLoad": { "max": 0 } },
+      "reason": "Doc §13 inputs table. `none` additionally collapses state transitions to 1ms at emit time, which is a stylesheet decision rather than a knob bound and so is not expressible here."
+    }
+  ],
+  "clampsNotExpressibleHere": {
+    "loudLayersPerViewport": "<= 3 at any intensity, in any context, for any request. §4 states why it is not a custom property: nothing in CSS can count the layers in a viewport, so it is enforced by scripts/max-scan.mjs, by the per-tile containment of §12, and by review.",
+    "textOnPattern": "body text never sits on a pattern, gradient, photograph or grain layer without an opaque plane behind it",
+    "targetMin": ">= 44px from --max-target-min, re-measured on the axis-aligned box after rotation, never below the 24x24 SC 2.5.8 floor",
+    "focusRing": "4px --max-focus-inner at 2px offset plus the --max-focus-outer halo drawn as a box-shadow, because an element gets only one outline",
+    "grainOpacity": "0.04-0.12, shipped at 0.08 light and 0.05 dark; grain reads louder on a dark ground",
+    "fontFamilies": "<= 4 families, <= 180 KB total font payload",
+    "rasterTexture": "0 bytes — noise and pattern are CSS/SVG or they are not emitted",
+    "flashRate": "no full-area colour change faster than 2.5Hz; keep any such change to a minimum period of 400ms",
+    "blendModes": "never on a full-viewport overlay, and never outside an `isolation: isolate` container",
+    "absoluteOrnament": "no position: absolute ornament below the 640px breakpoint, and no horizontal overflow at 320px",
+    "pauseControl": "every infinite animation has a pause control, and a CalmToggle is emitted whenever any infinite animation is",
+    "note": "These constrain the emitted composition rather than the value of a knob, so scripts/max-scan.mjs and ui-morphism-core:a11y-validate enforce them. Recorded here so the clamp table reads as the complete list."
+  }
+}

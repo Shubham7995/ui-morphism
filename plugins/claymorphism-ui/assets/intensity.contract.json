@@ -1,0 +1,108 @@
+{
+  "style": "claymorphism",
+  "default": 50,
+  "sourceDoc": "docs/04-claymorphism.md",
+  "docSection": "13",
+  "defaultProvenance": "Doc 04 is the one doc in the set whose §13 inputs are a bullet list rather than a table, so it states the intensity range (`0-100`) without stating a default beside it. 50 is the doc's own reference point twice over: §13's knob table labels its middle column \"Reference (intensity 50)\", and §5's React implementation declares `intensity = 50` as the default prop on both ClaySurface and ClayButton. Recorded here because a default the doc does not state in its inputs list must be visible as a derivation rather than look like a doc figure.",
+  "baselineAtZero": "A flat pastel-tinted card: 8px card / 6px button radius, no rim, no sheen, no shade, a hairline `0 2px 4px -2px` drop at 0.12 alpha still tinted with the surface hue, chroma pulled back to 0.02 oklch, and no press deformation. It keeps everything that is not ornament — its OWN background colour rather than the page ground, dark `--clay-ink` on every pastel, a 3px focus ring at 3px offset, and 48x48 targets. Recognisable as plain, fully accessible, and still not neumorphism: doc §10 and §12 are explicit that a surface whose colour equals the page background is the other style and the 1.4.11 failure, so intensity 0 flattens the volume and never the surface colour.",
+  "knobsAreForRung": 3,
+  "knobs": {
+    "radiusScale": {
+      "unit": "px",
+      "anchors": [[0, 8], [50, 32], [100, 48]],
+      "note": "Doc §13. The scalar is the CARD radius, which is what the doc's Min / Reference / Max cells lead with: 8px / 32px / 48px. The button ramp the same cells state is 6px / 20px / 28px and is resolved alongside it. Doc §3 and §13 both warn that below 16px on an interactive element the style stops reading as clay — that is a property of the baseline, not a clamp: intensity 0 is deliberately a flat card rather than a clay one.",
+      "companions": {
+        "button": { "anchors": [[0, 6], [50, 20], [100, 28]], "provenance": "doc §13, same cells" },
+        "input": { "derivation": "button - 2px", "provenance": "derived — doc §4 ships --clay-r-btn 20px against --clay-r-input 18px and the offset is held across the ramp" },
+        "modal": { "derivation": "card + 8px", "provenance": "derived — doc §4 ships --clay-r-card 32px against --clay-r-modal 40px and the offset is held across the ramp" },
+        "chip": { "fixed": "999px", "provenance": "doc §4 --clay-r-chip. A pill does not scale; it is already at its geometric maximum." }
+      }
+    },
+    "insetStrength": {
+      "anchors": [[0, 0], [50, 0.62], [100, 0.85]],
+      "note": "Doc §13. The scalar is the SHEEN alpha — the top highlight that does most of the inflating. The shade alpha the same cells state is 0.00 / 0.32 / 0.48. At 0 both insets are gone and the surface is a flat tinted card, which is the doc's own description of the minimum.",
+      "companions": {
+        "shade": { "anchors": [[0, 0], [50, 0.32], [100, 0.48]], "provenance": "doc §13, same cells" },
+        "rim": { "derivation": "sheen * 0.35 / 0.62, rounded to 2dp — 0.00 / 0.35 / 0.48", "provenance": "derived — doc §13 tables no rim endpoint, doc §4 ships --clay-rim at 0.35 against a 0.62 sheen, and doc §5's React reference scales rim and sheen by the same factor" }
+      },
+      "reconciliation": "Doc §5's React `claySoftShadow` scales all three alphas by k = intensity / 50, which reaches 1.24 sheen at intensity 100. §13's knob table caps the sheen at 0.85 and the shade at 0.48, and the knob table is the contract: the linear k form is the doc showing the shape, not the ceiling.",
+      "themeNote": "These are the LIGHT-theme alphas. Doc §4's dark block re-derives rather than reusing them — rim 0.10, sheen 0.14, shade 0.55 — and doc §13's validation item 8 makes that a hard assertion: dark sheen <= 0.20, dark shade >= 0.45. The knob scales within that dark band; it never lifts the dark sheen out of it."
+    },
+    "dropDepth": {
+      "unit": "px",
+      "anchors": [[0, 2], [50, 24], [100, 44]],
+      "note": "Doc §13. The scalar is the drop shadow's Y offset — how far the object floats — read from the Min / Reference / Max shadow specs `0 2px 4px -2px` @ 0.12, `0 24px 44px -12px` @ 0.32 and `0 44px 76px -16px` @ 0.42. Blur, spread and alpha ride with it as companions. The reference spec is --clay-drop-3, the card rung; rungs 1, 2 and 4 keep their §4 proportions to it. Blur is the main perf lever (doc §8: cost scales roughly with the square of the radius) and it is the companion that gets clamped.",
+      "companions": {
+        "blur": { "anchors": [[0, 4], [50, 44], [100, 76]], "provenance": "doc §13, same cells", "clamp": "<= 68px always (--clay-blur-max, doc §4 and §8); <= 48px on any selector that repeats (doc §8 budget, §13 validation item 3). The 76px endpoint therefore resolves to 68px at intensity 100 — a clamp that always fires at the top of the range, reported every run." },
+        "spread": { "anchors": [[0, -2], [50, -12], [100, -16]], "provenance": "doc §13, same cells" },
+        "alpha": { "anchors": [[0, 0.12], [50, 0.32], [100, 0.42]], "provenance": "doc §13, same cells" }
+      }
+    },
+    "surfaceChroma": {
+      "unit": "oklch C",
+      "anchors": [[0, 0.02], [50, 0.09], [100, 0.16]],
+      "note": "Doc §13. Palette saturation, with L and H held so the pastel keeps its hue and its lightness band (doc §3: L 70-90%, sat 20-60%). Doc §13's own warning is that above 0.16 the dark-ink contrast floor starts breaking, which is why 0.16 is also the clamp. Every scaled surface still goes to ui-morphism-core:a11y-validate before it ships; this knob moves chroma, it does not certify a pair."
+    },
+    "squishAmount": {
+      "anchors": [[0, 1], [50, 0.97], [100, 0.93]],
+      "note": "Doc §13. The scalar is the :active scale factor, so this knob is inverse — permitted by contract rule 1, which bans reversal rather than direction. 1.00 is no deformation, 0.97 is the reference press, 0.93 is the floor. Doc §13 states the floor's reason outright: further shrink makes 24px targets miss their own hit area. Doc §4's --clay-target-min is 48px partly to absorb this, and SC 2.5.8 is measured on the pressed box.",
+      "companions": {
+        "translateY": { "anchors": [[0, 0], [50, 1], [100, 3]], "unit": "px", "provenance": "doc §13, same cells" }
+      }
+    }
+  },
+  "clamps": {
+    "radiusScale": { "min": 8, "max": 48 },
+    "insetStrength": { "min": 0, "max": 0.85 },
+    "dropDepth": { "min": 2, "max": 44 },
+    "surfaceChroma": { "min": 0.02, "max": 0.16 },
+    "squishAmount": { "min": 0.93, "max": 1 }
+  },
+  "contextCaps": [
+    {
+      "when": { "surface": "data-dense" },
+      "cap": 0,
+      "reason": "Doc §9: clay's radii and padding cost roughly a quarter to a third of usable content area against a flat card, so dashboards, tables and IDEs cannot afford it, and doc §13's anti-pattern list names data tables, financial statements, medical records and admin dashboards outright. Applying the full stack wholesale to such a surface is a refusal, answered with accent-only scoping. This cap is what happens when clay is nonetheless scoped onto a dense surface: the intensity-0 rung, which doc §9 calls by its plain name — ship flat."
+    },
+    {
+      "when": { "register": "high-gravity" },
+      "cap": 0,
+      "reason": "Doc §9: banking core flows, insurance, legal, medical records, government services and security tooling are products where trust and gravity are the point, and clay reads as unserious at best and condescending at worst. The flat rung keeps the token layer, the focus ring and the target sizes and drops the volume that carries the toy register."
+    }
+  ],
+  "contextClamps": [
+    {
+      "when": { "repeating": true },
+      "clamps": { "dropDepth.blur": { "max": 48 } },
+      "reason": "Doc §8 budget and §13 validation item 3: <= 48px blur on anything that repeats. A 68px blur samples an area roughly 18x a 16px one, and a virtualised list re-rasterises it on every scroll tick. Applied to any selector this run judges to match a list, grid or carousel item."
+    },
+    {
+      "when": { "viewport": "under-480" },
+      "clamps": { "dropDepth.blur": { "max": 32 }, "insetStrength.rim": { "max": 0 } },
+      "reason": "Doc §8's cheaper-fallbacks block, keyed on `(prefers-reduced-data: reduce), (max-width: 480px)`: --clay-drop-3 drops to `0 12px 22px -8px` @ 0.30, --clay-drop-4 to `0 18px 32px -10px` @ 0.32, and --clay-rim goes to none. The rim is the cheapest layer to lose and it costs a full rasterisation."
+    },
+    {
+      "when": { "density": "compact" },
+      "clamps": { "radiusScale": { "max": 32 } },
+      "reason": "Doc §7 SC 1.4.12: reserve padding >= border-radius * 0.75 on any card whose text can wrap. Compact density trades padding for density, so the radius has to come down with it or text clips against the curve at 200% zoom and WCAG text-spacing values. Doc §13's own input note is that compact still floors targets at --clay-target-min."
+    }
+  ],
+  "clampsNotExpressibleHere": {
+    "shadowLayersPerElement": "<= 4 — rim, sheen, shade, drop (doc §8, §13 validation item 3)",
+    "clayElementsPerViewport": "<= 40 (doc §8)",
+    "dropBlurCeiling": "<= 68px anywhere (--clay-blur-max), <= 48px on anything that repeats (doc §8)",
+    "darkSheenAlpha": "<= 0.20 (doc §13 validation item 8 — the chalky-grey guard)",
+    "darkShadeAlpha": ">= 0.45 (doc §13 validation item 8)",
+    "nestedElevationLevels": "<= 2 in one subtree (doc §9, §13 anti-pattern)",
+    "gridGap": ">= 24px, so drop shadows never overlap (doc §3, §4 --clay-gap)",
+    "targetMin": ">= 48px (--clay-target-min), measured while pressed so the squish scale is included; never below the 24x24 SC 2.5.8 floor (doc §4, §7 item 11)",
+    "focusRing": ">= 3px outline at >= 3px offset, never removed, never a box-shadow (doc §4, §7)",
+    "paddingVsRadius": ">= border-radius * 0.75 on any card whose text can wrap (doc §7, SC 1.4.12)",
+    "surfaceColourIndependence": "a clay surface's background never equals the page background — that is neumorphism and the 1.4.11 failure (doc §10, §12, §13 anti-pattern)",
+    "dropShadowHue": "hue-matched to the surface at 28-35% alpha; never a neutral rgba(0,0,0,a) on a coloured surface (doc §3, §10, §13 anti-pattern)",
+    "boxShadowInMotion": "never inside a `transition` or `@keyframes` property list on a scrollable list item, carousel or any repeating selector (doc §6, §8, §13 validation item 9)",
+    "illustrationBytes": "<= 150KB per clay illustration as AVIF/WebP, and no Spline scene above the fold on mobile (doc §8, §13 anti-pattern)",
+    "forcedColorAdjust": "never `none` to preserve the aesthetic — doc §5 is explicit that clay does not opt out of the forced palette, and there is therefore no `forced-color-adjust` declaration in its forced-colors block at all",
+    "note": "These constrain the emitted sheet, the composition and the assets rather than the value of a knob, so scripts/clay-scan.mjs and ui-morphism-core:a11y-validate enforce them. Recorded here so the clamp table reads as the complete list."
+  }
+}

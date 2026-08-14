@@ -1,0 +1,226 @@
+/* ---------------------------------------------------------------------------
+ * liquid-glass-ui — token layer
+ *
+ * Source of truth: docs/08-liquid-glass.md §4 "Anatomy & Design Tokens", the
+ * single ready-to-paste ```css block. Everything below the header is that block
+ * reproduced verbatim — same declarations, same values, same order, same
+ * selector contexts. Nothing is added, removed, reordered or reformatted, and
+ * CI diffs this file against the doc declaration for declaration in both
+ * directions.
+ *
+ * Four things about this sheet that are easy to lose in a rewrite:
+ *
+ *   1. `--lg-backdrop` is a composition, not a value. It re-resolves per
+ *      element, so re-pointing `--lg-blur` locally moves the whole filter
+ *      chain. That is how the elevation rungs work: a rung is a fill plus a
+ *      blur, never a box-shadow step, because in this style elevation is
+ *      carried by the material.
+ *   2. Light values live on bare `:root`. Dark is written twice — once guarded
+ *      as `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }`
+ *      so it cannot beat an explicit light toggle, and once under
+ *      `:root[data-theme="dark"]` so a manual toggle beats the OS preference.
+ *   3. The legibility overrides come AFTER both theme blocks so they win in
+ *      either theme, and they flatten the elevation rungs as well as the base
+ *      pair. A surface that re-points `--lg-fill` / `--lg-blur` at rung 2 or 3
+ *      walks straight back through a rung-blind override.
+ *   4. `--lg-refract-scale` is unitless on purpose: it is an SVG
+ *      `feDisplacementMap` scale attribute, and filter primitives take numbers,
+ *      not lengths.
+ *
+ * The mapping onto the shared `--um-liquid-glass-*` grammar is in
+ * ../references/tokens.md and ./tokens.um-aliases.css. Emit through
+ * ui-morphism-core:token-emit; this file is the reference copy and the drop-in
+ * sheet for a project that wants the doc's CSS unchanged.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- surface ---- */
+  --lg-fill:            rgba(255, 255, 255, 0.62);
+  --lg-fill-clear:      rgba(255, 255, 255, 0.28);
+  --lg-scrim:           rgba(0, 0, 0, 0.22);
+  --lg-tint:            rgba(120, 180, 255, 0.10);
+
+  /* ---- optics ---- */
+  --lg-blur:            20px;
+  --lg-sat:             180%;
+  --lg-bright:          108%;
+  --lg-refract-scale:   48;      /* unitless: feDisplacementMap scale */
+  --lg-refract-band:    16px;
+  --lg-backdrop:        blur(var(--lg-blur)) saturate(var(--lg-sat)) brightness(var(--lg-bright));
+
+  /* ---- elevation rungs ----
+     There is no shadow ladder in this style (§3): elevation is carried by the
+     material itself, so each rung is a fill + a blur, not a box-shadow step.
+     Rung 1 IS the default pair above. To raise a surface, re-point the two
+     base tokens locally — `--lg-backdrop` is substituted per element, so it
+     picks the new blur up automatically:
+       .lg-sheet { --lg-fill: var(--lg-elev-2-fill);
+                   --lg-blur: var(--lg-elev-2-blur); }  */
+  --lg-elev-1-fill:     rgba(255, 255, 255, 0.62);
+  --lg-elev-1-blur:     20px;
+  --lg-elev-2-fill:     rgba(255, 255, 255, 0.72);
+  --lg-elev-2-blur:     24px;
+  --lg-elev-3-fill:     rgba(255, 255, 255, 0.86);
+  --lg-elev-3-blur:     28px;
+
+  /* ---- edges ---- */
+  --lg-rim:             rgba(255, 255, 255, 0.85);
+  --lg-rim-dark:        rgba(255, 255, 255, 0.18);
+  --lg-border:          rgba(255, 255, 255, 0.45);
+  --lg-inset:           inset 0 1px 0 rgba(255, 255, 255, 0.60);
+
+  /* ---- geometry ---- */
+  --lg-radius-control:  999px;
+  --lg-radius-card:     26px;
+  --lg-radius-sheet:    38px;
+
+  /* ---- targets ---- */
+  /* SC 2.5.8's floor is 24px, but that floor presumes a perceivable boundary.
+     The glass rim is frequently under 3:1 against its backdrop, so the user is
+     aiming at an edge they cannot see — 44px (the Apple HIG value) is the
+     working minimum for every capsule, icon button and merged-bar segment. */
+  --lg-target-min:      44px;
+
+  /* ---- depth ---- */
+  --lg-shadow-ambient:  0 8px 32px rgba(0, 0, 0, 0.12);
+  --lg-shadow-contact:  0 1px 2px rgba(0, 0, 0, 0.10);
+
+  /* ---- foreground ---- */
+  --lg-fg:              #1C1C1E;
+  --lg-fg-2:            rgba(28, 28, 30, 0.62);
+  --lg-accent:          #0A84FF;
+
+  /* ---- type ---- */
+  --lg-text-xs:  13px;
+  --lg-text-sm:  15px;
+  --lg-text-md:  17px;
+  --lg-text-lg:  20px;
+  --lg-text-xl:  28px;
+  --lg-text-2xl: 34px;
+  --lg-weight-on-glass: 600;
+
+  /* ---- space ---- */
+  --lg-space-1: 4px;
+  --lg-space-2: 8px;
+  --lg-space-3: 12px;
+  --lg-space-4: 16px;
+  --lg-space-5: 24px;
+  --lg-space-6: 32px;
+
+  /* ---- motion ---- */
+  --lg-dur-state:  180ms;
+  --lg-dur-morph:  320ms;
+  --lg-dur-settle: 520ms;
+  --lg-ease:        cubic-bezier(0.32, 0.72, 0, 1);
+  --lg-ease-spring: linear(0, 0.35, 0.86, 1.04, 1.01, 1);
+}
+
+/* Light values live on bare `:root` above. Dark is written twice: once guarded
+   so it cannot beat an explicit `data-theme="light"`, and once under
+   `:root[data-theme="dark"]` so a manual toggle beats the OS preference.
+   Same shape as docs 01, 02, 04, 05, 06, 07, 09 and 10. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --lg-fill:           rgba(28, 28, 30, 0.58);
+    --lg-fill-clear:     rgba(28, 28, 30, 0.26);
+    --lg-scrim:          rgba(0, 0, 0, 0.34);
+    --lg-tint:           rgba(120, 180, 255, 0.08);
+    --lg-blur:           24px;
+    --lg-sat:            160%;
+    --lg-bright:         96%;
+    --lg-elev-1-fill:    rgba(28, 28, 30, 0.58);
+    --lg-elev-1-blur:    24px;
+    --lg-elev-2-fill:    rgba(28, 28, 30, 0.68);
+    --lg-elev-2-blur:    28px;
+    --lg-elev-3-fill:    rgba(28, 28, 30, 0.82);
+    --lg-elev-3-blur:    30px;
+    --lg-rim:            rgba(255, 255, 255, 0.55);
+    --lg-rim-dark:       rgba(255, 255, 255, 0.10);
+    --lg-border:         rgba(255, 255, 255, 0.16);
+    --lg-inset:          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    --lg-shadow-ambient: 0 8px 32px rgba(0, 0, 0, 0.44);
+    --lg-shadow-contact: 0 1px 2px rgba(0, 0, 0, 0.30);
+    --lg-fg:             #F2F2F7;
+    --lg-fg-2:           rgba(242, 242, 247, 0.66);
+    --lg-accent:         #0A84FF;
+  }
+}
+
+/* Explicit opt-in override, so a toggle beats the media query both ways. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --lg-fill:           rgba(28, 28, 30, 0.58);
+  --lg-fill-clear:     rgba(28, 28, 30, 0.26);
+  --lg-scrim:          rgba(0, 0, 0, 0.34);
+  --lg-tint:           rgba(120, 180, 255, 0.08);
+  --lg-blur:           24px;
+  --lg-sat:            160%;
+  --lg-bright:         96%;
+  --lg-elev-1-fill:    rgba(28, 28, 30, 0.58);
+  --lg-elev-1-blur:    24px;
+  --lg-elev-2-fill:    rgba(28, 28, 30, 0.68);
+  --lg-elev-2-blur:    28px;
+  --lg-elev-3-fill:    rgba(28, 28, 30, 0.82);
+  --lg-elev-3-blur:    30px;
+  --lg-rim:            rgba(255, 255, 255, 0.55);
+  --lg-rim-dark:       rgba(255, 255, 255, 0.10);
+  --lg-border:         rgba(255, 255, 255, 0.16);
+  --lg-inset:          inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  --lg-shadow-ambient: 0 8px 32px rgba(0, 0, 0, 0.44);
+  --lg-shadow-contact: 0 1px 2px rgba(0, 0, 0, 0.30);
+  --lg-fg:             #F2F2F7;
+  --lg-fg-2:           rgba(242, 242, 247, 0.66);
+  --lg-accent:         #0A84FF;
+}
+:root[data-theme="light"] { color-scheme: light; }
+
+/* User/OS legibility overrides — treat as mandatory, not optional.
+   These come AFTER the theme blocks so they win in both themes. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --lg-fill:        rgba(246, 246, 248, 0.98);
+    --lg-fill-clear:  rgba(246, 246, 248, 0.98);
+    --lg-blur:        0px;
+    --lg-sat:         100%;
+    --lg-bright:      100%;
+    --lg-refract-scale: 0;
+    /* Flatten the rungs too, or a surface that re-points --lg-fill/--lg-blur
+       at rung 2 or 3 walks straight back through this override. */
+    --lg-elev-1-fill: rgba(246, 246, 248, 0.98);
+    --lg-elev-2-fill: rgba(246, 246, 248, 0.98);
+    --lg-elev-3-fill: rgba(246, 246, 248, 0.98);
+    --lg-elev-1-blur: 0px;
+    --lg-elev-2-blur: 0px;
+    --lg-elev-3-blur: 0px;
+  }
+  :root[data-theme="dark"] {
+    --lg-fill: rgba(24, 24, 26, 0.98);
+    --lg-fill-clear: rgba(24, 24, 26, 0.98);
+    --lg-elev-1-fill: rgba(24, 24, 26, 0.98);
+    --lg-elev-2-fill: rgba(24, 24, 26, 0.98);
+    --lg-elev-3-fill: rgba(24, 24, 26, 0.98);
+  }
+}
+@media (prefers-color-scheme: dark) and (prefers-reduced-transparency: reduce) {
+  :root:not([data-theme="light"]) {
+    --lg-fill: rgba(24, 24, 26, 0.98);
+    --lg-fill-clear: rgba(24, 24, 26, 0.98);
+    --lg-elev-1-fill: rgba(24, 24, 26, 0.98);
+    --lg-elev-2-fill: rgba(24, 24, 26, 0.98);
+    --lg-elev-3-fill: rgba(24, 24, 26, 0.98);
+  }
+}
+@media (prefers-contrast: more) {
+  :root {
+    --lg-fill:   rgba(255, 255, 255, 0.92);
+    --lg-border: rgba(0, 0, 0, 0.55);
+    --lg-blur:   10px;
+    --lg-refract-scale: 0;
+    --lg-elev-1-fill: rgba(255, 255, 255, 0.92);
+    --lg-elev-2-fill: rgba(255, 255, 255, 0.94);
+    --lg-elev-3-fill: rgba(255, 255, 255, 0.96);
+    --lg-elev-1-blur: 10px;
+    --lg-elev-2-blur: 10px;
+    --lg-elev-3-blur: 10px;
+  }
+}

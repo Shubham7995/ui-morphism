@@ -1,0 +1,158 @@
+/* ---------------------------------------------------------------------------
+ * Neumorphism — `--um-neumorphism-*` grammar bridge.
+ *
+ * assets/tokens.css carries the style's own `--nm-*` names verbatim from
+ * docs/02-neumorphism.md §4. ui-morphism-core:token-emit speaks the shared
+ * grammar `--um-<style>-<group>[-<variant>]` defined in
+ * docs/00-comparison-matrix.md §7. This file is the mapping between them.
+ *
+ * Direction: `--um-neumorphism-*` reads from `--nm-*`, not the reverse, so the
+ * verbatim §4 block stays the single place a value is written. Load tokens.css
+ * first, then this file. Both themes work with no duplication here, because
+ * every alias is a var() reference and inherits whichever theme block in
+ * tokens.css is active.
+ *
+ * THE ONE THING TO READ BEFORE USING THIS FILE. `border` and `border-strong`
+ * both resolve to `--nm-hairline`, and that is not a shortcut. Doc §7: the
+ * shadow pair measures 1.23:1 and 1.59:1 against the light surface and 1.37:1
+ * and 1.30:1 against the dark one, and no value of blur, distance or luminance
+ * delta gets a same-hue pair to the 3:1 that SC 1.4.11 requires. The hairline is
+ * the only boundary in this style that clears the floor — 3.20:1 light, 3.31:1
+ * dark — so the decorative `border` slot and the load-bearing `border-strong`
+ * slot are the same token on purpose. There is no cheaper boundary to fall back
+ * to.
+ *
+ * Groups deliberately NOT populated for this style:
+ *   blur      — docs §4: "backdrop blur has no token at all, because
+ *               neumorphism has no translucency. If you are blurring a backdrop
+ *               you are doing glassmorphism." The shadow's own blur is
+ *               geometry, carried by --nm-b-* and always 2 x the matching
+ *               --nm-d-*; it is not this group, which is backdrop blur.
+ *   saturate  — no backdrop-filter exists in this style, so there is nothing to
+ *               saturate.
+ *   noise     — no grain layer. Doc §8 puts additional asset weight at 0 bytes.
+ *   elev      — elevation IS the distance/blur rung, so the shadow ladder is
+ *               the elevation ladder. Doc §10 also caps what the style can
+ *               express: "neumorphism cannot express more than about two depth
+ *               levels legibly", so a parallel semantic ramp would promise a
+ *               resolution the material does not have.
+ *   accent-subtle — docs §3 item 11: colour is reserved for accents, one
+ *               saturated element per screen. A desaturated accent tint on a
+ *               same-hue surface is indistinguishable from the surface.
+ *   font-display / font-mono — docs §4: "One family for the whole style."
+ *   weight / leading / tracking — docs §4 states these as literals rather than
+ *               tokens, deliberately: 500 body / 600 label / 700 display and
+ *               1.5 body / 1.2 display. Under-500 weights disappear on a
+ *               low-contrast field, "so the floor is a rule to enforce in
+ *               review, not a dial to expose".
+ *   surface-2 … surface-4 — the style has exactly one plane. Doc §3 item 1: the
+ *               element's background is identical to its parent's. A second
+ *               ascending surface colour is the one thing this style may not
+ *               have.
+ *   shadow-4 / shadow-5 — the raised ramp is three rungs (sm / md / lg). The
+ *               xl rung exists as geometry (--nm-d-xl / --nm-b-xl) for
+ *               page-scale slabs but §4 composes no shadow from it, and §10
+ *               warns against copying neumorphism.io's 20/60 onto a control.
+ *
+ * Tokens with no home in the closed group vocabulary (§7.3), which therefore
+ * keep their `--nm-*` names and are consumed directly:
+ *   --nm-surface-sunken   large wells only, never controls. Not a `surface-N`,
+ *                         which ascends; a well descends, and a sunken control
+ *                         loses the same-hue illusion.
+ *   --nm-flat             the named zero rung. Animate to and from this rather
+ *                         than to `none`, which is not interpolable.
+ *   --nm-convex / --nm-concave
+ *                         the two 145deg surface gradients. The vocabulary has
+ *                         no gradient group, and these are shape states rather
+ *                         than colours.
+ *   --nm-d-* / --nm-b-*   the raw distance and blur ramp. The vocabulary
+ *                         carries composed shadows, not their components, and
+ *                         these two are what the intensity knob moves.
+ *   --nm-fs-* / --nm-sp-* aliased below, and kept as well: doc §4 calls each
+ *                         ramp "the complete scale — no others", and the local
+ *                         names are what the §5 recipes read.
+ * ------------------------------------------------------------------------- */
+
+:root {
+  /* ---- ground and planes. Same value by construction: doc §3 item 1, the
+     element's fill is the exact same colour as its parent background. If bg and
+     surface-1 ever differ, this is no longer neumorphism — it is a card with a
+     soft shadow, and doc §13 anti-pattern 4 refuses it. ---- */
+  --um-neumorphism-bg:              var(--nm-surface);
+  --um-neumorphism-surface-1:       var(--nm-surface);
+
+  /* ---- foreground ---- */
+  --um-neumorphism-ink:             var(--nm-text);
+  --um-neumorphism-ink-muted:       var(--nm-text-mut);
+  --um-neumorphism-ink-inverse:     var(--nm-accent-ink);
+
+  /* ---- boundaries. One token, two slots. See the header. ---- */
+  --um-neumorphism-border:          var(--nm-hairline);
+  --um-neumorphism-border-strong:   var(--nm-hairline);
+
+  /* ---- action hue. One saturated element per screen (docs §3 item 11): the
+     accent is what actually carries state, because the shadow cannot. ---- */
+  --um-neumorphism-accent:          var(--nm-accent);
+  --um-neumorphism-accent-fg:       var(--nm-accent-ink);
+  --um-neumorphism-danger:          var(--nm-danger);
+
+  /* ---- geometry. Four rungs, four slots, exactly. ---- */
+  --um-neumorphism-radius-sm:       var(--nm-r-ctl);
+  --um-neumorphism-radius-md:       var(--nm-r-card);
+  --um-neumorphism-radius-lg:       var(--nm-r-slab);
+  --um-neumorphism-radius-pill:     var(--nm-r-pill);
+
+  /* ---- composed shadows. Three raised rungs, then the two pressed ones.
+     `shadow-inset` is the resting well an input sits in; `shadow-press` is the
+     transient active state of a button, which is the shallower of the two
+     because pressed depth reads deeper than it measures. ---- */
+  --um-neumorphism-shadow-1:        var(--nm-raised-sm);
+  --um-neumorphism-shadow-2:        var(--nm-raised-md);
+  --um-neumorphism-shadow-3:        var(--nm-raised-lg);
+  --um-neumorphism-shadow-inset:    var(--nm-pressed-md);
+  --um-neumorphism-shadow-press:    var(--nm-pressed-sm);
+
+  /* ---- space ---- */
+  --um-neumorphism-space-1:         var(--nm-sp-1);
+  --um-neumorphism-space-2:         var(--nm-sp-2);
+  --um-neumorphism-space-3:         var(--nm-sp-3);
+  --um-neumorphism-space-4:         var(--nm-sp-4);
+  --um-neumorphism-space-5:         var(--nm-sp-5);
+  --um-neumorphism-space-6:         var(--nm-sp-6);
+  --um-neumorphism-space-7:         var(--nm-sp-7);
+  --um-neumorphism-space-8:         var(--nm-sp-8);
+
+  /* ---- type. Seven steps, seven slots. ---- */
+  --um-neumorphism-font-body:       var(--nm-font);
+
+  --um-neumorphism-text-xs:         var(--nm-fs-100);
+  --um-neumorphism-text-sm:         var(--nm-fs-200);
+  --um-neumorphism-text-base:       var(--nm-fs-300);
+  --um-neumorphism-text-lg:         var(--nm-fs-400);
+  --um-neumorphism-text-xl:         var(--nm-fs-500);
+  --um-neumorphism-text-2xl:        var(--nm-fs-600);
+  --um-neumorphism-text-3xl:        var(--nm-fs-700);
+
+  /* ---- motion. Three durations, three slots. The two easings are press-in and
+     release, so `enter` and `exit` are read as entering and leaving the pressed
+     state — the only transition this style has. Doc §6: fast start, hard stop
+     on the way in; a settle with no overshoot on the way out. ---- */
+  --um-neumorphism-dur-fast:        var(--nm-t-press);
+  --um-neumorphism-dur-base:        var(--nm-t-hover);
+  --um-neumorphism-dur-slow:        var(--nm-t-morph);
+  --um-neumorphism-ease-standard:   var(--nm-e-out);
+  --um-neumorphism-ease-enter:      var(--nm-e-in);
+  --um-neumorphism-ease-exit:       var(--nm-e-out);
+
+  /* ---- focus and targets. §4 declares no focus custom properties; the values
+     are literals in §5's recipes and §7's focus-visible strategy, and they are
+     stated here so the required `focus` triple exists in the shared grammar.
+     The colour is the accent because §7 measures it at 4.54:1 light and 5.45:1
+     dark, both clear of the 3:1 floor for a focus indicator. The offset is 3px
+     so the ring clears the blurred shadow halo. Never box-shadow: forced-colors
+     deletes it. ---- */
+  --um-neumorphism-focus-color:     var(--nm-accent);
+  --um-neumorphism-focus-width:     3px;
+  --um-neumorphism-focus-offset:    3px;
+  --um-neumorphism-target-min:      var(--nm-target-min);
+}

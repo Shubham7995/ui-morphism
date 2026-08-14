@@ -1,24 +1,23 @@
 ---
 name: audit
 description: >-
-  Use to check a UI that ALREADY uses frosted glass, backdrop-blur or acrylic against this
-  style's invariants, when the user names the style or its moves and wants a
-  review rather than a change. The invariants it owns: worst-case composited contrast at
-  both the darkest and brightest ground pixel, which axe, Lighthouse and Figma miss
-  because they measure the declared `background-color`; the ancestor backdrop-root scan
-  (`opacity` below 1, `filter`, `mask`, `clip-path`) that silently kills the effect; the
-  `@supports` wrapper and the `-webkit-` twin; stacked depth; the
-  glass-surface and blurred-viewport budgets; and the four escape hatches plus print and
-  the transparency toggle Safari makes mandatory. Writes a report
-  only; never edits — use glassmorphism-ui:apply to change anything. This is NOT a general design,
-  taste, visual-craft or AI-slop audit, and not a general accessibility sweep: it will not
-  answer "is my design good", "critique this UI", "find the AI tells", "review my
-  animations" or "audit my site's accessibility". Dedicated design-quality, de-slopping,
-  animation and a11y tools answer those better and should win them. Do not use for bento
-  tile layout (bento-grid-ui:audit) or hard-bordered zero-blur surfaces
-  (brutalism-ui:audit). Liquid Glass refraction, neumorphic extrusion and spatial depth
-  ladders are separate visual languages, documented in docs/08, docs/02 and docs/10, with
-  plugins planned but not yet built.
+  Use to check a UI that ALREADY uses frosted glass, backdrop-blur or acrylic — translucency
+  over a merely BLURRED backdrop, with no refraction and no perspective camera — against its
+  invariants, when the user names it and wants a review, not a change. The invariants it owns:
+  worst-case composited contrast at both the darkest and brightest ground pixel, which axe,
+  Lighthouse and Figma miss by measuring the declared `background-color`; the ancestor
+  backdrop-root scan (`opacity` below 1, `filter`, `mask`, `clip-path`) that silently kills
+  it; the `@supports` wrapper and the `-webkit-` twin; stacked glass panes; the glass-surface
+  and blurred-viewport budgets; and the four escape hatches plus print and the transparency
+  toggle Safari makes mandatory. Writes a report; never edits — use glassmorphism-ui:apply to
+  change anything. This is NOT a general design, taste, visual-craft or AI-slop audit, and not
+  a general accessibility sweep: it will not answer "is my design good", "critique this UI",
+  "find the AI tells" or "audit my site's accessibility". Dedicated design-quality,
+  de-slopping, animation and a11y tools answer those better and should win them. A warping or
+  lensing backdrop is liquid-glass-ui:audit; panels at translateZ under a camera are
+  spatial-ui:audit. Not for skeuomorphism-ui:audit, neumorphism-ui:audit,
+  claymorphism-ui:audit, minimalism-ui:audit, maximalism-ui:audit, brutalism-ui:audit,
+  bento-grid-ui:audit.
 argument-hint: "[scope glob] [--a11y-floor=AA|AA-strict|AAA] [--perf-target=desktop|mobile|low-end]"
 allowed-tools:
   - Read

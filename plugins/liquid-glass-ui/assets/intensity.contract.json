@@ -1,0 +1,83 @@
+{
+  "style": "liquid-glass",
+  "default": 60,
+  "sourceDoc": "docs/08-liquid-glass.md",
+  "docSection": "13",
+  "baselineAtZero": "A near-opaque bordered surface: fillAlpha 0.95, blurRadius 0, refractionScale 0, specularOpacity 0, saturation 100%. No backdrop-filter is emitted at all, so no @supports branch is needed and no displacement map is generated. That is Tier 0 — the same surface every browser without backdrop-filter gets from the fallback path, the same surface prefers-reduced-transparency collapses to, and a fully usable, fully accessible capsule or card. Doc §13's last anti-pattern applies from the other end as well: with refractionScale at 0 the emitted class names and docs must not say liquid-glass, and at intensity 0 there is no blur either, so what has been emitted is neither this style nor glassmorphism. It is an opaque card, and the skill says so.",
+  "knobs": {
+    "refractionScale": {
+      "unit": "px",
+      "anchors": [[0, 0], [60, 48], [100, 72]],
+      "note": "Doc §13: min 0, max 72, default 48 at the default intensity 60. The feDisplacementMap `scale` attribute, and the single knob that separates this style from glassmorphism (§1). 0 disables Tier 2 entirely — no map is generated, no url() filter is emitted, and the surface is glassmorphism, which the skill must then call glassmorphism. Piecewise linear through the three anchors: 0.8 per intensity point below 60, 0.6 above it. Doc §3 puts the usable band at 30-70 for a 56px-tall control, so the top of the range is deliberately past what a toolbar should use."
+    },
+    "fillAlpha": {
+      "anchors": [[0, 0.95], [60, 0.62], [100, 0.55]],
+      "inverse": true,
+      "note": "Doc §13: min 0.55, max 0.95, default 0.62, and `fillAlpha` moves INVERSELY — higher intensity means thinner glass but never below the 0.55 clamp. So the knob is 0.95 at intensity 0 and 0.55 at intensity 100. See `deviation` below for why the endpoints read against the doc's Min/Max columns the way they do. This is the style's primary legibility lever and the one knob whose floor is solved rather than chosen: §7 puts the shipped floor at 0.55 and the safe default at 0.62, and at 0.62 with a known foreground polarity the composite clears 4.5:1 across the whole backdrop range 0-255."
+    },
+    "blurRadius": {
+      "unit": "px",
+      "anchors": [[0, 0], [60, 20], [100, 28]],
+      "note": "Doc §13: min 0px, max 28px, default 20px. Doc §4's usable band is 12-28px and §8's performance budget is <= 24px, so intensity above roughly 90 buys blur the budget will not pay for; the skill reports the overrun rather than silently clamping, because the budget is a route-level measurement and not a knob bound."
+    },
+    "specularOpacity": {
+      "anchors": [[0, 0], [60, 0.55], [100, 0.9]],
+      "note": "Doc §13: min 0.00, max 0.90, default 0.55. The peak alpha of the rim highlight's bright arc. Decoration only: §6 is explicit that the specular sweep must never be the only signal that something is loading, focused or selected, and §7 is explicit that the rim is never the control boundary."
+    },
+    "saturation": {
+      "unit": "%",
+      "anchors": [[0, 100], [60, 180], [100, 190]],
+      "note": "Doc §13: min 100%, max 190%, default 180%. Doc §3 puts the readable band at 160-190% and §4 notes that below 140% the material reads as fog rather than glass, so everything under roughly intensity 30 is deliberately not glass-looking — which is correct, because at that intensity the blur is small enough that there is little to re-saturate."
+    }
+  },
+  "clamps": {
+    "refractionScale": { "min": 0, "max": 72 },
+    "fillAlpha": { "min": 0.55, "max": 0.95 },
+    "blurRadius": { "min": 0, "max": 28 },
+    "specularOpacity": { "min": 0, "max": 0.9 },
+    "saturation": { "min": 100, "max": 190 }
+  },
+  "contextCaps": [
+    {
+      "when": { "backdropControl": "arbitrary" },
+      "cap": 45,
+      "reason": "Doc §13: `backdropControl: arbitrary` hard-caps intensity at 45 and forces `variant: regular`. Over user uploads, third-party embeds or arbitrary photography the backdrop cannot be clamped, so worst-case composited contrast cannot be computed at all — the cap is what keeps the fill thick enough that the answer does not depend on the computation. The cap also satisfies §13's validation item 1 on its own: at intensity 45 this contract's fillAlpha resolves to 0.7025, above the 0.62 arbitrary-backdrop floor, so the floor never has to be applied as a separate correction. The variant forcing is not expressible as a scalar and is applied by the skill."
+    }
+  ],
+  "contextClamps": [
+    {
+      "when": { "backdropControl": "arbitrary" },
+      "clamps": { "fillAlpha": { "min": 0.62 } },
+      "reason": "Doc §13 validation item 1: fill alpha >= 0.55 always, >= 0.62 when the backdrop is user-supplied. Redundant under the cap above by construction, and recorded anyway: a future change to either number must not silently remove the floor, and the audit reports a clamp that changed nothing as evidence that it was checked."
+    },
+    {
+      "when": { "a11yTarget": "AAA" },
+      "clamps": { "refractionScale": { "max": 0 }, "fillAlpha": { "min": 0.62 } },
+      "reason": "Doc §7: 1.4.6 Contrast (Enhanced) is effectively unreachable on Clear glass, and the displaced rim band is where an AAA pair is least defensible because the text's effective backdrop is warped as well as blurred. At AAA this style resolves to Tier 1 at the safe default fill, and the skill says plainly that AAA and refraction are not both available."
+    },
+    {
+      "when": { "perfTarget": "low-end" },
+      "clamps": { "refractionScale": { "max": 0 }, "blurRadius": { "max": 12 } },
+      "reason": "Doc §8: feature-gate on device — `navigator.hardwareConcurrency <= 4` or `navigator.deviceMemory <= 4` drops to Tier 1 (blur only) or Tier 0 (opaque). Refraction adds a displacement pass sampling the map texture per output pixel, and on a 2022 mid-range Android a 20px blur over a full-width toolbar is already 3-6ms per frame before it."
+    },
+    {
+      "when": { "variant": "clear" },
+      "clamps": { "fillAlpha": { "max": 0.28 } },
+      "reason": "Doc §4: the Clear variant's fill is 0.28 light / 0.26 dark, well under the Regular floor, and it is legal ONLY with `--lg-scrim` beneath it — Apple mandates the dimming layer and restricts Clear to three conditions holding simultaneously (media-rich backdrop, scrim-tolerant content, bold bright foreground). The 0.55 clamp is on the Regular fill; under Clear the scrim carries the guarantee instead, and a Clear surface with no scrim is a refusal, not a clamp."
+    }
+  ],
+  "deviation": "Doc §13's knob table heads its columns `Min` and `Max` rather than doc 07's `Min (intensity 0)` / `Max (intensity 100)`, and the sentence under the table states that `fillAlpha` moves inversely — higher intensity means thinner glass. For this style the Min and Max columns are therefore the knob's BOUNDS, and the direction of travel is stated in prose: fillAlpha is 0.95 (the Max cell) at intensity 0 and 0.55 (the Min cell) at intensity 100. Doc §5's reference React component agrees and is the tie-breaker — it documents `intensity` as `0 = flat opaque card, 100 = maximum refraction and transparency` and computes `alpha = baseAlpha + (1 - baseAlpha) * (1 - t) * 0.75`, which falls with t and bottoms out at the 0.55 floor. Any consumer that reads a Min cell as the value at intensity 0 will read fillAlpha's two endpoints swapped; the `inverse` flag on the knob is there to be read rather than inferred. Every other knob in this contract rises with intensity and needs no such reading.",
+  "clampsNotExpressibleHere": {
+    "nestedGlass": "zero, at any depth — a glass surface with a glass ancestor is a hard fail, not a budget. Apple's own renderer cannot sample glass with glass, which is why GlassEffectContainer exists (§8, §13 validation item 11)",
+    "clearWithoutScrim": "illegal — every Clear surface has `--lg-scrim` beneath it",
+    "glassSurfacesPerRoute": "<= 3, and <= 2 on mobile (§8 budget)",
+    "refractingSurfaces": "<= 1 per route (§8 budget)",
+    "totalGlassArea": "<= 25% of the viewport (§8 budget)",
+    "displacementMapAsset": "<= 8KB each, inlined as a data URI, never fetched by feImage (§8 budget, §13 validation item 14)",
+    "targetMin": ">= 44px from `--lg-target-min`, never below the 24x24 SC 2.5.8 floor",
+    "focusRing": ">= 3px accent outline at >= 2px offset plus two contrasting halo rings",
+    "textOnGlass": ">= 17px at weight >= 600",
+    "animatedProperties": "never `backdrop-filter`, `filter`, `border-radius` or SVG filter geometry — `feDisplacementMap@scale`, `transform`, `opacity` and `background-color` are the animatable set (§6)",
+    "note": "These constrain the emitted CSS and the composition rather than the value of a knob, so ../skills/apply/scripts/lg-scan.mjs, ../skills/apply/scripts/displacement-map.mjs and ui-morphism-core:a11y-validate enforce them. Recorded here so the clamp table reads as the complete list."
+  }
+}
