@@ -208,6 +208,21 @@ async function runCli(argv) {
     return 0;
   }
 
+  // An unrecognised flag is rejected rather than ignored. The failure this
+  // prevents is quiet and expensive: `--scope=product` looks exactly like the
+  // real `--context=scope=product`, and silently dropping it resolves the full
+  // uncapped intensity while printing a confident, wrong-looking-correct
+  // result. A context cap that does not apply is the one output of this tool
+  // nobody would think to double-check.
+  const KNOWN = new Set(['help', 'intensity', 'context', 'format']);
+  const unknown = [...flags.keys()].filter((k) => !KNOWN.has(k));
+  if (unknown.length) {
+    throw new IntensityError(
+      `unknown flag${unknown.length > 1 ? 's' : ''}: ${unknown.map((k) => `--${k}`).join(', ')}. ` +
+      `Known flags are ${[...KNOWN].map((k) => `--${k}`).join(', ')}. ` +
+      `Context caps are passed as --context=key=value, for example --context=scope=product.`);
+  }
+
   const { readFile } = await import('node:fs/promises');
   const contract = JSON.parse(await readFile(positional[0], 'utf8'));
 
