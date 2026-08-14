@@ -767,8 +767,20 @@ function inScroller(node) {
  */
 export function scan(inputs) {
   const findings = [];
-  const add = (severity, rule, file, line, message) =>
+  // A neumorphic shadow is a mirrored PAIR, and the geometry checks walk each
+  // layer, so a rule whose two layers share a blur and a distance — which is
+  // every correctly-formed pair, by construction — produced the identical
+  // sentence twice. Two copies of one finding read as two defects and make a
+  // report look worse than the code is, so identical findings collapse here
+  // rather than at each call site. Anything genuinely distinct differs in its
+  // message and survives.
+  const emitted = new Set();
+  const add = (severity, rule, file, line, message) => {
+    const key = severity + ' ' + rule + ' ' + file + ' ' + line + ' ' + message;
+    if (emitted.has(key)) return;
+    emitted.add(key);
     findings.push({ file, line, severity, rule, message });
+  };
 
   const state = {
     surfaces: [],
