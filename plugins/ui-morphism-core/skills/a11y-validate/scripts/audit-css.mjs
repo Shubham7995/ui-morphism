@@ -744,7 +744,18 @@ function checkReducedMotion(rules, file) {
 
   for (const rule of inBlock) {
     for (const decl of rule.declarations) {
-      if (/^(animation|transition)(-duration)?$/.test(decl.property) && /\b0(\.0*1)?m?s\b/.test(decl.value)) {
+      // Two idioms genuinely stop the motion and both must count. Zeroing the
+      // duration (`transition-duration: 0.01ms`) is the one most guides show,
+      // but the shorthand `transition: none` / `animation: none` — and the
+      // longhand `transition-property: none` / `animation-name: none` — disable
+      // it just as completely. Accepting only the first reports a correct
+      // stylesheet as failing, which is worse than silence: it trains a reader
+      // to distrust the check.
+      const isMotionProp = /^(animation|transition)(-duration)?$/.test(decl.property);
+      const isMotionOffProp = /^(transition-property|animation-name)$/.test(decl.property);
+      const value = decl.value.trim();
+      if ((isMotionProp && /\b0(\.0*1)?m?s\b/.test(value)) ||
+          ((isMotionProp || isMotionOffProp) && /^none\b/.test(value))) {
         zeroed = true;
       }
       const removesState =
@@ -783,7 +794,7 @@ function checkReducedMotion(rules, file) {
       file,
       line: inBlock[0].line,
       selector: inBlock[0].selector,
-      message: 'zeroes durations and removes no state-carrying property.',
+      message: 'disables the motion and removes no state-carrying property.',
     });
   }
 
