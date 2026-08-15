@@ -48,6 +48,11 @@
 #  14. every `apply` skill offers `--dry-run` — in its argument-hint, in its
 #      Inputs table, and as the shared `## Dry run` section, byte-identical
 #      across all ten
+#  15. the report contract against audit-css.mjs's exported CHECKS: the seven
+#      sections in every style skill match core's report-template.md headings in
+#      order, and every prose copy of the nine universal rows — the template,
+#      a11y-validate's own table, docs/MARKETPLACE.md §7.3, and all twenty
+#      skills' §3 — names all nine, in the array's order where it is a table
 #
 # Conventions are check-links.sh's, deliberately: the same `==> checking …` /
 # `  ok` shape, every offence in every category printed rather than the first,
@@ -105,8 +110,11 @@
 #   * check 14 compares the ten `## Dry run` sections against EACH OTHER, with
 #     the first-sorting apply skill as the reference. There is no external spec
 #     for that text, so an edit applied uniformly to all ten passes. Green there
-#     means consistent, never right. The same is true of the seven-section
-#     report shape restated in every apply skill, which is not gated at all.
+#     means consistent, never right. Check 15 does NOT have that weakness — its
+#     authority is an exported array in the code that runs — but it reaches only
+#     the section list and the nine row names. Everything else in a report-shape
+#     section is prose: the column headers each section states, the wording of
+#     what belongs in a row, the report's filename. None of that is compared.
 #   * nothing verifies that `--dry-run` BEHAVES — that a run actually leaves the
 #     project tree untouched and names its scratch path. No gate here runs a
 #     skill, so every behavioural promise in a SKILL.md is text this script can
@@ -2477,6 +2485,198 @@ else
   printf '  %s apply skill(s) compared against %s\n' "$dry_checked" "${dry_ref_file:-<none>}"
 fi
 [ "$dry_ok" -eq 1 ] && echo "  ok"
+
+# ------------------------------------------- 15. the shared report contract ---
+# The seven report sections and the nine universal checklist rows are the same
+# in every report from every style, and they are written down in five places:
+# core's assets/report-template.md, core's a11y-validate/SKILL.md,
+# docs/MARKETPLACE.md §7.3, the §3 Checklist item of all twenty style skills,
+# and — the only one that runs — audit-css.mjs's exported CHECKS array. That
+# last file cites §7.3 by name as the source of its ORDER, which is exactly the
+# kind of citation that goes stale unread; it is graded here for that reason,
+# even though it lives outside plugins/.
+#
+# CHECKS is therefore the authority here, not the prose. A report row the tool
+# never emits is a promise to a user that nothing fulfils, and a check the tool
+# runs that no report has a row for is a result nobody reads. This compares
+# every prose copy against the array.
+#
+# Anti-vacuity, three ways, because a check this shape is easy to get wrong:
+#   * The pattern map's keys must EQUAL CHECKS. Add a tenth check to
+#     audit-css.mjs and this fails until the gate knows how to recognise it —
+#     rather than quietly certifying nine of ten.
+#   * The nine are matched inside the extracted §3 Checklist item ONLY, never
+#     against the whole file. "forced colors" and "reduced motion" appear in
+#     every one of these skills as procedure steps and guard blocks, so a
+#     file-wide grep would pass on a skill whose report lists neither.
+#   * Section names come from the template's own headings, so the expected list
+#     is read rather than restated. Zero skills adjudicated, an empty section
+#     list, or an unreadable template each fail loudly.
+#
+# Whitespace is collapsed before matching: these are wrapped markdown lines, and
+# "non-text\n   contrast (1.4.11)" is the same row as the unwrapped one.
+echo "==> checking the report contract against audit-css.mjs's CHECKS"
+rep_ok=1
+if [ "$have_node" -eq 0 ]; then
+  echo "  NOTRUN   node is unavailable — NO report contract was compared."
+  fail=1; rep_ok=0
+else
+  rep_out=$(node --input-type=module -e '
+    import fs from "node:fs";
+    import path from "node:path";
+    const CORE = process.argv[1];
+    const { CHECKS } = await import(
+      path.resolve(CORE, "skills/a11y-validate/scripts/audit-css.mjs"));
+
+    // One pattern per check id. Specific enough that a row for a DIFFERENT
+    // check cannot satisfy it: every one is anchored on the SC number where
+    // the criterion has one, and on the two-word name where it does not.
+    const PATTERNS = {
+      "text-contrast":         /(?:^|[^-])\btext contrast \(1\.4\.3\)/i,
+      "non-text-contrast":     /\bnon-text contrast \(1\.4\.11\)/i,
+      "focus":                 /\bfocus\b[^|(]{0,20}\(2\.4\.7/i,
+      "target-size":           /\btarget size \(2\.5\.8\)/i,
+      "forced-colors":         /\bforced colors\b/i,
+      "reduced-motion":        /\breduced motion\b/i,
+      "reduced-transparency":  /\breduced transparency\b/i,
+      "colour-only":           /\bcolou?r-only\b[^|(]{0,20}\(1\.4\.1\)/i,
+      "dom-order":             /\bDOM order \(1\.3\.2\)/i,
+    };
+
+    const out = [];
+    let bad = 0;
+    const flat = (s) => s.replace(/\s+/g, " ");
+
+    const known = Object.keys(PATTERNS);
+    if (JSON.stringify(known) !== JSON.stringify(CHECKS)) {
+      out.push("  DRIFT    audit-css.mjs exports [" + CHECKS.join(", ") + "]");
+      out.push("           this gate knows how to recognise [" + known.join(", ") + "]");
+      out.push("  ^ the check set moved and the gate did not. Nothing below is trustworthy.");
+      process.stdout.write(out.join("\n") + "\n");
+      process.exit(1);
+    }
+
+    const tplPath = path.join(CORE, "assets/report-template.md");
+    const tpl = fs.readFileSync(tplPath, "utf8");
+    const sections = [...tpl.matchAll(/^## (\d)\. (.+)$/gm)].map((m) => m[2]);
+    if (sections.length === 0) {
+      out.push("  NOSECTIONS " + tplPath + " states no numbered report sections");
+      process.stdout.write(out.join("\n") + "\n");
+      process.exit(1);
+    }
+
+    // The universal rows of a `Check | ... ` table: header, separator, then data.
+    const rowsOf = (block) =>
+      block.split("\n").filter((l) => l.startsWith("| ")).slice(1)
+        .map((l) => flat(l.split("|")[1].trim()));
+
+    const gradeRows = (label, rows) => {
+      if (rows.length !== CHECKS.length) {
+        out.push("  ROWCOUNT " + label + ": " + rows.length +
+                 " universal row(s), CHECKS has " + CHECKS.length);
+        bad++; return;
+      }
+      CHECKS.forEach((c, i) => {
+        if (!PATTERNS[c].test(rows[i])) {
+          out.push("  ROWORDER " + label + ": row " + (i + 1) + " is `" + rows[i] +
+                   "`, expected the one for `" + c + "`");
+          bad++;
+        }
+      });
+    };
+
+    gradeRows(tplPath, rowsOf(
+      tpl.split(/^### Universal[^\n]*$/m)[1].split(/^###/m)[0]));
+
+    // docs/MARKETPLACE.md §7.3 is the fifth copy, and audit-css.mjs cites it by
+    // name as the source of the array ORDER. A citation nothing checks is how
+    // the cited text and the citing code drift apart, so it is graded here even
+    // though it lives outside plugins/.
+    const mkPath = "docs/MARKETPLACE.md";
+    if (!fs.existsSync(mkPath)) {
+      out.push("  NOPLAN   " + mkPath + " is missing — the check set order it is cited for went uncompared");
+      bad++;
+    } else {
+      const mk = fs.readFileSync(mkPath, "utf8");
+      const mkBlock = mk.split(/^### 7\.3 [^\n]*$/m)[1];
+      if (mkBlock === undefined) {
+        out.push("  NO73     " + mkPath + " has no §7.3 heading");
+        bad++;
+      } else {
+        gradeRows(mkPath + " §7.3", rowsOf(mkBlock.split(/^### /m)[0]));
+      }
+    }
+
+    const avPath = path.join(CORE, "skills/a11y-validate/SKILL.md");
+    const av = fs.readFileSync(avPath, "utf8");
+    const avBlock = av.split(/^## The nine universal checks$/m)[1];
+    if (avBlock === undefined) {
+      out.push("  NOTABLE  " + avPath + " has no `## The nine universal checks` section");
+      bad++;
+    } else {
+      gradeRows(avPath, rowsOf(avBlock.split(/^## /m)[0]));
+    }
+
+    let seen = 0;
+    const plugins = fs.readdirSync(path.dirname(CORE)).sort();
+    for (const p of plugins) {
+      if (p === path.basename(CORE)) continue;
+      for (const s of ["apply", "audit"]) {
+        const f = path.join(path.dirname(CORE), p, "skills", s, "SKILL.md");
+        if (!fs.existsSync(f)) continue;
+        seen++;
+        const src = fs.readFileSync(f, "utf8");
+        const m = src.match(
+          /^## (?:The report shape|What goes in the report|What the report contains)$([\s\S]*?)(?=^## )/m);
+        if (!m) {
+          out.push("  NOREPORT " + f + ": no report-shape section");
+          bad++; continue;
+        }
+        const items = [...m[1].matchAll(/^(\d)\. \*\*([^*]+)\*\*/gm)].map((x) => x[2]);
+        if (items.join("|") !== sections.join("|")) {
+          out.push("  SECTIONS " + f + ": " + (items.join("|") || "<none>"));
+          out.push("           template says: " + sections.join("|"));
+          bad++;
+        }
+        // Item 3 runs to the next numbered item, or to the end of the section
+        // if it is last. A lazy match with `$` in the lookahead would stop at
+        // the first line ending under /m and grade an empty string, which is a
+        // green run over nothing — the one outcome this file never allows.
+        const item3 = m[1].match(/^3\. \*\*[^*]+\*\*([\s\S]*)/m);
+        if (!item3) {
+          out.push("  NOITEM3  " + f + ": no section 3 to carry the universal rows");
+          bad++; continue;
+        }
+        const rest = item3[1].split(/^\d\. \*\*/m)[0];
+        if (rest.trim() === "") {
+          out.push("  EMPTY3   " + f + ": section 3 has no body to compare");
+          bad++; continue;
+        }
+        const body = flat(rest);
+        const missing = CHECKS.filter((c) => !PATTERNS[c].test(body));
+        if (missing.length) {
+          out.push("  MISSING  " + f + ": its §3 names no row for " + missing.join(", "));
+          bad++;
+        }
+      }
+    }
+
+    if (seen === 0) {
+      out.push("  NOSKILLS the scan found no style skill to compare.");
+      out.push("  ^ zero skills adjudicated is a FAILURE, not a clean run.");
+      bad++;
+    } else {
+      out.push("  " + seen + " style skill(s) compared against " + CHECKS.length +
+               " CHECKS and " + sections.length + " template section(s)");
+    }
+    process.stdout.write(out.join("\n") + "\n");
+    process.exit(bad ? 1 : 0);
+  ' "$CORE" 2>&1)
+  rep_rc=$?
+  printf '%s\n' "$rep_out"
+  if [ "$rep_rc" -ne 0 ]; then fail=1; rep_ok=0; fi
+fi
+[ "$rep_ok" -eq 1 ] && echo "  ok"
 
 if [ "$fail" -ne 0 ]; then
   echo

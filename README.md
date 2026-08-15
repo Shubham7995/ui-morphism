@@ -214,8 +214,12 @@ description length against the 1,450-character budget and asserts the deference 
 resolves every `references/`, `assets/` or `scripts/` path a `SKILL.md` names; traces every `N:1`
 contrast figure the plugin tree prints back to a figure the docs print; keeps `.claude-plugin/`
 directories manifest-only; asserts the WCAG contrast arithmetic exists in exactly one file, with
-nothing outside `ui-morphism-core` so much as naming it; and holds the ten `apply` skills' `--dry-run`
-contract byte-identical, in the argument hint, the Inputs table and the `## Dry run` section alike.
+nothing outside `ui-morphism-core` so much as naming it; holds the ten `apply` skills' `--dry-run`
+contract byte-identical, in the argument hint, the Inputs table and the `## Dry run` section alike;
+and holds the whole report contract against `audit-css.mjs`'s exported `CHECKS` array — the seven
+sections in each of the twenty style skills against core's `report-template.md` headings, in order,
+and every prose restatement of the nine universal checklist rows against the nine the tool actually
+runs, so a report cannot promise a row nothing produces.
 
 **`docs/check-links.sh`** needs `bash` and `python3`. It verifies link targets, the fourteen-heading
 contract, Tailwind v4 `@theme` and bracket-syntax rules, phantom tokens against a per-doc row-coverage

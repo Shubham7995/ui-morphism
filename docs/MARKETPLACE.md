@@ -530,14 +530,14 @@ Universal checks (identical logic for all ten):
 
 | Check | Rule |
 |---|---|
-| Text contrast | ≥ 4.5:1 normal, ≥ 3:1 for ≥ 24px or ≥ 19px bold. **Unrounded** — the W3C states values are not rounded, so 2.999:1 fails. |
+| Text contrast (1.4.3) | ≥ 4.5:1 normal, ≥ 3:1 for ≥ 24px or ≥ 19px bold. **Unrounded** — the W3C states values are not rounded, so 2.999:1 fails. |
 | Non-text contrast (1.4.11) | Every control boundary ≥ 3:1 against both its fill and its surroundings. |
-| Focus | A `:focus-visible` rule exists on every focusable element, uses `outline` not `box-shadow`, ≥ 2px (≥ 3px where the style specifies), with an offset, ≥ 3:1, and no `outline: none` survives without a replacement in the same rule. |
+| Focus (2.4.7, 2.4.13) | A `:focus-visible` rule exists on every focusable element, uses `outline` not `box-shadow`, ≥ 2px (≥ 3px where the style specifies), with an offset, ≥ 3:1, and no `outline: none` survives without a replacement in the same rule. |
 | Target size (2.5.8) | ≥ 24×24 CSS px hard floor; warn below 44×44; re-measure the axis-aligned bounding box after any `rotate`. |
 | Forced colors | A `@media (forced-colors: active)` block exists, uses system colour keywords, gives every shadow-bounded element a real border, and hides decorative pseudo-elements. No `forced-color-adjust: none` on text-bearing elements. |
 | Reduced motion | A `prefers-reduced-motion: reduce` block exists, zeroes durations, and — separately — does **not** remove any state-carrying property. |
 | Reduced transparency | Required for any style emitting `backdrop-filter`, plus an in-app toggle, because Safari does not implement the media query. |
-| Colour-only encoding | No state, error, selection or category conveyed by colour, depth, blur or shadow alone. |
+| Colour-only encoding (1.4.1) | No state, error, selection or category conveyed by colour, depth, blur or shadow alone. |
 | DOM order (1.3.2) | Warn on `order`, `row-reverse`, `grid-auto-flow: dense` or absolute positioning applied to sequential content. |
 
 Style-specific checks stay in the style plugin's `references/checklist.md` because they encode style facts: neumorphism's same-hue invariant and `blur == 2 × distance` assertion, glassmorphism's ancestor backdrop-root scan, liquid-glass's nested-glass hard fail, spatial-ui's SC 2.5.7 dragging-alternative detection, bento's one-heading-per-tile and reading-flow guard.
@@ -579,6 +579,8 @@ Two rules the shared skill enforces: **detection is always confirmed with the us
 7. **Manual TODOs** — what the skill could not verify statically.
 
 Uniform reports mean a user who runs `minimalism-ui:audit` then `brutalism-ui:audit` can diff them, and it makes a future "compare three styles on this codebase" workflow trivial.
+
+That uniformity is now gated rather than trusted. The shape is written down five times — the template above, §7.3's table, `a11y-validate`'s own table, the §3 Checklist item of all twenty style skills, and `audit-css.mjs`'s exported `CHECKS` array — and only the last one runs. `check-plugins.sh` check 15 treats it as the authority and grades every prose copy against it: the seven sections in each skill against the template's headings in order, and every restatement of the nine rows against the nine the tool emits. A report row nothing produces and a check no report has a row for are the same defect seen from two ends, and neither survives a green run. `audit-css.mjs`'s comment citing §7.3 for the array's order is part of what is checked, because a citation nobody verifies is how the cited text and the citing code drift apart.
 
 ### 7.6 The line, stated plainly
 
