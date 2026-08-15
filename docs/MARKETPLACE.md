@@ -11,7 +11,7 @@ Every structural claim below — file locations, field names, field types, defau
 | | |
 |---|---|
 | **Marketplace name** | `ui-morphism` |
-| **Install command** | `/plugin marketplace add <owner>/ui_morphism` |
+| **Install command** | `/plugin marketplace add Shubham7995/ui-morphism` |
 | **Plugin install** | `/plugin install glassmorphism-ui@ui-morphism` |
 | **Owner** | the repository owner (`owner.name` is required; `email` and `url` optional) |
 | **Description** | "Ten researched UI surface styles as executable skills — tokens, components, and an accessibility validator for each." |
@@ -110,7 +110,18 @@ ui_morphism/
 
 ## 3. `marketplace.json`
 
-`metadata.pluginRoot` is set to `./plugins`, which lets each entry's `source` be a bare directory name instead of a full relative path.
+Every entry's `source` is a full repo-root-relative path beginning `./`. An earlier draft of this
+section set `metadata.pluginRoot` to `./plugins` and gave each `source` as a bare directory name;
+that combination does not validate. `claude plugin validate` rejects a bare name outright —
+`plugins.0.source: Invalid input` — whether or not `pluginRoot` is present, so the field buys nothing
+and the shipped catalog omits it.
+
+One caveat about that validator, because it shapes what `check-plugins.sh` has to do. A `source` whose
+path does not exist is **not** an error: the validator accepts `"./nope"` and prints
+`✔ Validation passed`, silently skipping the per-plugin half of the run. The tell is negative — the
+warnings it would have raised against that plugin's own `plugin.json` simply do not appear. So a green
+`claude plugin validate .` does not mean the catalog resolves; it means the catalog parses. Resolution
+is check 6 of `check-plugins.sh`, which is why that check exists rather than deferring to the CLI.
 
 ```json
 {
@@ -120,15 +131,12 @@ ui_morphism/
   "version": "0.1.0",
   "owner": {
     "name": "UI Morphism",
-    "url": "https://github.com/OWNER/ui_morphism"
-  },
-  "metadata": {
-    "pluginRoot": "./plugins"
+    "url": "https://github.com/Shubham7995/ui-morphism"
   },
   "plugins": [
     {
       "name": "ui-morphism-core",
-      "source": "ui-morphism-core",
+      "source": "./plugins/ui-morphism-core",
       "displayName": "UI Morphism Core",
       "description": "Shared foundation for the ui-morphism style skills: host-framework detection, the --um-<style>-<group>-<variant> token grammar and emitters, the WCAG 2.2 contrast and forced-colors validator, and the common audit-report format. Installed automatically as a dependency of any style plugin.",
       "version": "0.1.0",
@@ -139,7 +147,7 @@ ui_morphism/
     },
     {
       "name": "skeuomorphism-ui",
-      "source": "skeuomorphism-ui",
+      "source": "./plugins/skeuomorphism-ui",
       "displayName": "Skeuomorphism UI",
       "description": "Physical, tactile, hardware-inspired interfaces — bevelled and embossed surfaces, leather/metal/wood/felt materials, audio-plugin and instrument-panel styling, and converting flat components into raised light-modelled surfaces with a consistent four-layer shadow stack.",
       "version": "0.1.0",
@@ -150,7 +158,7 @@ ui_morphism/
     },
     {
       "name": "neumorphism-ui",
-      "source": "neumorphism-ui",
+      "source": "./plugins/neumorphism-ui",
       "displayName": "Neumorphism UI",
       "description": "Soft UI / neomorphism — same-hue extruded and pressed-in surfaces for thermostats, smart-home panels, media transport and calculators, plus auditing an existing neumorphic UI for its characteristic 1.4.11 contrast and forced-colors failures.",
       "version": "0.1.0",
@@ -161,7 +169,7 @@ ui_morphism/
     },
     {
       "name": "glassmorphism-ui",
-      "source": "glassmorphism-ui",
+      "source": "./plugins/glassmorphism-ui",
       "displayName": "Glassmorphism UI",
       "description": "Frosted-glass surfaces — backdrop-blur navbars, cards, modals and command palettes, Apple- and Fluent-style translucent materials ported to the web, with the @supports fallback, contrast clamp and blur budget handled.",
       "version": "0.1.0",
@@ -172,7 +180,7 @@ ui_morphism/
     },
     {
       "name": "claymorphism-ui",
-      "source": "claymorphism-ui",
+      "source": "./plugins/claymorphism-ui",
       "displayName": "Claymorphism UI",
       "description": "Soft puffy clay surfaces — inflated pastel cards and buttons with inset highlight-and-shade shadows for kids, edtech and wellness products, and converting flat or neumorphic interfaces into tactile clay.",
       "version": "0.1.0",
@@ -183,7 +191,7 @@ ui_morphism/
     },
     {
       "name": "minimalism-ui",
-      "source": "minimalism-ui",
+      "source": "./plugins/minimalism-ui",
       "displayName": "Minimalism UI",
       "description": "Simplify, quiet down and de-clutter an interface — monochrome palette with one accent, 4/8pt spacing, a modular type scale, stripped shadows and gradients, and a compensating pass that restores the affordances subtraction removes.",
       "version": "0.1.0",
@@ -194,7 +202,7 @@ ui_morphism/
     },
     {
       "name": "maximalism-ui",
-      "source": "maximalism-ui",
+      "source": "./plugins/maximalism-ui",
       "displayName": "Maximalism UI",
       "description": "Make a UI louder — layered collage, clashing saturated colour, oversized display type, stickers, marquees, patterned and grainy grounds, hard offset shadows and anti-grid placement, with a hard three-loud-layer cap and a Calm mode toggle.",
       "version": "0.1.0",
@@ -205,7 +213,7 @@ ui_morphism/
     },
     {
       "name": "brutalism-ui",
-      "source": "brutalism-ui",
+      "source": "./plugins/brutalism-ui",
       "displayName": "Brutalism & Neubrutalism UI",
       "description": "Neubrutalist restyling — hard 2-4px ink borders, zero-blur offset shadows, flat saturated fills and chunky display type, for making an interface look bolder, rawer and less like a generic AI-generated rounded-gray-card layout.",
       "version": "0.1.0",
@@ -216,7 +224,7 @@ ui_morphism/
     },
     {
       "name": "liquid-glass-ui",
-      "source": "liquid-glass-ui",
+      "source": "./plugins/liquid-glass-ui",
       "displayName": "Liquid Glass UI",
       "description": "Apple Liquid Glass styling — refractive lensing surfaces, iOS 26/27-style floating toolbars and specular-rim controls for web, React Native or SwiftUI, including upgrading existing glassmorphism to true displacement-map refraction with a three-tier @supports ladder.",
       "version": "0.1.0",
@@ -227,7 +235,7 @@ ui_morphism/
     },
     {
       "name": "bento-grid-ui",
-      "source": "bento-grid-ui",
+      "source": "./plugins/bento-grid-ui",
       "displayName": "Bento Grid UI",
       "description": "Build or convert an asymmetric modular tile layout — Apple-style feature grids, dashboards, portfolio indexes and overview screens — assigning spans by content weight on a locked gutter with correct reading order and concentric media radii.",
       "version": "0.1.0",
@@ -238,7 +246,7 @@ ui_morphism/
     },
     {
       "name": "spatial-ui",
-      "source": "spatial-ui",
+      "source": "./plugins/spatial-ui",
       "displayName": "Spatial UI",
       "description": "Depth-based interfaces — floating panels at measured z-depth, visionOS and Android XR layouts, orbiter chrome, pointer and scroll parallax, and converting a flat shadow-elevation system into a real six-step depth ladder with distance-independent sizing.",
       "version": "0.1.0",
@@ -279,10 +287,10 @@ Validate before publishing: `claude plugin validate ./plugins/skeuomorphism-ui -
   "description": "Physical, tactile, hardware-inspired interfaces. Emits a material token layer with a four-layer shadow stack, rewrites flat components into raised light-modelled surfaces, and self-audits every generated pair against WCAG 2.2.",
   "author": {
     "name": "UI Morphism",
-    "url": "https://github.com/OWNER/ui_morphism"
+    "url": "https://github.com/Shubham7995/ui-morphism"
   },
-  "homepage": "https://github.com/OWNER/ui_morphism/blob/main/docs/01-skeuomorphism.md",
-  "repository": "https://github.com/OWNER/ui_morphism",
+  "homepage": "https://github.com/Shubham7995/ui-morphism/blob/main/docs/01-skeuomorphism.md",
+  "repository": "https://github.com/Shubham7995/ui-morphism",
   "license": "MIT",
   "keywords": [
     "skeuomorphism",
@@ -648,3 +656,83 @@ Decide these before writing code, because each one is expensive to reverse after
 12. **Do the skills write files or propose diffs?** Every spec says the skill emits files. A dry-run mode that prints the audit and the diff without writing would make the first use of any style skill far less alarming. Should `--dry-run` be universal, and should it be the default on first invocation in a repository?
 13. **Where does the `--um-*` migration happen?** Publishing skills that emit `--um-<style>-*` while the docs still show `--sk-*`, `--nm-*` and friends guarantees confusion. Either update all ten docs' §4 and §5 first, or have the skills emit both names with the legacy set aliased to the new one for one release.
 14. **Is there a `hooks` story?** A `PostToolUse` hook on `Write|Edit` that re-runs `a11y-validate` on any file a style skill touched would make the validator continuous rather than end-of-run. It is also the kind of thing that gets annoying fast. Worth prototyping in core behind an off-by-default setting.
+
+---
+
+## 10. How §9 was actually resolved in v0.1.0
+
+§9 says to decide these before writing code. The code is written and all eleven plugins ship, so the
+section above is now a record of what was open rather than a list of what to do. This section closes
+each question against what is on disk. Where the shipped answer differs from the recommendation in §9,
+that is called out; where the question was deferred rather than answered, it says so, because a
+deferred question that reads as settled is the more expensive of the two mistakes.
+
+**Distribution and packaging**
+
+1. **One repository.** Eleven plugins under `plugins/`, sources relative, as planned. The atomic-commit
+   property between a doc and its plugin is load-bearing: `check-plugins.sh` compares each
+   `skills/apply/assets/tokens.css` against its doc's §4 block declaration-for-declaration, which only
+   works because the two move in one commit.
+2. **The docs ship, and the duplication is accepted rather than generated away.** `docs/NN-style.md` §4
+   and `plugins/<name>/skills/apply/references/tokens.md` state the same values twice. The drift §9
+   worried about is real; the answer is a gate, not a build step. Nothing loads `docs/` at runtime.
+3. **Version in both places, in lockstep, at `0.1.0`.** `plugin.json` is authoritative where they
+   disagree, so drift does not break an install — it misadvertises one, in the copy a user reads
+   *before* installing and that nothing else in the repository contradicts. `check-plugins.sh` check 6
+   compares the two and fails on any disagreement, and prints how many entries it compared, so an
+   entry that quietly stopped stating a version shows up as a smaller count rather than as `ok`.
+   Omitting `version` from a catalog entry stays legal — that delegates to the manifest, the other
+   coherent policy — but an entry that states one must state the right one.
+4. **`defaultEnabled` is set nowhere**, so all eleven default to `true`. `ui-morphism-core` was left
+   enabled rather than dependency-only: it is declared in every style's `dependencies`, so the
+   dependency edge writes `true` regardless, and a user who installs core directly gets the three
+   skills it owns rather than a plugin that appears to do nothing.
+
+**Skill design**
+
+5. **Two skills per plugin.** 23 skills — `apply` and `audit` for each of the ten styles, plus core's
+   `detect-stack`, `a11y-validate` and `token-emit`. The risk asymmetry decided it: `audit` holds
+   `Read Glob Grep` and never writes, `apply` additionally holds `Write` and `Edit`.
+6. **`apply` is model-invocable.** `disable-model-invocation` is set on no skill. §9's recommendation
+   stands unmodified: the scoping step is mandatory and confirmed instead, and the flag is held in
+   reserve for the case where real usage shows unwanted rewrites.
+7. **Negative triggers, no router.** Every description carries its cluster's discriminating question in
+   capitals and names the siblings it defers to. There is no `choose-style` router skill. This is a
+   design claim and not a measured one — `check-plugins.sh` check 9 asserts each description carries
+   its deference clause and ends inside the listing cap, which is presence, not effectiveness.
+8. **No `context: fork` anywhere.** Neither `apply` nor `audit` forks. §9 guessed "plausibly yes for
+   `audit`"; the shipped answer is no for both, and this is a deferral rather than a decision — no
+   usage data yet says the main thread is being flooded.
+9. **`allowed-tools` is narrow, and `Bash` is path-scoped.** No skill holds bare `Bash`. Every grant
+   names one exact script under `${CLAUDE_SKILL_DIR}` or `${CLAUDE_PLUGIN_ROOT}` with a trailing
+   argument wildcard, so the pre-approval covers this plugin's own scripts and nothing else. The
+   project formatter and linter are therefore *not* runnable from a skill; that convenience was traded
+   away deliberately, and running them stays the user's step after `apply` reports.
+
+**Technical**
+
+10. **Static analysis only. No browser dependency.** Nothing under `plugins/` names Playwright or
+    Puppeteer. Worst-case composited contrast is not estimated and not skipped — it is *solved*, per
+    channel in gamma-encoded sRGB, against the extreme backdrop rather than sampled from a render, so
+    `glassmorphism-ui`'s central claim is verified rather than guessed. What genuinely needs a render —
+    computed target size after a `rotate`, anything depending on the accessibility tree — is reported
+    as a manual TODO in the report template and handed to a live-DOM auditor. That boundary is stated
+    in `a11y-validate`'s own description, which is why it declines "audit my site's accessibility".
+11. **Five emitter formats in v1**, wider than §9's floor: `css`, `theme` (Tailwind v4 `@theme`), `ts`,
+    `swift` and `kt`, in `emit.mjs`'s `FORMATS`. The SwiftUI and Compose paths that §8 deferred were
+    built, because `liquid-glass-ui` and `spatial-ui` shipped in the same release that needed them. No
+    Vue or Svelte emitter exists — the `--framework` argument-hint on some `apply` skills accepts those
+    names for *component* rewriting, which is the skill's own work, not a token emitter.
+12. **The skills write files. There is no `--dry-run`.** The word appears in no `SKILL.md`. What stands
+    in for it is the mandatory confirmed scoping step and `audit`, which is the read-only half of every
+    pair and can always be run first. §9's suggestion that a dry run be the default on first invocation
+    in a repository was not implemented and remains the best unbuilt idea in this section.
+13. **Both names ship, legacy aliased.** Each style emits its short prefix in `tokens.css` and a
+    `tokens.um-aliases.css` bridging those to `--um-<style>-<group>-<variant>`. The docs were not
+    rewritten. This is the one-release migration §9 offered as the alternative, and it carries the
+    obligation §9 implied: the alias layer is deletable only once the docs move.
+14. **No hooks.** No plugin has a `hooks/`, `commands/` or `agents/` directory; the eleven ship skills
+    and nothing else. The continuous-validation `PostToolUse` prototype was not attempted.
+
+**What is still open after v0.1.0:** whether `apply` should fork or default to a dry run (8, 12), and
+when the `--um-*` aliases can be dropped (13). Everything else above is a decision, not a deferral.

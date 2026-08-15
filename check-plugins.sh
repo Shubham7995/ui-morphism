@@ -550,7 +550,8 @@ mk_entries() {
       const s = typeof e.source === "string"
         ? e.source
         : "<non-local:" + ((e.source && e.source.source) || "unknown") + ">";
-      process.stdout.write((e.name == null ? "<unnamed>" : String(e.name)) + "\t" + s + "\n");
+      const v = e.version == null ? "" : String(e.version);
+      process.stdout.write((e.name == null ? "<unnamed>" : String(e.name)) + "\t" + s + "\t" + v + "\n");
     }
   ' "$MARKETPLACE"
 }
@@ -1705,22 +1706,34 @@ fi
 
 # ------------------------------------------------ 6. catalog ↔ manifest -------
 # Every source resolves to a real directory carrying .claude-plugin/plugin.json,
-# and every plugin.json name equals its marketplace entry name, exactly.
+# every plugin.json name equals its marketplace entry name exactly, and where an
+# entry also states a version, that version equals the manifest's.
 #
 # The name half is not cosmetic. Claude Code keys enabledPlugins on the
 # marketplace entry's name while the plugin's own components are namespaced by
 # plugin.json's name, so a mismatch installs a plugin whose skills are addressed
 # under a name nothing enables — docs/MARKETPLACE.md §4 states the rule and this
 # is what enforces it.
-echo "==> checking marketplace sources resolve and names match their manifests"
+#
+# The version half is not cosmetic either, for a quieter reason. plugin.json
+# wins where the two disagree, so a stale marketplace version does not break an
+# install — it misreports one. The catalog is what a user reads before deciding
+# to install, and it is the copy nothing else in this repository would ever
+# contradict, so drift here is invisible until someone compares the two by hand.
+# docs/MARKETPLACE.md §10.3 records lockstep versioning as the shipped policy
+# and named this gate as the hole; this closes it. An entry that omits `version`
+# is not an offence — it delegates to the manifest, which is the other legal
+# policy — but an entry that states one must state the right one.
+echo "==> checking marketplace sources resolve, and names and versions match their manifests"
 cat_ok=1
 cat_checked=0
+cat_versioned=0
 if [ "$have_node" -eq 0 ] || [ ! -f "$MARKETPLACE" ]; then
   echo "  NOTRUN   node or $MARKETPLACE is unavailable — NO catalog entry was resolved."
   fail=1; cat_ok=0
 else
   proot=$(json_field "$MARKETPLACE" 'metadata.pluginRoot')
-  while IFS=$'\t' read -r name src; do
+  while IFS=$'\t' read -r name src entry_ver; do
     [ -n "${name:-}" ] || continue
     cat_checked=$((cat_checked + 1))
 
@@ -1730,8 +1743,13 @@ else
         fail=1; cat_ok=0; continue ;;
     esac
 
-    # metadata.pluginRoot exists so a `source` can be a bare directory name.
-    # With no pluginRoot, a source is a path relative to the repo root.
+    # A source is a path relative to the repo root, and the manifest schema
+    # requires the leading `./` — `claude plugin validate` rejects a bare
+    # directory name with `plugins.N.source: Invalid input`, with or without
+    # metadata.pluginRoot, so this catalog sets no pluginRoot. The bare-name
+    # branch below is kept anyway: it costs one case arm, and resolving a name
+    # the schema would have rejected is strictly better than resolving it
+    # against the repo root and reporting the wrong missing directory.
     case "$src" in
       ./*|../*|/*) dir="$src" ;;
       *)           dir="${proot:+$proot/}$src" ;;
@@ -1758,6 +1776,16 @@ else
         "$dir" "$name" "${mname:-<unset>}"
       fail=1; cat_ok=0
     fi
+
+    if [ -n "${entry_ver:-}" ]; then
+      cat_versioned=$((cat_versioned + 1))
+      mver=$(json_field "$dir/.claude-plugin/plugin.json" 'version')
+      if [ "$mver" != "$entry_ver" ]; then
+        printf '  VERSION  %s: catalog offers `%s`, plugin.json ships `%s` — plugin.json wins, so the catalog is advertising a version nobody installs\n' \
+          "$name" "$entry_ver" "${mver:-<unset>}"
+        fail=1; cat_ok=0
+      fi
+    fi
   done < <(mk_entries)
 
   if [ "$cat_checked" -eq 0 ]; then
@@ -1765,7 +1793,8 @@ else
     echo "  ^ zero entries adjudicated is a FAILURE, not a clean run."
     fail=1; cat_ok=0
   else
-    printf '  %s catalog entry/entries resolved\n' "$cat_checked"
+    printf '  %s catalog entry/entries resolved, %s of them version-compared\n' \
+      "$cat_checked" "$cat_versioned"
   fi
 fi
 [ "$cat_ok" -eq 1 ] && echo "  ok"

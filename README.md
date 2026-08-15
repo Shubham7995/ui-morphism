@@ -196,7 +196,9 @@ and `glass.layer.css` against that `tokens.css` and the doc; holds every
 `assets/intensity.contract.json` against its owning doc's §13 — the default intensity, the knob set in
 both directions, both endpoints of every knob to whatever depth the doc's own table shape supports, and
 every context cap against a committed registry; resolves every marketplace `source`
-to a directory carrying a `.claude-plugin/plugin.json` and checks its name equals the entry name;
+to a directory carrying a `.claude-plugin/plugin.json` and checks its name and, where the entry
+states one, its version against that manifest — `claude plugin validate` does neither, and in fact
+accepts a `source` pointing at a directory that does not exist;
 parses every `SKILL.md` frontmatter, rejects a space-separated `allowed-tools` scalar, prints every
 description length against the 1,450-character budget and asserts the deference clause is still in it;
 resolves every `references/`, `assets/` or `scripts/` path a `SKILL.md` names; traces every `N:1`
