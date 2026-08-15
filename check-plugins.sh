@@ -53,6 +53,11 @@
 #      order, and every prose copy of the nine universal rows — the template,
 #      a11y-validate's own table, docs/MARKETPLACE.md §7.3, and all twenty
 #      skills' §3 — names all nine, in the array's order where it is a table
+#  16. how wide each grant is, not just whether it parses: every entry names a
+#      tool in GRANT_TOOLS, no skill holds bare `Bash`, every `Bash(...)` is
+#      anchored on ${CLAUDE_SKILL_DIR} or ${CLAUDE_PLUGIN_ROOT}, and no `audit`
+#      skill holds Write or Edit. Cross-checked against check 8 on entry count,
+#      because it is a second parser over the same field
 #
 # Conventions are check-links.sh's, deliberately: the same `==> checking …` /
 # `  ok` shape, every offence in every category printed rather than the first,
@@ -88,9 +93,12 @@
 #     SKILL.md wording defects, not gate defects, and gating on them today would
 #     fail the run for a reason no edit here can fix.
 #   * README.md and plugins/*/README.md are not checked at all.
-#   * `allowed-tools` ENTRIES are checked for shape, not for existence: check 8
-#     knows that `Bash(node …)` is well formed, and cannot know whether `Bash` is
-#     a tool this platform has. That needs a live tool registry.
+#   * `allowed-tools` entries are checked for shape (8), for WIDTH (16), and —
+#     where the argument is a path — for existence (10). What none of them can
+#     do is confirm a granted name is a tool THIS PLATFORM has: GRANT_TOOLS is a
+#     committed list, so it catches a typo and a deliberate widening, and it
+#     would not notice the day a tool is renamed upstream. That needs a live
+#     tool registry, and there isn't one to read.
 #   * bento-grid-ui's `tileSource: cms` intensity cap of 25 is the one context
 #     cap in the set whose number appears nowhere in its owning doc — §13 states
 #     no number and §9 states the constraint in prose. It is pinned by the
@@ -502,6 +510,14 @@ SKILLREF_FOREIGN_MAX=2
 # lines of comment explained why the clause is load-bearing and the check then
 # measured only the LENGTH, so deleting a deference clause outright passed. Check
 # 9 now asserts the clause itself — see DEFERENCE_RE.
+# The tool names any skill in this set may be granted. A registry rather than an
+# inferred set, for the reason PLUGIN_COUNT is one: a typo — `Reed`, `Wrote` —
+# names a tool that does not exist, which is not an error anywhere. The grant is
+# simply inert, and the skill runs prompting for a permission it was supposed to
+# already hold. Adding a genuinely new tool to a skill means editing this line,
+# which is the point.
+GRANT_TOOLS='Bash Edit Glob Grep Read Write'
+
 DESC_MAX=1450
 DESC_LISTING_CAP=1536
 
@@ -516,6 +532,34 @@ DESC_LISTING_CAP=1536
 DEFERENCE_RE='should win (them|it)'
 
 # ---------------------------------------------------------------- helpers -----
+
+# One `allowed-tools` entry per line, argument included, for check 16. Check 8
+# has its own parser over the same field and judges the entry with its argument
+# STRIPPED, because it asks a different question; the two are cross-checked on
+# entry count at check 16 so this one cannot quietly read fewer.
+grant_entries() {
+  frontmatter "$1" | awk '
+    function trim(s) { gsub(/^[[:space:]]+|[[:space:]]+$/, "", s); return s }
+    function emit_scalar(s,   i, k, parts) {
+      if (s ~ /^\[.*\]$/) { sub(/^\[/, "", s); sub(/\]$/, "", s) }
+      k = split(s, parts, ",")
+      for (i = 1; i <= k; i++) if (trim(parts[i]) != "") print trim(parts[i])
+    }
+    !seen && /^allowed-tools:[[:space:]]*[^[:space:]>|]/ {
+      seen = 1; v = $0; sub(/^allowed-tools:[[:space:]]*/, "", v); emit_scalar(v); next
+    }
+    !seen && /^allowed-tools:[[:space:]]*[>|][-+]?[[:space:]]*$/ { seen = 1; blk = 1; next }
+    blk {
+      if ($0 ~ /^[^[:space:]]/) { blk = 0 } else { acc = (acc == "" ? trim($0) : acc " " trim($0)); next }
+    }
+    !seen && /^allowed-tools:[[:space:]]*$/ { seen = 1; seq = 1; next }
+    seq {
+      if ($0 ~ /^[[:space:]]*-[[:space:]]+/) { e = $0; sub(/^[[:space:]]*-[[:space:]]+/, "", e); print trim(e); next }
+      if ($0 ~ /^[^[:space:]]/) { seq = 0 }
+    }
+    END { if (blk || acc != "") emit_scalar(acc) }
+  '
+}
 
 # Print a captured list only when it is non-empty, so `comm` never sees a blank.
 lines() { [ -n "$1" ] && printf '%s\n' "$1"; return 0; }
@@ -1902,7 +1946,10 @@ done
 # judged. Whatever is left must be a single bare token. That is the whole rule,
 # and it is structural: nothing is exempt by name.
 #
-# What this does NOT check: whether the named tools exist. See the header.
+# What this does NOT check: how wide the grant is. `Bash` alone and
+# `Bash(rm -rf *)` are both well-formed, and check 8 passes them. Check 16 asks
+# that question, over the same field, with its own parser cross-checked against
+# this one's entry count.
 echo "==> checking the allowed-tools grant syntax"
 grant_ok=1
 grant_checked=0
@@ -2677,6 +2724,95 @@ else
   if [ "$rep_rc" -ne 0 ]; then fail=1; rep_ok=0; fi
 fi
 [ "$rep_ok" -eq 1 ] && echo "  ok"
+
+# --------------------------------------------- 16. how WIDE the grant is ------
+# Check 8 asks whether the grant PARSES. This asks what it lets the skill do.
+#
+# Four properties, and all four are claims this repository already makes in
+# user-facing prose — which is the reason to gate them. README's trust-surface
+# paragraph and docs/MARKETPLACE.md §10.9 both state that no skill holds bare
+# `Bash` and that every Bash grant is scoped to one bundled script; every audit
+# skill's own description promises it "never edits"; and the `## Dry run`
+# section in all ten apply skills tells the user that audit "holds no `Write`
+# grant at all and so cannot write whatever it is told". A promise about what a
+# tool CANNOT do is worth exactly what checks it.
+#
+#   1. Every entry names a tool in GRANT_TOOLS. A typo grants nothing and errors
+#      nowhere — see the registry.
+#   2. No bare `Bash`. Bare Bash is the whole shell, and it is one keystroke
+#      away from the scoped form, which is the dangerous kind of adjacency.
+#   3. Every `Bash(...)` argument is anchored on `${CLAUDE_SKILL_DIR}` or
+#      `${CLAUDE_PLUGIN_ROOT}`, so the grant can only reach a script this plugin
+#      ships. `Bash(node *)` and `Bash(npm run *)` are refused: both are
+#      arbitrary code by a different route. (That the anchored path EXISTS is
+#      check 10's job, and it does check frontmatter, not just prose.)
+#   4. No skill directory named `audit` holds `Write` or `Edit`.
+#
+# The entry parser here is a second implementation of check 8's, which is a
+# drift risk. It is made self-checking instead of being commented about: the two
+# must adjudicate the SAME NUMBER of entries, and a disagreement fails the run.
+# An under-reading parser is the vacuity failure this file exists to prevent, so
+# it is not left to inspection.
+echo "==> checking how wide each tool grant is"
+wide_ok=1
+wide_checked=0
+for sd in "${skill_dirs[@]}"; do
+  f="$sd/SKILL.md"
+  [ -f "$f" ] || continue
+  is_audit=0
+  [ "$(basename "$sd")" = "audit" ] && is_audit=1
+
+  while IFS= read -r entry; do
+    [ -n "$entry" ] || continue
+    wide_checked=$((wide_checked + 1))
+
+    name=${entry%%(*}
+    name=$(printf '%s' "$name" | sed 's/[[:space:]]*$//')
+    case " $GRANT_TOOLS " in
+      *" $name "*) ;;
+      *) printf '  UNKNOWN  %s: grants `%s`, which is not in GRANT_TOOLS (%s) — a name that matches no tool grants nothing and errors nowhere\n' \
+           "$f" "$name" "$GRANT_TOOLS"
+         fail=1; wide_ok=0; continue ;;
+    esac
+
+    if [ "$name" = "Bash" ]; then
+      case "$entry" in
+        Bash\(*\))
+          arg=${entry#Bash(}; arg=${arg%)}
+          case "$arg" in
+            *'${CLAUDE_SKILL_DIR}'*|*'${CLAUDE_PLUGIN_ROOT}'*) ;;
+            *) printf '  WIDEBASH %s: `Bash(%s)` is not anchored on ${CLAUDE_SKILL_DIR} or ${CLAUDE_PLUGIN_ROOT} — it can reach past this plugin\n' \
+                 "$f" "$arg"
+               fail=1; wide_ok=0 ;;
+          esac ;;
+        *) printf '  BAREBASH %s: grants `%s` — bare Bash is the whole shell. Scope it to one bundled script.\n' "$f" "$entry"
+           fail=1; wide_ok=0 ;;
+      esac
+    fi
+
+    if [ "$is_audit" -eq 1 ]; then
+      case "$name" in
+        Write|Edit)
+          printf '  AUDITW   %s: an audit skill grants `%s`. Its own description promises it never edits, and every apply skill tells the user audit holds no Write grant.\n' \
+            "$f" "$name"
+          fail=1; wide_ok=0 ;;
+      esac
+    fi
+  done < <(grant_entries "$f")
+done
+
+if [ "$wide_checked" -eq 0 ]; then
+  echo "  NOGRANTS not one grant entry was read across the whole skill set."
+  echo "  ^ zero entries adjudicated is a FAILURE, not a clean run."
+  fail=1; wide_ok=0
+elif [ "$wide_checked" -ne "$grant_checked" ]; then
+  printf '  PARSERS  check 8 read %s grant entry/entries, this check read %s. Two parsers over one field must agree; the smaller one is reading past something.\n' \
+    "$grant_checked" "$wide_checked"
+  fail=1; wide_ok=0
+else
+  printf '  %s grant(s) measured for width, agreeing with check 8\n' "$wide_checked"
+fi
+[ "$wide_ok" -eq 1 ] && echo "  ok"
 
 if [ "$fail" -ne 0 ]; then
   echo

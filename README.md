@@ -209,7 +209,10 @@ every context cap against a committed registry; resolves every marketplace `sour
 to a directory carrying a `.claude-plugin/plugin.json` and checks its name and, where the entry
 states one, its version against that manifest — `claude plugin validate` does neither, and in fact
 accepts a `source` pointing at a directory that does not exist;
-parses every `SKILL.md` frontmatter, rejects a space-separated `allowed-tools` scalar, prints every
+parses every `SKILL.md` frontmatter, rejects a space-separated `allowed-tools` scalar, and then asks
+what that grant actually permits — every entry names a tool on a committed registry, no skill holds
+bare `Bash`, every `Bash(...)` is anchored on `${CLAUDE_SKILL_DIR}` or `${CLAUDE_PLUGIN_ROOT}` so it
+can reach only a script the plugin ships, and no `audit` skill holds `Write` or `Edit`; prints every
 description length against the 1,450-character budget and asserts the deference clause is still in it;
 resolves every `references/`, `assets/` or `scripts/` path a `SKILL.md` names; traces every `N:1`
 contrast figure the plugin tree prints back to a figure the docs print; keeps `.claude-plugin/`

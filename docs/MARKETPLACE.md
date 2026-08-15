@@ -711,6 +711,13 @@ deferred question that reads as settled is the more expensive of the two mistake
    project formatter and linter are therefore *not* runnable from a skill; that convenience was traded
    away deliberately, and running them stays the user's step after `apply` reports.
 
+   Every clause of that paragraph is now gated by `check-plugins.sh` check 16, which also holds the
+   claim each `audit` skill makes about itself — that it never edits — by refusing it a `Write` or
+   `Edit` grant. A statement about what a tool cannot do is worth what checks it, and this one had
+   been prose since the plugins shipped. Check 8 still asks only whether the field parses; the two run
+   separate parsers over it and must agree on how many entries there are, because a second parser that
+   quietly reads fewer is how a width check certifies a grant it never saw.
+
 **Technical**
 
 10. **Static analysis only. No browser dependency.** Nothing under `plugins/` names Playwright or
