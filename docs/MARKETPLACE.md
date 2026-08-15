@@ -723,10 +723,24 @@ deferred question that reads as settled is the more expensive of the two mistake
     built, because `liquid-glass-ui` and `spatial-ui` shipped in the same release that needed them. No
     Vue or Svelte emitter exists — the `--framework` argument-hint on some `apply` skills accepts those
     names for *component* rewriting, which is the skill's own work, not a token emitter.
-12. **The skills write files. There is no `--dry-run`.** The word appears in no `SKILL.md`. What stands
-    in for it is the mandatory confirmed scoping step and `audit`, which is the read-only half of every
-    pair and can always be run first. §9's suggestion that a dry run be the default on first invocation
-    in a repository was not implemented and remains the best unbuilt idea in this section.
+12. **The skills write files, and `--dry-run` is now universal across the ten.** Half of §9's
+    suggestion shipped and half did not, deliberately. Every `apply` skill takes the flag, advertises
+    it in its `argument-hint`, carries `dryRun` in its Inputs table, and describes it in a `## Dry run`
+    section that is byte-identical across all ten and gated as such by `check-plugins.sh` check 14.
+    The semantics are the strict ones: every step still runs, `a11y-validate` still measures real
+    emitted CSS, and the whole proposed output goes to a scratch directory outside the project so the
+    contrast table is a measurement rather than an estimate. Nothing in the project tree is created or
+    modified, no report file is written, and the report — printed in the reply — must name the scratch
+    path. A mode that says "nothing was written" while writing somewhere it does not name would be
+    worse than no mode.
+
+    What did **not** ship is §9's other half: dry run is opt-in and is not the default on first
+    invocation in a repository. A skill invoked by name against a confirmed scope was asked to do
+    something, and a silent no-op is its own kind of surprise; the read-only question already has a
+    home in the `audit` half of every pair, which holds no `Write` grant and so cannot write whatever
+    it is told. Note the limit of the gate: it compares the ten sections against each other with no
+    external reference, and it cannot run a skill, so it certifies that the promise is stated
+    consistently and never that a run honours it.
 13. **Both names ship, legacy aliased.** Each style emits its short prefix in `tokens.css` and a
     `tokens.um-aliases.css` bridging those to `--um-<style>-<group>-<variant>`. The docs were not
     rewritten. This is the one-release migration §9 offered as the alternative, and it carries the
@@ -734,5 +748,6 @@ deferred question that reads as settled is the more expensive of the two mistake
 14. **No hooks.** No plugin has a `hooks/`, `commands/` or `agents/` directory; the eleven ship skills
     and nothing else. The continuous-validation `PostToolUse` prototype was not attempted.
 
-**What is still open after v0.1.0:** whether `apply` should fork or default to a dry run (8, 12), and
-when the `--um-*` aliases can be dropped (13). Everything else above is a decision, not a deferral.
+**What is still open after v0.1.0:** whether `apply` should run forked (8), and when the `--um-*`
+aliases can be dropped (13) — which is blocked on the ten docs' §4 and §5 moving to the `--um-*`
+grammar, not on anything in the plugin tree. Everything else above is a decision, not a deferral.

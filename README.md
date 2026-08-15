@@ -80,6 +80,16 @@ Installing any style plugin pulls in `ui-morphism-core` automatically — it is 
 `dependencies`, and Claude Code enables a plugin required by an active one. Skills are namespaced by
 plugin, so they invoke as `/brutalism-ui:apply`, `/glassmorphism-ui:audit`, and so on.
 
+Every `apply` skill takes `--dry-run`, and it means the strict thing. The run happens in full — stack
+detection, intensity resolution, token emission, component rewriting, and a real
+`ui-morphism-core:a11y-validate` pass over the CSS it actually produced — so the contrast table and
+the budgets are measurements, not estimates. Only the destination changes: the proposed output lands
+in a scratch directory outside your project, nothing in the project tree is created or modified, no
+report file is written, and the report comes back in the reply with the scratch path named in it. It
+is opt-in rather than the default, because a skill invoked by name against a confirmed scope was asked
+to do something. The `audit` half of every pair is the other way to look before touching anything: it
+holds no `Write` grant at all, so it cannot write whatever it is told to.
+
 Before publishing, run the gate — it validates the catalog and all eleven plugin manifests, and twelve
 other things besides:
 
@@ -203,8 +213,9 @@ parses every `SKILL.md` frontmatter, rejects a space-separated `allowed-tools` s
 description length against the 1,450-character budget and asserts the deference clause is still in it;
 resolves every `references/`, `assets/` or `scripts/` path a `SKILL.md` names; traces every `N:1`
 contrast figure the plugin tree prints back to a figure the docs print; keeps `.claude-plugin/`
-directories manifest-only; and asserts the WCAG contrast arithmetic exists in exactly one file, with
-nothing outside `ui-morphism-core` so much as naming it.
+directories manifest-only; asserts the WCAG contrast arithmetic exists in exactly one file, with
+nothing outside `ui-morphism-core` so much as naming it; and holds the ten `apply` skills' `--dry-run`
+contract byte-identical, in the argument hint, the Inputs table and the `## Dry run` section alike.
 
 **`docs/check-links.sh`** needs `bash` and `python3`. It verifies link targets, the fourteen-heading
 contract, Tailwind v4 `@theme` and bracket-syntax rules, phantom tokens against a per-doc row-coverage

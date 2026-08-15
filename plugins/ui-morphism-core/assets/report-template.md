@@ -21,12 +21,26 @@
 | | |
 |---|---|
 | **Style** | `<style>` v`<plugin version>` |
+| **Mode** | `<applied / dry run — no project files written>` |
 | **Intensity** | `<effective>` (requested `<requested>`, capped by `<context>`) |
 | **Scope** | `<glob list>` |
 | **Framework** | `<framework>` / `<styling>` — detected `<confidence>`, confirmed by user `<yes/no>` |
 | **Dark mode** | `<media / class / both>` |
 | **Files changed** | `<n>` written, `<n>` modified, `<n>` refused |
 | **Verdict** | **`<PASS / PASS WITH CORRECTIONS / FAIL>`** |
+
+<!--
+  Under `--dry-run`, Files changed reads "<n> would write, <n> would modify, <n>
+  refused", and one further row is added directly below Mode:
+
+  | **Scratch** | `<absolute path the proposed output was written to>` |
+
+  That row is not optional. A dry run writes real files somewhere so the
+  validator has something to read; the numbers above are only trustworthy
+  because it does. Saying "no files written" without naming where they went is
+  the failure mode the mode exists to avoid.
+-->
+
 
 `<One paragraph: what was applied, to what, and the single most important thing
 the reader needs to know before looking at the numbers.>`

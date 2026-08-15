@@ -27,8 +27,9 @@
 #      depth the doc's own table shape supports, and every context cap against a
 #      committed registry
 #   6. every marketplace source resolves to a directory that exists and holds a
-#      .claude-plugin/plugin.json, and every plugin.json name equals its
-#      marketplace entry name, exactly
+#      .claude-plugin/plugin.json, every plugin.json name equals its marketplace
+#      entry name exactly, and every entry that states a `version` states the
+#      one its manifest ships
 #   7. every skill directory holds a SKILL.md whose frontmatter parses and
 #      carries `name` and `description`, with `name` equal to the directory
 #   8. `allowed-tools` is a comma-separated scalar or a YAML list — never the
@@ -44,6 +45,9 @@
 #      marketplace.json inside the repo root's
 #  13. the contrast / luminance / alpha-compositing arithmetic lives in exactly
 #      one file, and nothing outside ui-morphism-core so much as names it
+#  14. every `apply` skill offers `--dry-run` — in its argument-hint, in its
+#      Inputs table, and as the shared `## Dry run` section, byte-identical
+#      across all ten
 #
 # Conventions are check-links.sh's, deliberately: the same `==> checking …` /
 # `  ok` shape, every offence in every category printed rather than the first,
@@ -98,6 +102,15 @@
 #     at all — font-weights, a scale() argument, some alphas — and any of them
 #     could source a plugin figure no doc actually claimed. The plugin side is
 #     stripped; the doc side is not. See the note at the check.
+#   * check 14 compares the ten `## Dry run` sections against EACH OTHER, with
+#     the first-sorting apply skill as the reference. There is no external spec
+#     for that text, so an edit applied uniformly to all ten passes. Green there
+#     means consistent, never right. The same is true of the seven-section
+#     report shape restated in every apply skill, which is not gated at all.
+#   * nothing verifies that `--dry-run` BEHAVES — that a run actually leaves the
+#     project tree untouched and names its scratch path. No gate here runs a
+#     skill, so every behavioural promise in a SKILL.md is text this script can
+#     confirm the presence of and nothing more.
 #   * check 3 compares tokens.css against ONE registered ```css fence per doc.
 #     A second fence in a doc's §4 is registered in sec4_fences_of() and is not
 #     compared against anything — today that is doc 02's alternative OKLCH
@@ -2393,6 +2406,77 @@ while IFS= read -r f; do
 done < <(printf '%s' "$api_files")
 
 [ "$math_ok" -eq 1 ] && echo "  ok"
+
+# ------------------------------------------------------ 14. the dry-run mode ---
+# Every `apply` skill offers `--dry-run`, and offers the SAME one.
+#
+# This is the only promise in the set that a user acts on before reading any
+# output: they add a flag because they were told the project will not be
+# touched. Ten skills each describing that promise in their own words is how one
+# of them ends up writing a report file anyway, or omitting the scratch path, or
+# quietly skipping validation because nothing was going to land. So the section
+# is normative shared text and this compares it byte for byte across the ten.
+#
+# Three separate things are asserted, because two of them can hold while the
+# third is broken: the flag is in `argument-hint`, where a user discovers it;
+# `dryRun` is in the Inputs table, which is the skill's normative input list;
+# and the `## Dry run` section is present and identical. A flag advertised in
+# the hint with no section behind it is worse than no flag.
+#
+# `audit` skills are deliberately out of scope. They hold no Write grant, so
+# they are dry by construction and a mode switch would imply otherwise.
+#
+# What this cannot catch: the ten are compared against each other, and the
+# reference is whichever file sorts first, not an external spec. An edit applied
+# uniformly to all ten passes. That is the correct trade — the failure this
+# guards against is drift, and there is no second source to check the text
+# against — but it means a green here says "consistent", never "right".
+echo "==> checking every apply skill offers the same --dry-run contract"
+dry_ok=1
+dry_checked=0
+dry_ref=''
+dry_ref_file=''
+
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  dry_checked=$((dry_checked + 1))
+
+  # Anchored to the argument-hint LINE. A whole-file grep for --dry-run passes
+  # on the section below, which names the flag a dozen times, so it would
+  # certify the hint without ever reading it — caught by mutation, not review.
+  grep -q -E '^argument-hint:.*--dry-run' "$f" || {
+    printf '  NOHINT   %s: argument-hint does not offer --dry-run\n' "$f"
+    fail=1; dry_ok=0
+  }
+  grep -q -F -- '`dryRun`' "$f" || {
+    printf '  NOINPUT  %s: the Inputs table has no dryRun row\n' "$f"
+    fail=1; dry_ok=0
+  }
+
+  body=$(awk '/^## Dry run$/ { s = 1 } s && /^## / && !/^## Dry run$/ { exit } s' "$f")
+  if [ -z "$body" ]; then
+    printf '  NOSECTION %s: no ## Dry run section\n' "$f"
+    fail=1; dry_ok=0; continue
+  fi
+
+  if [ -z "$dry_ref" ]; then
+    dry_ref=$body; dry_ref_file=$f; continue
+  fi
+  if [ "$body" != "$dry_ref" ]; then
+    printf '  DIFFERS  %s: its ## Dry run section is not the one in %s\n' "$f" "$dry_ref_file"
+    printf '%s\n' "$(diff <(printf '%s\n' "$dry_ref") <(printf '%s\n' "$body") | sed 's/^/    /')"
+    fail=1; dry_ok=0
+  fi
+done < <(find plugins -path '*/skills/apply/SKILL.md' 2>/dev/null | sort)
+
+if [ "$dry_checked" -eq 0 ]; then
+  echo "  NOAPPLY  the scan found no apply skill to check."
+  echo "  ^ zero skills adjudicated is a FAILURE, not a clean run."
+  fail=1; dry_ok=0
+else
+  printf '  %s apply skill(s) compared against %s\n' "$dry_checked" "${dry_ref_file:-<none>}"
+fi
+[ "$dry_ok" -eq 1 ] && echo "  ok"
 
 if [ "$fail" -ne 0 ]; then
   echo

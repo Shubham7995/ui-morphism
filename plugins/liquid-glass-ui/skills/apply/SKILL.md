@@ -18,7 +18,7 @@ description: >-
   named languages: skeuomorphism-ui, neumorphism-ui, claymorphism-ui, minimalism-ui,
   maximalism-ui, brutalism-ui, bento-grid-ui. To review without editing, use
   liquid-glass-ui:audit.
-argument-hint: "[scope glob] [--intensity=0-100] [--variant=regular|clear] [--backdrop-control=owned|arbitrary] [--a11y-target=AA|AAA] [--perf-target=desktop|mobile|low-end]"
+argument-hint: "[scope glob] [--intensity=0-100] [--variant=regular|clear] [--backdrop-control=owned|arbitrary] [--a11y-target=AA|AAA] [--perf-target=desktop|mobile|low-end] [--dry-run]"
 allowed-tools:
   - Read
   - Glob
@@ -116,6 +116,7 @@ Doc §13's input table, with the detection defaults this skill applies.
 | `targetBrowsers` | browserslist string | project's browserslist |
 | `a11yTarget` | AA \| AAA | `AA` |
 | `perfTarget` | desktop \| mobile \| low-end | `desktop` |
+| `dryRun` | flag | off — see [Dry run](#dry-run) |
 
 `backdropControl: arbitrary` hard-caps `intensity` at 45 and forces `variant: regular`.
 `perfTarget` is not in doc §13's input table; it is in the contract because §8's
@@ -328,6 +329,32 @@ a missing section is a hole. The sections are fixed; this style supplies the row
    at three scroll positions over a deliberately hostile backdrop and sample them; verify
    the triple-ring focus indicator over black, over white and over a saturated photo; and
    measure frame time on a mid-tier device during a 1000px scroll with the chrome pinned.
+
+## Dry run
+
+`--dry-run` runs everything above and changes nothing in the project. Every step executes in
+full — the stack is detected and confirmed, intensity resolves through core, the token layer
+and the component rewrites are generated, and `ui-morphism-core:a11y-validate` runs over the
+real emitted CSS — so the contrast table, the checklist and the budgets are measurements and
+not estimates. A dry run that guessed at its own numbers would be worth less than no dry run.
+
+What changes is where the output lands. Nothing inside the project tree is created, modified
+or deleted, and no report file is written. The complete proposed output goes to a scratch
+directory outside the project — `$TMPDIR/ui-morphism-dry-run-<style>/`, or
+`/tmp/ui-morphism-dry-run-<style>/` where `$TMPDIR` is unset — so the validator has real files
+to read and the user has something to diff. The report is printed in the reply instead of
+saved, and its Summary carries two extra rows: **Mode**, `dry run — no project files written`,
+and **Scratch**, the absolute path. **Files changed** becomes `would write / would modify /
+refused`.
+
+Name that scratch path in the report. A dry run that claims to have written nothing while
+writing somewhere it does not name is the one outcome worse than not offering the mode.
+
+`--dry-run` is opt-in and is not the default. A skill invoked by name against a confirmed
+scope was asked to do something, and a silent no-op is its own kind of surprise. The
+read-only question — "what is wrong with what I already have" rather than "what would this
+style do to it" — belongs to this plugin's `audit` skill, which holds no `Write` grant at all
+and so cannot write whatever it is told.
 
 ## Outputs
 

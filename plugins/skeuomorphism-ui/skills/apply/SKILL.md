@@ -17,7 +17,7 @@ description: >-
   animation and a11y tools answer those better and should win them. Nor for the other named
   languages: glassmorphism-ui, minimalism-ui, maximalism-ui, brutalism-ui, liquid-glass-ui,
   bento-grid-ui, spatial-ui. To review without editing, use skeuomorphism-ui:audit.
-argument-hint: "[scope glob] [--intensity=0-100] [--material=plastic|brushed-metal|wood|leather|felt|rubber|mixed] [--density=compact|default|comfortable] [--dark-mode=media|class|both] [--framework=react-ts|react-js|vue|svelte|html|swiftui]"
+argument-hint: "[scope glob] [--intensity=0-100] [--material=plastic|brushed-metal|wood|leather|felt|rubber|mixed] [--density=compact|default|comfortable] [--dark-mode=media|class|both] [--framework=react-ts|react-js|vue|svelte|html|swiftui] [--dry-run]"
 allowed-tools:
   - Read
   - Glob
@@ -107,6 +107,7 @@ measured UI generations between January and June 2026. Accent, not foundation.
 | `intensity` | 0-100 | 60 |
 | `scope` | glob list | `src/components/ui/**` |
 | `darkMode` | media \| class \| both | both |
+| `dryRun` | flag | off — see [Dry run](#dry-run) |
 
 `density: compact` may trade padding for density but never takes a target below the
 24×24 SC 2.5.8 floor, and every control still sizes from `var(--sk-target-min)` rather
@@ -302,6 +303,32 @@ a missing section is a hole. The style supplies the rows; the sections are fixed
    target box of every knob, dial and fader in a cluster; and run the interface at 320px
    and at 200% zoom with the SC 1.4.12 text-spacing overrides applied, looking for clipped
    uppercase letterpress labels and for a fixed-width hardware panel that will not reflow.
+
+## Dry run
+
+`--dry-run` runs everything above and changes nothing in the project. Every step executes in
+full — the stack is detected and confirmed, intensity resolves through core, the token layer
+and the component rewrites are generated, and `ui-morphism-core:a11y-validate` runs over the
+real emitted CSS — so the contrast table, the checklist and the budgets are measurements and
+not estimates. A dry run that guessed at its own numbers would be worth less than no dry run.
+
+What changes is where the output lands. Nothing inside the project tree is created, modified
+or deleted, and no report file is written. The complete proposed output goes to a scratch
+directory outside the project — `$TMPDIR/ui-morphism-dry-run-<style>/`, or
+`/tmp/ui-morphism-dry-run-<style>/` where `$TMPDIR` is unset — so the validator has real files
+to read and the user has something to diff. The report is printed in the reply instead of
+saved, and its Summary carries two extra rows: **Mode**, `dry run — no project files written`,
+and **Scratch**, the absolute path. **Files changed** becomes `would write / would modify /
+refused`.
+
+Name that scratch path in the report. A dry run that claims to have written nothing while
+writing somewhere it does not name is the one outcome worse than not offering the mode.
+
+`--dry-run` is opt-in and is not the default. A skill invoked by name against a confirmed
+scope was asked to do something, and a silent no-op is its own kind of surprise. The
+read-only question — "what is wrong with what I already have" rather than "what would this
+style do to it" — belongs to this plugin's `audit` skill, which holds no `Write` grant at all
+and so cannot write whatever it is told.
 
 ## Outputs
 
