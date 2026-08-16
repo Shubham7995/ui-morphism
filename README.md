@@ -87,6 +87,29 @@ Installing any style plugin pulls in `ui-morphism-core` automatically — it is 
 `dependencies`, and Claude Code enables a plugin required by an active one. Skills are namespaced by
 plugin, so they invoke as `/brutalism-ui:apply`, `/glassmorphism-ui:audit`, and so on.
 
+### What it costs you before you type anything
+
+Claude Code injects every enabled plugin's skill `description` into the system prompt on every request,
+whether or not the plugin is relevant. That is a real recurring cost and this marketplace is not cheap,
+so here it is measured rather than left for you to discover:
+
+| Installed | ~tokens per request |
+|---|---:|
+| `ui-morphism-core` alone | ~844 |
+| core + one style | ~1,560 |
+| core + all ten styles | **~7,980** |
+
+Individual style plugins run 672–726 tokens each — two skills apiece, both descriptions near the
+1,450-character cap that `check-plugins.sh` check 9 enforces. About **45% of that budget is the
+negative-trigger tail**: the "do NOT use for open-ended quality work" clauses and the sibling hand-offs.
+That is the price of the routing discipline described below, and it is the reason this ships as eleven
+plugins rather than one — **install only the styles you actually work in**, and you pay for those.
+
+Numbers are from [`harness-meter`](https://github.com/Shubham7995/harness-meter) run against this
+repository; `claude plugin details <name>` gives a somewhat higher figure per plugin because it counts
+manifest metadata too. Either way the ranking and the advice are the same. On-invoke cost is separate
+and paid only when a skill fires: roughly 6.3k tokens for an `apply`, 2.5k for an `audit`.
+
 ### First run
 
 Nothing here fires on "make this look good" — that is the whole design, and it means you have to name
