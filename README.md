@@ -68,17 +68,46 @@ preflight rather than riding along.
 /plugin install brutalism-ui@ui-morphism
 ```
 
-The repository is private, so the GitHub source resolves only for an account with access. A local clone
-always works and is the better path while the plugins are still moving:
+That is the whole install. A local clone also works, and is the better path if you want to read the
+research alongside the plugins or pin to a commit:
 
 ```
 git clone https://github.com/Shubham7995/ui-morphism.git
 /plugin marketplace add /absolute/path/to/ui-morphism
 ```
 
+**Requirements.** Claude Code, and **Node** on your `PATH` — ten of the eleven plugins ship at least one
+`.mjs` script that a skill runs directly, so without Node those skills lose the measured half of what
+they do. Everything here is developed and tested on Node 22; the scripts use only stable `node:` core
+modules, so older LTS lines will very likely work, though nothing in this repository verifies that. No
+npm install, no dependencies, no network access at runtime — the scripts read the CSS you point them at
+and nothing else. `python3` is needed only to run the research gate in `docs/`, never by a plugin.
+
 Installing any style plugin pulls in `ui-morphism-core` automatically — it is declared in each style's
 `dependencies`, and Claude Code enables a plugin required by an active one. Skills are namespaced by
 plugin, so they invoke as `/brutalism-ui:apply`, `/glassmorphism-ui:audit`, and so on.
+
+### First run
+
+Nothing here fires on "make this look good" — that is the whole design, and it means you have to name
+the style or describe its moves. Three ways in, all of them ordinary sentences:
+
+```
+Apply neubrutalism to src/components/ui, dry run first
+Audit my frosted-glass navbar — does the text still clear 4.5:1 over the hero image?
+Turn this feature list into a bento grid, spans by content weight
+```
+
+The first is the one to start with. `--dry-run` runs everything and writes nothing into your project,
+so you get the full report — contrast table, nine-check list, budgets, refusals — and can read it
+before deciding. Drop the flag when you want the files.
+
+If you would rather not depend on the wording, invoke a skill directly: `/brutalism-ui:apply`,
+`/glassmorphism-ui:audit`. There are 23 of them — an `apply` and an `audit` for each of the ten styles,
+plus core's three, which the style skills call and you rarely invoke yourself.
+
+Not sure which of the ten you want? The [routing table](#routing-three-clusters-where-the-languages-read-alike)
+below splits the three clusters that read alike by one physical question each.
 
 Every `apply` skill takes `--dry-run`, and it means the strict thing. The run happens in full — stack
 detection, intensity resolution, token emission, component rewriting, and a real

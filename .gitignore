@@ -1,5 +1,6 @@
 # Local Claude Code tooling state (written at any depth, not just the repo root)
 **/.claude/tdd-guard/
+.impeccable/
 
 # macOS
 .DS_Store
