@@ -1001,7 +1001,9 @@ Levels: fail (a criterion is broken), warn (compliant but worth a look), todo
 
 Markdown is the default because the output lands in §3 of the audit report.
 Exit status is 1 when anything at or above --fail-on is found (default fail),
-and 2 when a file cannot be read or parsed.`;
+and 2 when a file cannot be read or parsed. Being given NO file is also a 2:
+--help exits 0, but a caller that assembled an empty list is not told its
+empty run passed.`;
 
 function renderMarkdown(result) {
   const lines = [`### ${result.file}`, ''];
@@ -1028,9 +1030,21 @@ async function runCli(argv) {
     if (m) flags.set(m[1], m[2] === undefined ? true : m[2]);
     else files.push(arg);
   }
-  if (flags.has('help') || files.length === 0) {
+  if (flags.has('help')) {
     process.stdout.write(`${USAGE}\n`);
     return 0;
+  }
+  // Asking for help and being handed nothing to work on are different events,
+  // and conflating them is how a caller reads success off an empty run. A style
+  // skill assembles this file list itself: a glob that matched nothing, an
+  // emitter that wrote somewhere else, a --dry-run scratch directory that was
+  // never populated all arrive here as zero paths. Exiting 0 there tells the
+  // skill every check passed, and the skill writes that into a user's report.
+  // Nothing audited is not a pass — same rule the style scanners already follow.
+  if (files.length === 0) {
+    process.stderr.write(`${USAGE}\n`);
+    process.stderr.write('audit-css.mjs: no input files — nothing was audited. Pass at least one path, or --help.\n');
+    return 2;
   }
 
   const { readFile } = await import('node:fs/promises');

@@ -401,3 +401,18 @@ test('the CLI also emits JSON, names all nine checks, and honours --fail-on', ()
   assert.match(cli('--help').stdout, /nine universal accessibility checks/);
   rmSync(dir, { recursive: true, force: true });
 });
+
+test('no input files is a failure, and --help is not', () => {
+  // A style skill builds this file list itself. A glob that matched nothing, an
+  // emitter that wrote elsewhere, an unpopulated --dry-run scratch directory all
+  // arrive as zero paths, and exiting 0 there would tell the skill that all nine
+  // checks passed over nothing at all.
+  const empty = cli();
+  assert.equal(empty.status, 2);
+  assert.match(empty.stderr, /no input files/);
+  assert.equal(empty.stdout, '', 'usage on an error goes to stderr, not stdout');
+
+  const help = cli('--help');
+  assert.equal(help.status, 0);
+  assert.match(help.stdout, /audit-css\.mjs —/);
+});

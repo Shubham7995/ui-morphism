@@ -227,7 +227,9 @@ counter with no limit is reported and not judged.
 
 Without --budget the run only reports, and exits 0. With it, exit status is 1
 when any limit is exceeded. A counter whose value is not computable from CSS
-text is reported as "unknown" and never counts as a pass.`;
+text is reported as "unknown" and never counts as a pass. Being given no file
+at all exits 2: --help exits 0, but a caller that assembled an empty list is
+not told its empty run passed.`;
 
 function renderMarkdown(measurements, rows) {
   const lines = [];
@@ -263,9 +265,21 @@ async function runCli(argv) {
     if (m) flags.set(m[1], m[2] === undefined ? true : m[2]);
     else files.push(arg);
   }
-  if (flags.has('help') || files.length === 0) {
+  if (flags.has('help')) {
     process.stdout.write(`${USAGE}\n`);
     return 0;
+  }
+  // Asking for help and being handed nothing to work on are different events,
+  // and conflating them is how a caller reads success off an empty run. A style
+  // skill assembles this file list itself: a glob that matched nothing, an
+  // emitter that wrote somewhere else, a --dry-run scratch directory that was
+  // never populated all arrive here as zero paths. Exiting 0 there tells the
+  // skill every check passed, and the skill writes that into a user's report.
+  // Nothing measured is not a pass — same rule the style scanners already follow.
+  if (files.length === 0) {
+    process.stderr.write(`${USAGE}\n`);
+    process.stderr.write('budget.mjs: no input files — nothing was measured. Pass at least one path, or --help.\n');
+    return 2;
   }
 
   const { readFile } = await import('node:fs/promises');

@@ -197,3 +197,15 @@ test('the CLI measures files, applies a --budget file, and exits on an exceeded 
   assert.equal(cli('--help').status, 0);
   rmSync(dir, { recursive: true, force: true });
 });
+
+test('no input files is a failure, and --help is not', () => {
+  // Same rule as audit-css: an empty file list is a caller bug, not a clean run.
+  const empty = cli();
+  assert.equal(empty.status, 2);
+  assert.match(empty.stderr, /no input files/);
+  assert.equal(empty.stdout, '', 'usage on an error goes to stderr, not stdout');
+
+  const help = cli('--help');
+  assert.equal(help.status, 0);
+  assert.match(help.stdout, /budget\.mjs —/);
+});

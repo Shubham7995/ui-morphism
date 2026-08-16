@@ -68,7 +68,7 @@ Identical logic for all ten styles. Style-specific invariants stay in the style 
    ```bash
    node ${CLAUDE_SKILL_DIR}/scripts/audit-css.mjs tokens/*.css styles/*.css --format=md
    ```
-   Markdown is the default because the output lands directly in §3 of the audit report. `--format=json` when a skill needs to branch on the result; `--fail-on=warn` for a stricter gate. Exit status is 1 when anything at or above the threshold is found.
+   Markdown is the default because the output lands directly in §3 of the audit report. `--format=json` when a skill needs to branch on the result; `--fail-on=warn` for a stricter gate. Exit status is 1 when anything at or above the threshold is found, and 2 when a file cannot be read — including the case where the glob above matched nothing and the script was handed no paths at all. Treat a 2 as "this did not run", never as "nothing was wrong": an empty file list means the emission step wrote somewhere other than where this is looking, and the checklist rows for that run are unknown rather than passing.
 3. **Measure any pair the sheet audit could not resolve.** A colour whose background comes from an ancestor is not computable from CSS text, and the audit reports it as a `todo` rather than a pass.
    ```bash
    node ${CLAUDE_SKILL_DIR}/scripts/contrast.mjs ratio "#0A0A0A" "#FFDC58" --target=4.5

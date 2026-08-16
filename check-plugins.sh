@@ -234,8 +234,8 @@ assert_baseline_of() {
     plugins/neumorphism-ui/skills/apply/scripts/neu-scan.test.mjs)               echo  107 ;;
     plugins/skeuomorphism-ui/skills/apply/scripts/skeuo-scan.test.mjs)           echo   87 ;;
     plugins/spatial-ui/skills/apply/scripts/spatial-scan.test.mjs)               echo  123 ;;
-    plugins/ui-morphism-core/skills/a11y-validate/scripts/audit-css.test.mjs)    echo   78 ;;
-    plugins/ui-morphism-core/skills/a11y-validate/scripts/budget.test.mjs)       echo   46 ;;
+    plugins/ui-morphism-core/skills/a11y-validate/scripts/audit-css.test.mjs)    echo   83 ;;
+    plugins/ui-morphism-core/skills/a11y-validate/scripts/budget.test.mjs)       echo   51 ;;
     plugins/ui-morphism-core/skills/a11y-validate/scripts/contrast.test.mjs)     echo  274 ;;
     plugins/ui-morphism-core/skills/token-emit/scripts/emit.test.mjs)            echo  119 ;;
     plugins/ui-morphism-core/skills/token-emit/scripts/intensity.test.mjs)       echo   54 ;;
