@@ -884,7 +884,7 @@ else
   fail=1
 fi
 
-# ------------------------------------------- 11. the sizes README states ------
+# --------------------------------- 11. the figures the READMEs state ----------
 # README.md's opening paragraph sizes the set for a reader deciding whether to
 # commit to it: how many lines the ten style docs run, how many numbered
 # references they carry, and how much the three companion docs add. Nothing
@@ -900,7 +900,7 @@ fi
 # Deliberately exact rather than approximate. "About 1,400" would never fail and
 # would therefore never be maintained; a number that must be right is the only
 # kind that stays right.
-echo "==> checking the set sizes README states against the files"
+echo "==> checking the figures the READMEs state against the files"
 size_ok=1
 size_checked=0
 
@@ -939,12 +939,41 @@ else
     fi
   done
 
+  # The same class, one level up: both READMEs state how many checks this
+  # script runs. That sentence went stale the moment check 11 was added — twice
+  # over, in two files — which is how this block came to exist. The count is
+  # taken from the `echo "==>"` lines actually in the script, minus the
+  # preflight, and compared against the number WORD the prose uses.
+  echo_lines=$(grep -c '^echo "==>' ./check-links.sh 2>/dev/null || echo 0)
+  n_checks=$((echo_lines - 1))
+  words='zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen'
+  word=$(printf '%s\n' "$words" | awk -v i="$n_checks" '{ print $(i + 1) }')
+
+  if [ -z "$word" ]; then
+    printf '  NOWORD   this script prints %s check(s) — past the spelt-out range this compares against\n' "$n_checks"
+    fail=1; size_ok=0
+  else
+    for claim in "README.md:then ${word} checks" "../README.md:preflight + ${word} checks"; do
+      cf=${claim%%:*}; phrase=${claim#*:}
+      if [ ! -f "$cf" ]; then
+        printf '  NOFILE   %s is not on disk — its stated check count went uncompared\n' "$cf"
+        fail=1; size_ok=0; continue
+      fi
+      size_checked=$((size_checked + 1))
+      if ! grep -qF -- "$phrase" "$cf"; then
+        printf '  COUNT    %s does not say "%s" — this script runs %s check(s) plus the preflight\n' \
+          "$cf" "$phrase" "$n_checks"
+        fail=1; size_ok=0
+      fi
+    done
+  fi
+
   if [ "$size_checked" -eq 0 ]; then
     echo "  NOSIZES  not one stated size was found to compare."
     echo "  ^ zero figures adjudicated is a FAILURE, not a clean run."
     fail=1; size_ok=0
   else
-    printf '  %s stated size(s) compared against the files\n' "$size_checked"
+    printf '  %s stated figure(s) compared against the files\n' "$size_checked"
   fi
 fi
 [ "$size_ok" -eq 1 ] && echo "  ok"

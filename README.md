@@ -244,7 +244,7 @@ every category rather than the first, and both exit non-zero once, at the end.
 
 ```
 ./check-plugins.sh              # the artefact: plugins/, the manifests and the catalog
-(cd docs && ./check-links.sh)   # the research: preflight + ten checks, the last of them numeric
+(cd docs && ./check-links.sh)   # the research: preflight + eleven checks, one of them numeric
 ```
 
 **`./check-plugins.sh`** needs `bash`, `node` v22+ and the `claude` CLI. It runs every `*.test.mjs`

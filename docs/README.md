@@ -223,7 +223,7 @@ Whichever form you emit, **one doc uses exactly one prefix**. That is rule 2 bel
 
 ## CI check
 
-`./check-links.sh` runs a doc-set preflight and then ten checks — nine structural, plus a numeric one it shells out to — prints every offence in every category, and exits non-zero if anything fails. Run it before committing.
+`./check-links.sh` runs a doc-set preflight and then eleven checks — nine structural, a numeric one it shells out to, and a last one holding this page's own stated figures against the files — prints every offence in every category, and exits non-zero if anything fails. Run it before committing.
 
 Checks 1, 3, 4, 8 and 10 read all fourteen markdown files; checks 2, 5, 6, 7 and 9 read the ten style docs. Checks 1, 3 and 4 get there by globbing `*.md`, and check 10's `check-contrast.py` does the same when given no arguments, so those four read whatever markdown is on disk — fourteen files today; check 8 walks an explicit list of the four prefix-less docs plus the ten style docs. Either way no markdown file in this directory escapes those five.
 
