@@ -1,6 +1,6 @@
 # ui-morphism — the ten style docs
 
-Ten UI style languages, documented to the same fourteen-section template, at a depth you can build from: token tables, working CSS, React / Tailwind / SwiftUI recipes, measured contrast ratios, performance budgets, and a sourced timeline for each. The ten style docs run 12,850 lines and carry 229 numbered references between them; the three top-level companion docs add another 1,320 lines. Every doc's frontmatter reads `last_researched: 2026-08-08`, and every factual claim in the set is pinned to that date.
+Ten UI style languages, documented to the same fourteen-section template, at a depth you can build from: token tables, working CSS, React / Tailwind / SwiftUI recipes, measured contrast ratios, performance budgets, and a sourced timeline for each. The ten style docs run 12,850 lines and carry 229 numbered references between them; the three top-level companion docs add another 1,432 lines. Every doc's frontmatter reads `last_researched: 2026-08-08`, and every factual claim in the set is pinned to that date.
 
 To refresh the research: re-verify the numbered sources in each doc's **§14 References**, update the moving facts first (Baseline dates, library release dates and star counts, telemetry percentages, WCAG criteria status, platform version numbers), then bump `last_researched` in the frontmatter of every doc you touched and re-run `./check-links.sh`. Facts that move fastest are flagged with explicit dates in the prose, so a date search is a reasonable first pass. Recount references with:
 

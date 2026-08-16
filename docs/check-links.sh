@@ -884,6 +884,71 @@ else
   fail=1
 fi
 
+# ------------------------------------------- 11. the sizes README states ------
+# README.md's opening paragraph sizes the set for a reader deciding whether to
+# commit to it: how many lines the ten style docs run, how many numbered
+# references they carry, and how much the three companion docs add. Nothing
+# checked any of the three.
+#
+# One of them had already rotted by 112 lines when this check was written —
+# MARKETPLACE.md grew a section recording how its own open questions were
+# resolved, and the figure describing it did not move. That is the whole reason
+# this exists: a number in prose has no owner, and the reader cannot tell a
+# current one from a stale one. Either the sentence is worth keeping accurate
+# or it is not worth printing.
+#
+# Deliberately exact rather than approximate. "About 1,400" would never fail and
+# would therefore never be maintained; a number that must be right is the only
+# kind that stays right.
+echo "==> checking the set sizes README states against the files"
+size_ok=1
+size_checked=0
+
+state_num() {  # the first integer, commas stripped, from README matching a pattern
+  grep -oE "$1" README.md 2>/dev/null | head -1 | grep -oE '[0-9][0-9,]*' | head -1 | tr -d ','
+}
+
+if [ ! -f README.md ]; then
+  echo "  MISSING  docs/README.md is not on disk — NO stated size was checked."
+  fail=1; size_ok=0
+else
+  real_style=$(cat 0[1-9]-*.md 10-*.md 2>/dev/null | wc -l | tr -d ' ')
+  real_comp=$(cat 00-comparison-matrix.md GLOSSARY.md MARKETPLACE.md 2>/dev/null | wc -l | tr -d ' ')
+  real_refs=0
+  for f in 0[1-9]-*.md 10-*.md; do
+    n=$(awk '/^## 14\./ { s = 1; next } s && /^## / { exit } s' "$f" | grep -cE '^[0-9]+\. ')
+    real_refs=$((real_refs + n))
+  done
+
+  claim_style=$(state_num 'style docs run [0-9,]+ lines')
+  claim_refs=$(state_num 'carry [0-9,]+ numbered references')
+  claim_comp=$(state_num 'companion docs add another [0-9,]+ lines')
+
+  for pair in "style-doc lines:${claim_style}:${real_style}" \
+              "numbered references:${claim_refs}:${real_refs}" \
+              "companion-doc lines:${claim_comp}:${real_comp}"; do
+    what=${pair%%:*}; rest=${pair#*:}; claimed=${rest%%:*}; actual=${rest#*:}
+    if [ -z "$claimed" ]; then
+      printf '  NOCLAIM  README states no %s figure — the sentence this checks was reworded or removed\n' "$what"
+      fail=1; size_ok=0; continue
+    fi
+    size_checked=$((size_checked + 1))
+    if [ "$claimed" != "$actual" ]; then
+      printf '  SIZE     %s: README says %s, the files are %s\n' "$what" "$claimed" "$actual"
+      fail=1; size_ok=0
+    fi
+  done
+
+  if [ "$size_checked" -eq 0 ]; then
+    echo "  NOSIZES  not one stated size was found to compare."
+    echo "  ^ zero figures adjudicated is a FAILURE, not a clean run."
+    fail=1; size_ok=0
+  else
+    printf '  %s stated size(s) compared against the files\n' "$size_checked"
+  fi
+fi
+[ "$size_ok" -eq 1 ] && echo "  ok"
+
 if [ "$fail" -ne 0 ]; then
   echo
   echo "FAILED — see above."
