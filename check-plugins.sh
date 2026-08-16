@@ -62,6 +62,11 @@
 #      recomputed from the token values beside it with core's own contrast.mjs,
 #      theme-aware. Check 11 proves a figure came from its doc; this proves it is
 #      true. Ratcheted on how many were recomputed, not how many were found
+#  18. the six alpha SAFETY FLOORS, re-derived with solveMinAlpha from the two
+#      colours their docs name: the crossing matches the published figure, the
+#      published figure is a ceiling of it rather than a truncation, and the
+#      shipped clamp sits at or above it. A floor below its crossing ships
+#      failing contrast at its own minimum
 #
 # Conventions are check-links.sh's, deliberately: the same `==> checking …` /
 # `  ok` shape, every offence in every category printed rather than the first,
@@ -84,6 +89,10 @@
 #   * glass.layer.css's ordinary CSS declarations — padding, radius, the ground
 #     gradient's stops — are not held against anything. Check 4 gates its var()
 #     references and its COLOUR literals; a wrong `12px` in it passes.
+#   * check 18's claim table is exactly six rows. A style that grows a
+#     translucent surface, or a floor re-derived from different colours, is
+#     invisible to it until someone writes the row. The table IS the coverage,
+#     and nothing counts how many floors exist to compare it against.
 #   * plugins/**/*.css figures ARE recomputed now, by check 17 — but only the
 #     27 whose two colours are determinable from the file. The other 67 are
 #     prose comments or name no reference, and remain provenance-only.
@@ -3028,6 +3037,145 @@ else
   fi
 fi
 [ "$cssfig_ok" -eq 1 ] && echo "  ok"
+
+# ----------------------------------------------- 18. the alpha safety floors ---
+# The one number in this repository that can hurt somebody is the minimum alpha
+# a translucent surface may take. Below it, a panel ships text that does not
+# meet 4.5:1 over a backdrop the style does not own — and unlike every other
+# figure here, that failure is invisible in the mock, because the mock has one
+# backdrop and the clamp exists for all of them.
+#
+# Those floors were derived by hand and, until this check, verified by hand.
+# README and docs/README both said the alpha-composited figures were permanently
+# outside the tooling. That was true when it was written and is not true now:
+# contrast.mjs grew `solveMinAlpha` and `composite`, and the crossings the docs
+# publish are exactly what they compute.
+#
+# So each claim below is re-derived from the two colours the doc names, and then
+# checked for the property that actually matters:
+#
+#     the SHIPPED clamp must be at or above the COMPUTED crossing.
+#
+# A clamp equal to a truncated crossing is the specific way this goes wrong —
+# 0.5573 published as "0.557" is a floor that misses 4.5:1 — so the comparison
+# is against the unrounded crossing, and the published two- and four-decimal
+# forms are checked to be CEILINGS of it, never roundings.
+#
+# This is a table of claims, which is not the keyword list this file bans. A
+# suppression list says "do not look here". This says "look here, and here is
+# what the answer must be". Adding a style with a translucent surface and no row
+# here is the gap it cannot see; that is stated in the header's not-gated list.
+echo "==> re-deriving the alpha safety floors from the colours their docs name"
+alpha_ok=1
+if [ "$have_node" -eq 0 ]; then
+  echo "  NOTRUN   node is unavailable — NO alpha floor was re-derived."
+  fail=1; alpha_ok=0
+else
+  alpha_out=$(node --input-type=module -e '
+    import path from "node:path";
+    const CORE = process.argv[1];
+    const { solveMinAlpha, ceilTo } = await import(
+      path.resolve(CORE, "skills/a11y-validate/scripts/contrast.mjs"));
+
+    // fill / text / backdrop(null = worst case over the whole sRGB cube) /
+    // target, the crossing the owning doc publishes, and the alpha the plugin
+    // actually clamps to. `clamp: null` means the doc states the crossing but
+    // ships no clamp derived from it.
+    const CLAIMS = [
+      { style: "glassmorphism-ui", what: "text scrim, white body text, worst-case ground",
+        fill: "rgb(10,10,15)", text: "#FFFFFF", backdrop: null, target: 4.5,
+        published: 0.55734, dp: 5, clamp: 0.56,
+        cite: "doc 03 §7 / intensity.contract.json textScrimAlpha" },
+
+      { style: "spatial-ui", what: "dark panel, #F5F6FA ink, shipped #16181E fill",
+        fill: "#16181E", text: "#F5F6FA", backdrop: null, target: 4.5,
+        published: 0.6135, dp: 4, clamp: 0.62,
+        cite: "doc 10 §7 / contextClamps backdropControl:arbitrary" },
+
+      { style: "spatial-ui", what: "dark panel, pure white text, #14161C fill",
+        fill: "#14161C", text: "#FFFFFF", backdrop: null, target: 4.5,
+        published: 0.5853, dp: 4, clamp: null,
+        cite: "doc 10 §7 — the round-up trap: 0.585 gives 4.497:1" },
+
+      { style: "spatial-ui", what: "dark panel at AAA against #F5F6FA",
+        fill: "#14161C", text: "#F5F6FA", backdrop: null, target: 7,
+        published: 0.7336, dp: 4, clamp: null,
+        cite: "doc 10 §7 — why the 0.72 default is AA and not AAA" },
+
+      { style: "liquid-glass-ui", what: "white glass, #1C1C1E ink, binding black backdrop",
+        fill: "#FFFFFF", text: "#1C1C1E", backdrop: "#000000", target: 4.5,
+        published: 0.5145, dp: 4, clamp: 0.55,
+        cite: "doc 08 §7 / intensity.contract.json fillAlpha floor" },
+
+      { style: "liquid-glass-ui", what: "same crossing against the arbitrary-backdrop clamp",
+        fill: "#FFFFFF", text: "#1C1C1E", backdrop: "#000000", target: 4.5,
+        published: 0.5145, dp: 4, clamp: 0.62,
+        cite: "doc 08 §7 / contextClamps backdropControl:arbitrary" },
+    ];
+
+    const out = [];
+    let bad = 0;
+
+    for (const c of CLAIMS) {
+      const label = c.style + " — " + c.what;
+      let r;
+      try {
+        r = solveMinAlpha(c.fill, c.text, { target: c.target, backdrop: c.backdrop });
+      } catch (e) {
+        out.push("  ERROR    " + label + ": solveMinAlpha refused it — " + e.message);
+        bad++; continue;
+      }
+      if (!r || r.feasible === false || typeof r.alpha !== "number") {
+        out.push("  INFEASIBLE " + label + ": no alpha clears " + c.target + ":1");
+        bad++; continue;
+      }
+
+      const exact = r.alpha;
+      const asPublished = ceilTo(exact, c.dp);
+      if (Math.abs(asPublished - c.published) > 1e-12) {
+        out.push("  CROSSING " + label + ": doc publishes " + c.published +
+                 ", recomputes " + exact.toFixed(8) + " (ceil " + c.dp + "dp = " + asPublished + ")");
+        out.push("           " + c.cite);
+        bad++;
+      }
+      // The published figure must be a CEILING of the crossing. A truncation
+      // reads like a floor and is not one.
+      if (c.published < exact) {
+        out.push("  TRUNCATED " + label + ": published " + c.published +
+                 " is BELOW the crossing " + exact.toFixed(8) + " — it misses the target it claims");
+        bad++;
+      }
+      if (c.clamp !== null && c.clamp < exact) {
+        out.push("  UNSAFE   " + label + ": shipped clamp " + c.clamp +
+                 " is below the crossing " + exact.toFixed(8) + " — the floor ships failing contrast");
+        out.push("           " + c.cite);
+        bad++;
+      }
+    }
+
+    out.push("  " + CLAIMS.length + " alpha floor(s) re-derived, " + bad + " problem(s)");
+    out.push("COUNT\t" + CLAIMS.length + "\t" + bad);
+    process.stdout.write(out.join("\n") + "\n");
+  ' "$CORE" 2>&1)
+  alpha_rc=$?
+
+  printf '%s\n' "$alpha_out" | grep -v '^COUNT	'
+  if [ "$alpha_rc" -ne 0 ]; then
+    echo "  ERROR    the re-derivation did not complete — no floor was adjudicated."
+    fail=1; alpha_ok=0
+  else
+    n_cl=$(printf '%s\n' "$alpha_out" | awk -F'\t' '$1 == "COUNT" { print $2; exit }')
+    n_pb=$(printf '%s\n' "$alpha_out" | awk -F'\t' '$1 == "COUNT" { print $3; exit }')
+    if [ -z "${n_cl:-}" ] || [ "${n_cl:-0}" -eq 0 ]; then
+      echo "  NOCLAIMS the table adjudicated nothing."
+      echo "  ^ zero floors re-derived is a FAILURE, not a clean run."
+      fail=1; alpha_ok=0
+    elif [ "${n_pb:-0}" -ne 0 ]; then
+      fail=1; alpha_ok=0
+    fi
+  fi
+fi
+[ "$alpha_ok" -eq 1 ] && echo "  ok"
 
 if [ "$fail" -ne 0 ]; then
   echo

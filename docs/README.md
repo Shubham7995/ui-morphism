@@ -235,11 +235,15 @@ Read this before you trust `All structural checks passed.`, or `All contrast fig
 
 **What CI does not prove.** The other **419 figures are never recomputed**, and the run prints why, bucket by bucket. Most are unmeasurable by construction — a bare AA text-contrast requirement quoted with no colours beside it has nothing to compute against. But **47 of them are alpha-composited**, and those are the ones that matter most:
 
-> An alpha-composited figure is one where at least one operand is a translucent colour — `rgba(255,255,255,0.12)` over a backdrop. Recomputing it means knowing what is behind the panel, and what is behind the panel is the page. The tool cannot reach these, and no amount of work on the tool will change that; it is a property of the claim, not a gap in the implementation.
+> An alpha-composited figure is one where at least one operand is a translucent colour — `rgba(255,255,255,0.12)` over a backdrop. Recomputing it means knowing what is behind the panel, and what is behind the panel is the page. `check-contrast.py` reads a clause at a time and the backdrop is not in the clause, so the extractor cannot reach these.
 
-These 47 are exactly the figures that decide **whether glass carries legible text** — the single highest-risk claim in the set, and the reason glassmorphism, liquid-glass and spatial-ui are rated *High* a11y risk in the table at the top of this file. All 47 were hand-verified in this round's audit (`last_researched: 2026-08-08`) and all 47 were correct on that date. That is the only thing standing behind them, and it does not renew itself: **a future edit to any of them lands unchecked**, and CI will stay green over a wrong one.
+These 47 are exactly the figures that decide **whether glass carries legible text** — the single highest-risk claim in the set, and the reason glassmorphism, liquid-glass and spatial-ui are rated *High* a11y risk in the table at the top of this file. All 47 were hand-verified in this round's audit (`last_researched: 2026-08-08`) and all 47 were correct on that date.
 
-**So: after editing any of these, re-check the numbers by hand.**
+**Six of them no longer rest on that alone.** An earlier version of this page said no amount of work on the tooling could reach an alpha-composited figure, because the backdrop is a property of the page rather than of the claim. That was too strong, and `check-plugins.sh` check 18 is the counter-example: what the extractor cannot *infer*, a maintainer can *supply*. Six alpha floors — glassmorphism's 0.56 text scrim, spatial-ui's 0.6135 and 0.5853 and 0.7336 crossings, and liquid-glass's 0.5145 against both its 0.55 and 0.62 clamps — have their fill, their text colour, their backdrop and their target committed beside them, and `contrast.mjs` re-derives each one on every run. Each is checked three ways: the crossing matches the published figure, the published figure is a *ceiling* of the crossing rather than a truncation of it, and the shipped clamp sits at or above the crossing. That last one is the property that matters, because a floor below the crossing ships failing contrast at its own minimum.
+
+The generic statement still holds for the other 41: an extractor reading one clause cannot find a backdrop that is not in it. What changed is that "the tool cannot reach it" is now a statement about the extractor, not about the figure. Any of the 41 can be moved into check 18's table by writing down its operands.
+
+**So: after editing any of the remaining 41, re-check the numbers by hand — or add the claim to check 18 and stop having to.**
 
 | Section | What lives there |
 |---|---|

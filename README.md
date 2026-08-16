@@ -90,8 +90,8 @@ is opt-in rather than the default, because a skill invoked by name against a con
 to do something. The `audit` half of every pair is the other way to look before touching anything: it
 holds no `Write` grant at all, so it cannot write whatever it is told to.
 
-Before publishing, run the gate — it validates the catalog and all eleven plugin manifests, and twelve
-other things besides:
+Before publishing, run the gate — it validates the catalog and all eleven plugin manifests, and
+seventeen other things besides:
 
 ```
 ./check-plugins.sh
@@ -222,7 +222,9 @@ where provenance alone would pass it; keeps `.claude-plugin/`
 directories manifest-only; asserts the WCAG contrast arithmetic exists in exactly one file, with
 nothing outside `ui-morphism-core` so much as naming it; holds the ten `apply` skills' `--dry-run`
 contract byte-identical, in the argument hint, the Inputs table and the `## Dry run` section alike;
-and holds the whole report contract against `audit-css.mjs`'s exported `CHECKS` array — the seven
+re-derives the six alpha safety floors from the colours their docs name and checks that each
+shipped clamp sits at or above its computed crossing, because a floor below its crossing ships
+failing contrast at its own minimum; and holds the whole report contract against `audit-css.mjs`'s exported `CHECKS` array — the seven
 sections in each of the twenty style skills against core's `report-template.md` headings, in order,
 and every prose restatement of the nine universal checklist rows against the nine the tool actually
 runs, so a report cannot promise a row nothing produces.
@@ -241,8 +243,9 @@ catalog entries is a failure, never a quiet `ok`.
 **What a green run does not prove.** For the research half, the authoritative account is
 [what a green run proves, and what it does not](./docs/README.md#what-a-green-run-proves-and-what-it-does-not).
 Read it before trusting `All structural checks passed.` — it is specific about how many contrast
-figures are actually recomputed, about the alpha-composited ones that no tool can recompute and that
-are hand-verified instead, and about the checks whose scope is narrower than the doc set. For the
+figures are actually recomputed, about the alpha-composited ones the doc-side extractor cannot reach —
+six of which the plugin gate now re-derives anyway, because a maintainer can supply the backdrop an
+extractor cannot infer — and about the checks whose scope is narrower than the doc set. For the
 plugin half: `check-plugins.sh` proves the artefact agrees with the research and with itself, and — as
 of check 17 — that 27 of the 94 contrast figures its stylesheets print are arithmetically true rather
 than merely traceable. The other 67 sit in prose comments or name no reference colour, and inherit
@@ -268,7 +271,8 @@ written down, so the list is part of the deliverable and not a footnote to it.
 `docs/` is the source of truth for every plugin, so a change there is a change to the artefact. To refresh
 research: re-verify the numbered sources in each doc's §14, update the moving facts first, bump
 `last_researched` in the frontmatter of every doc you touched, and re-run `docs/check-links.sh`. Hand-check
-any alpha-composited contrast figure you edit — CI will stay green over a wrong one.
+any alpha-composited contrast figure you edit, unless it is one of the six in `check-plugins.sh`
+check 18 — CI will stay green over a wrong one anywhere else.
 
 Editing a **§4 token block** of a doc that has a plugin is the one change that must not stop there: the
 plugin's `skills/apply/assets/tokens.css` is that block, verbatim, and `./check-plugins.sh` compares the
