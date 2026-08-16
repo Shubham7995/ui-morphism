@@ -99,6 +99,47 @@ A contract that breaks one of the five rules exits 2 instead of resolving, so a 
 knob table reverses direction, or whose zero is described as "off", finds out here rather
 than in a shipped stylesheet.
 
+## Layout
+
+```
+ui-morphism-core/
+├── .claude-plugin/plugin.json
+├── assets/report-template.md
+├── skills/
+│   ├── detect-stack/
+│   │   └── SKILL.md
+│   ├── a11y-validate/
+│   │   ├── SKILL.md
+│   │   └── scripts/{contrast,audit-css,budget}{.mjs,.test.mjs}
+│   └── token-emit/
+│       ├── SKILL.md
+│       ├── references/{token-grammar,group-vocabulary,tailwind-mapping,intensity-contract}.md
+│       └── scripts/{emit,intensity}{.mjs,.test.mjs}
+├── README.md
+└── LICENSE
+```
+
+Three differences from a style plugin's shape, each of them deliberate.
+
+**`assets/` sits at the plugin root, not inside a skill.** `report-template.md` is not owned
+by any one of the three skills: `a11y-validate` fills in §2, §3, §4 and §7 of it, and all
+twenty style skills reproduce its seven sections. A shared file under one skill's directory
+would imply an ownership that does not exist. `check-plugins.sh` check 15 grades every
+prose copy of those sections against it.
+
+**No `assets/*.css` anywhere, and no `tokens.css` at all.** Core owns the token *grammar*
+and the emitters, never a value. The moment a colour appears in this directory, the line in
+[The line between core and a style](#the-line-between-core-and-a-style) has been crossed.
+
+**The three skills carry different subdirectories, and the asymmetry is the design.**
+`detect-stack` is procedure only — one `SKILL.md`, nothing to bundle, because its whole
+output is a JSON contract the caller branches on. `a11y-validate` has `scripts/` but no
+`references/`: the only checklist it names belongs to the calling style plugin, which is
+why check 10 reports it as one of the two references unresolvable by construction.
+`token-emit` has both, because the token grammar, the closed group vocabulary and the
+Tailwind namespace map are reference material a skill reads on demand rather than carries
+in its body.
+
 ## Tests
 
 ```
