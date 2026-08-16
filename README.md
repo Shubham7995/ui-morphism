@@ -215,7 +215,10 @@ bare `Bash`, every `Bash(...)` is anchored on `${CLAUDE_SKILL_DIR}` or `${CLAUDE
 can reach only a script the plugin ships, and no `audit` skill holds `Write` or `Edit`; prints every
 description length against the 1,450-character budget and asserts the deference clause is still in it;
 resolves every `references/`, `assets/` or `scripts/` path a `SKILL.md` names; traces every `N:1`
-contrast figure the plugin tree prints back to a figure the docs print; keeps `.claude-plugin/`
+contrast figure the plugin tree prints back to a figure the docs print, and — for the 27 in a shipped
+stylesheet whose two colours are determinable from the file they sit in — **recomputes** them with
+core's own `contrast.mjs`, theme-aware, so a figure that is faithfully copied and wrong is caught
+where provenance alone would pass it; keeps `.claude-plugin/`
 directories manifest-only; asserts the WCAG contrast arithmetic exists in exactly one file, with
 nothing outside `ui-morphism-core` so much as naming it; holds the ten `apply` skills' `--dry-run`
 contract byte-identical, in the argument hint, the Inputs table and the `## Dry run` section alike;
@@ -240,7 +243,10 @@ catalog entries is a failure, never a quiet `ok`.
 Read it before trusting `All structural checks passed.` — it is specific about how many contrast
 figures are actually recomputed, about the alpha-composited ones that no tool can recompute and that
 are hand-verified instead, and about the checks whose scope is narrower than the doc set. For the
-plugin half: `check-plugins.sh` proves the artefact agrees with the research and with itself. It never
+plugin half: `check-plugins.sh` proves the artefact agrees with the research and with itself, and — as
+of check 17 — that 27 of the 94 contrast figures its stylesheets print are arithmetically true rather
+than merely traceable. The other 67 sit in prose comments or name no reference colour, and inherit
+their correctness from the doc side, which recomputes 157 of 576. It never
 runs a skill, renders nothing, and has no way to tell whether a description triggers when it should.
 The deference clauses that keep these skills off the incumbent tools' territory are held two ways —
 the clause must be present, and it must end inside the listing cap, since it sits in the tail of each

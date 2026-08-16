@@ -58,6 +58,10 @@
 #      anchored on ${CLAUDE_SKILL_DIR} or ${CLAUDE_PLUGIN_ROOT}, and no `audit`
 #      skill holds Write or Edit. Cross-checked against check 8 on entry count,
 #      because it is a second parser over the same field
+#  17. the ARITHMETIC of every contrast figure a shipped stylesheet prints,
+#      recomputed from the token values beside it with core's own contrast.mjs,
+#      theme-aware. Check 11 proves a figure came from its doc; this proves it is
+#      true. Ratcheted on how many were recomputed, not how many were found
 #
 # Conventions are check-links.sh's, deliberately: the same `==> checking …` /
 # `  ok` shape, every offence in every category printed rather than the first,
@@ -80,8 +84,12 @@
 #   * glass.layer.css's ordinary CSS declarations — padding, radius, the ground
 #     gradient's stops — are not held against anything. Check 4 gates its var()
 #     references and its COLOUR literals; a wrong `12px` in it passes.
+#   * plugins/**/*.css figures ARE recomputed now, by check 17 — but only the
+#     27 whose two colours are determinable from the file. The other 67 are
+#     prose comments or name no reference, and remain provenance-only.
 #   * plugins/*/references/*.md prose is gated only for the contrast figures it
-#     prints (check 11) and only for PROVENANCE, not for arithmetic. A figure the
+#     prints (check 11) and only for PROVENANCE, not for arithmetic. Check 17
+#     covers stylesheets, not markdown. A figure the
 #     owning doc also states is inherited as correct from
 #     docs/check-contrast.py, which recomputes the doc side; a figure swapped for
 #     a DIFFERENT figure the same doc also states is not caught. Wiring
@@ -458,7 +466,7 @@ endpoint_exempt_of() {
   esac
 }
 
-# COMMITTED COUNTS for the three checks whose natural failure mode is to
+# COMMITTED COUNTS for the four checks whose natural failure mode is to
 # adjudicate nothing and say `ok`. Each is a FLOOR with no deadband, measured
 # from a clean run, and each guards a different extraction:
 #
@@ -479,9 +487,18 @@ endpoint_exempt_of() {
 # check 11 no longer counting `N : 1` out of fenced blocks and inline code spans
 # on the plugin side. That second change LOWERS the count by five against the
 # same tree, which is why this is a re-measurement and not an arithmetic bump.
+#   CSSFIG_BASELINE       contrast figures printed in a shipped stylesheet that
+#                         check 17 RECOMPUTED from the token values beside them.
+#                         Narrow the pair-resolution and it recomputes nothing,
+#                         reports every figure as "names no reference colour",
+#                         and passes — certifying arithmetic it never did. This
+#                         is the numerator, not the denominator: check 11 already
+#                         guards how many figures are FOUND, and found is not
+#                         checked.
 ASSET_DECL_BASELINE=1454
 SKILLREF_BASELINE=172
 FIGURE_BASELINE=485
+CSSFIG_BASELINE=27
 
 # A SKILL.md may name a path that belongs to ANOTHER plugin: core's a11y-validate
 # says "the style plugin's own `references/checklist.md`" and core's token-emit
@@ -2813,6 +2830,204 @@ else
   printf '  %s grant(s) measured for width, agreeing with check 8\n' "$wide_checked"
 fi
 [ "$wide_ok" -eq 1 ] && echo "  ok"
+
+# ------------------------------- 17. the arithmetic of a shipped CSS figure ---
+# Check 11 asks whether a contrast figure printed in the plugin tree is one its
+# owning doc also prints. That is PROVENANCE, and provenance is not truth: a
+# figure copied faithfully from a doc that had it wrong passes check 11 forever,
+# and wrong contrast numbers are the defect class that has cost this repository
+# the most — four docs shipped with transcription-shaped errors, and one shipped
+# a compositing model that was optimistic by roughly 3x.
+#
+# So this recomputes them, from the token values declared beside them, with
+# core's own contrast.mjs. Using the shipped implementation is the point: check
+# 13 guarantees there is exactly one, so a figure verified here was measured by
+# the same code a user's audit will run.
+#
+# A figure is only recomputable when BOTH colours are determinable from the file
+# it sits in. Three resolutions, all structural, none a registry:
+#   * `/* 6.01:1 on #221D2E */`  — the reference is written out.
+#   * `/* 14.42:1 on --clay-bg */` — a token declared in the same file.
+#   * `/* 9.59:1 on surface */`  — a bare word, resolved as the DECLARING
+#     token's own prefix plus that word (`--nm-text` + `surface` = `--nm-surface`)
+#     and used only when that token exists. Derived from the file, not listed here.
+#   * A section header stating the reference once — `(ratios are vs
+#     --nb-on-accent #0A0A0A)` — covers the declarations under it until the block
+#     ends.
+#
+# Theme matters and is tracked: a token declared in both `:root` and a dark block
+# has two values, and `--nm-text: #e8eaf2 /* 11.29:1 */` inside the dark block is
+# a claim about the DARK surface. Getting that wrong would silently compare
+# across themes and pass.
+#
+# What is out of scope, and stays out: a figure in a prose block comment, which
+# is a statement about the world rather than about the declaration beside it, and
+# a figure whose reference is an alpha composite over a ground the style does not
+# own. Those are hand-verified in the docs and nothing here changes that.
+# CSSFIG_BASELINE is a floor on what is RECOMPUTED, so narrowing the resolution
+# above cannot quietly turn this into a check that verifies nothing.
+echo "==> recomputing every contrast figure a shipped stylesheet prints"
+cssfig_ok=1
+if [ "$have_node" -eq 0 ]; then
+  echo "  NOTRUN   node is unavailable — NO shipped figure was recomputed."
+  fail=1; cssfig_ok=0
+else
+  cssfig_out=$(node --input-type=module -e '
+    import fs from "node:fs";
+    import path from "node:path";
+    const CORE = process.argv[1];
+    const { contrastRatio, parseColor } = await import(
+      path.resolve(CORE, "skills/a11y-validate/scripts/contrast.mjs"));
+
+    const files = [];
+    const walk = (d) => {
+      for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+        const p = path.join(d, e.name);
+        if (e.isDirectory()) walk(p);
+        else if (e.name.endsWith(".css")) files.push(p);
+      }
+    };
+    walk("plugins");
+    files.sort();
+
+    const isDark = (stack) =>
+      stack.some((s) => /prefers-color-scheme:\s*dark|data-theme="dark"|\.dark\b/.test(s));
+
+    let verified = 0, mismatched = 0, skipped = 0;
+    const skips = new Map();
+    const out = [];
+    const note = (why) => skips.set(why, (skips.get(why) || 0) + 1);
+
+    for (const rel of files) {
+      const lines = fs.readFileSync(rel, "utf8").split("\n");
+
+      const tokens = { light: new Map(), dark: new Map() };
+      let stack = [];
+      for (const l of lines) {
+        const open = l.match(/^([^{}]*)\{\s*$/);
+        if (open) { stack.push(open[1].trim()); continue; }
+        if (/^\s*\}/.test(l)) { stack.pop(); continue; }
+        const d = l.match(/^\s*(--[\w-]+)\s*:\s*([^;]+);/);
+        if (d) tokens[isDark(stack) ? "dark" : "light"].set(d[1], d[2].trim());
+      }
+      // Light is the base layer: a token only declared light is in scope in dark.
+      for (const [k, v] of tokens.light) if (!tokens.dark.has(k)) tokens.dark.set(k, v);
+
+      const resolve = (val, theme, depth) => {
+        if (depth > 4) return null;
+        const v = String(val).trim();
+        const ref = v.match(/^var\(\s*(--[\w-]+)/);
+        if (ref) {
+          const next = tokens[theme].get(ref[1]);
+          return next === undefined ? null : resolve(next, theme, depth + 1);
+        }
+        try { parseColor(v); return v; } catch { return null; }
+      };
+
+      stack = [];
+      let sectionRef = null;
+      for (const l of lines) {
+        const open = l.match(/^([^{}]*)\{\s*$/);
+        if (open) { stack.push(open[1].trim()); sectionRef = null; continue; }
+        if (/^\s*\}/.test(l)) { stack.pop(); sectionRef = null; continue; }
+
+        const hdr = l.match(/(?:vs\.?|against|on)\s+(--[\w-]+)(?:\s+(#[0-9a-fA-F]{3,8}))?/);
+        if (/^\s*\/\*/.test(l) && hdr && !/^\s*--/.test(l)) sectionRef = hdr[2] || hdr[1];
+
+        const ratios = [...l.matchAll(/(\d+\.?\d*):1/g)];
+        if (!ratios.length) continue;
+        const theme = isDark(stack) ? "dark" : "light";
+        const decl = l.match(/^\s*(--[\w-]+)\s*:\s*([^;]+);/);
+        if (!decl) {
+          skipped += ratios.length;
+          for (const _ of ratios) note("in a prose comment, not on a declaration");
+          continue;
+        }
+        const fg = resolve(decl[2], theme, 0);
+        if (!fg) {
+          skipped += ratios.length;
+          for (const _ of ratios) note("the declared value is not a colour");
+          continue;
+        }
+
+        for (const r of ratios) {
+          const after = l.slice(r.index);
+          let ref = null;
+          const explicit = after.match(/^\S*\s*(?:on|over|against|vs\.?)\s+(#[0-9a-fA-F]{3,8}|--[\w-]+)/);
+          if (explicit) ref = explicit[1];
+          if (!ref) {
+            const w = after.match(/^\S*\s*(?:on|over|against|vs\.?)\s+([a-z][a-z-]{2,})\b/i);
+            const pre = decl[1].match(/^(--[a-z]+-)/i);
+            if (w && pre) {
+              const guess = pre[1] + w[1].toLowerCase();
+              if (tokens[theme].has(guess)) ref = guess;
+            }
+          }
+          if (!ref && sectionRef) ref = sectionRef;
+          if (!ref) { skipped++; note("the figure names no reference colour"); continue; }
+
+          let bgRaw = ref;
+          if (bgRaw.startsWith("--")) {
+            const t = tokens[theme].get(bgRaw);
+            if (t === undefined) { skipped++; note("the reference token is not declared in that file"); continue; }
+            bgRaw = t;
+          }
+          const bg = resolve(bgRaw, theme, 0);
+          if (!bg) { skipped++; note("the reference value is not a colour"); continue; }
+
+          let got;
+          try { got = contrastRatio(fg, bg); }
+          catch { skipped++; note("contrast.mjs refused one of the two colours"); continue; }
+
+          const stated = Number(r[1]);
+          const dp = (r[1].split(".")[1] || "").length;
+          if (Math.abs(Number(got.toFixed(dp)) - stated) > 1e-9) {
+            mismatched++;
+            out.push("  WRONG    " + rel + ": " + decl[1] + " (" + theme + " theme) states " +
+                     r[1] + ":1 against " + ref + ", recomputes " + got.toFixed(3) + ":1");
+          } else verified++;
+        }
+      }
+    }
+
+    for (const [why, n] of [...skips].sort((a, b) => b[1] - a[1])) {
+      out.push("  info     " + String(n).padStart(3) + " figure(s) not recomputed: " + why);
+    }
+    out.push("  " + verified + " shipped figure(s) recomputed, " + mismatched +
+             " wrong, " + skipped + " out of scope");
+    out.push("COUNT\t" + verified + "\t" + mismatched);
+    process.stdout.write(out.join("\n") + "\n");
+  ' "$CORE" 2>&1)
+  cssfig_rc=$?
+
+  printf '%s\n' "$cssfig_out" | grep -v '^COUNT	'
+  if [ "$cssfig_rc" -ne 0 ]; then
+    echo "  ERROR    the recomputation did not complete — nothing was adjudicated."
+    fail=1; cssfig_ok=0
+  else
+    n_ver=$(printf '%s\n' "$cssfig_out" | awk -F'\t' '$1 == "COUNT" { print $2; exit }')
+    n_bad=$(printf '%s\n' "$cssfig_out" | awk -F'\t' '$1 == "COUNT" { print $3; exit }')
+    if [ -z "${n_ver:-}" ]; then
+      echo "  NOCOUNT  the recomputation printed no count — treat as a failed run, not a clean one."
+      fail=1; cssfig_ok=0
+    else
+      [ "${n_bad:-0}" -ne 0 ] && { fail=1; cssfig_ok=0; }
+      if [ "$n_ver" -lt "$CSSFIG_BASELINE" ]; then
+        printf '  ratchet  %s figure(s) recomputed, BELOW the committed baseline %s\n' \
+          "$n_ver" "$CSSFIG_BASELINE"
+        echo "  ^ fewer figures reached the arithmetic than last time. Either a stylesheet"
+        echo "    lost figures, or the pair resolution stopped resolving. Find out which,"
+        echo "    then lower CSSFIG_BASELINE in a reviewed diff."
+        fail=1; cssfig_ok=0
+      elif [ "$n_ver" -gt "$CSSFIG_BASELINE" ]; then
+        printf '  ratchet  %s figure(s) recomputed, above the committed baseline %s — raise CSSFIG_BASELINE\n' \
+          "$n_ver" "$CSSFIG_BASELINE"
+        fail=1; cssfig_ok=0
+      fi
+    fi
+  fi
+fi
+[ "$cssfig_ok" -eq 1 ] && echo "  ok"
 
 if [ "$fail" -ne 0 ]; then
   echo
